@@ -1,71 +1,256 @@
-# Business Rules
+# MemoFlo Business Rules
 
-MemoFlo supports two categories of memos.
+Version: 2.0
 
-## Workflow Memo
+---
 
-Requires approvals.
+# 1. Company
 
-Examples
+A company represents one organization using MemoFlo.
 
-- Procurement
-- Budget
-- Leave
-- Recruitment
-- Asset Purchase
+Each company has its own:
 
-Workflow is configurable.
+- users
+- logo
+- workflow
+- branding
+- departments
+- SBUs
+- permissions
+- memos
 
-Example
+Companies never share data.
 
-Requester
+---
 
-↓
+# 2. Memo Types
 
-Manager
+MemoFlo supports multiple memo types.
 
-↓
+Initially:
 
-Finance
+## Procurement Memo
 
-↓
+Used for purchasing.
 
-CEO
+Uses a configurable approval workflow.
 
-↓
+---
 
-Finance
+## Basic Memo
 
-↓
+Internal communication.
+
+Can be sent directly to one or more recipients.
+
+Examples:
+
+- Circular
+- Announcement
+- Request
+- Reminder
+- Notice
+
+No approval workflow is required unless configured.
+
+---
+
+# 3. Memo Status
+
+Draft
+
+Submitted
+
+Pending
+
+Approved
+
+Rejected
+
+Returned
+
+Cancelled
 
 Completed
 
----
-
-## Direct Memo
-
-No approval chain.
-
-Sent directly to one or many recipients.
-
-Recipients may
-
-- Read
-- Comment
-- Reply
-- Acknowledge
+Archived
 
 ---
 
-## Approval Actions
+# 4. Memo Priority
 
-Every approval stage supports
+Low
 
-- Approve
-- Return
-- Reject
-- Cancel
+Medium
 
-Each action requires a comment.
+High
 
-Every action becomes part of the permanent audit history.
+Urgent
+
+---
+
+# 5. Comments
+
+Every workflow participant may add comments.
+
+Comments are immutable.
+
+Comments become part of the audit trail.
+
+---
+
+# 6. Approval Actions
+
+Approve
+
+Reject
+
+Return
+
+Cancel
+
+Forward
+
+Escalate
+
+Delegate
+
+---
+
+# 7. Audit Trail
+
+Every action creates a permanent audit record.
+
+Audit entries cannot be edited.
+
+Audit entries include:
+
+Actor
+
+Action
+
+Comment
+
+Date
+
+IP Address (future)
+
+Device (future)
+
+---
+
+# 8. Attachments
+
+Each memo may contain multiple files.
+
+Supported:
+
+PDF
+
+Word
+
+Excel
+
+Images
+
+Maximum size configurable per company.
+
+---
+
+# 9. Workflow
+
+Workflow is configurable.
+
+Each company defines:
+
+approval steps
+
+roles
+
+conditions
+
+notifications
+
+SLA
+
+MemoFlo never hardcodes workflow.
+
+---
+
+# 10. Notifications
+
+Users receive notifications for:
+
+New memo
+
+Approval required
+
+Returned memo
+
+Rejected memo
+
+Completed memo
+
+Mention
+
+---
+
+# 11. Search
+
+Search by:
+
+Memo Number
+
+Title
+
+Department
+
+SBU
+
+Priority
+
+Status
+
+Date
+
+Creator
+
+Workflow Stage
+
+---
+
+# 12. Security
+
+Every request requires authentication.
+
+Every action requires authorization.
+
+Users only access data belonging to their company.
+
+---
+
+# 13. Soft Delete
+
+Memos are never permanently deleted.
+
+Deleted memos become archived.
+
+Only administrators may restore archived memos.
+
+---
+
+# 14. Version History
+
+Every edit creates a version.
+
+Previous versions remain available.
+
+---
+
+# 15. Dashboard
+
+Dashboard is personalized.
+
+Each user sees only data relevant to them.
+
+Statistics vary by role.
