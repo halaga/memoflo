@@ -1,4 +1,4 @@
-# MemoFlow
+# MemoFlo
 
 An enterprise-grade memo and workflow management platform.
 
