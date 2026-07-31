@@ -1,0 +1,15 @@
+export default [
+  "memo.create",
+  "memo.view",
+  "memo.update",
+  "memo.delete",
+  "memo.approve",
+  "memo.reject",
+  "memo.return",
+  "memo.comment",
+  "workflow.manage",
+  "user.manage",
+  "role.manage",
+  "department.manage",
+  "company.manage",
+];
