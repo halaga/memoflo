@@ -1,35 +1,37 @@
-export default function authorize(
-  permission
-) {
-  return async (
-    req,
-    res,
-    next
-  ) => {
-    try {
-      const user = req.user;
+import jwt from "jsonwebtoken";
 
-      if (!user) {
-        return res.status(401).json({
+export default function authorize(
+  req,
+  res,
+  next
+) {
+  try {
+    const header =
+      req.headers.authorization;
+
+    if (!header)
+      return res
+        .status(401)
+        .json({
           message: "Unauthorized",
         });
-      }
 
-      const hasPermission =
-        user.permissions?.includes(
-          permission
-        );
+    const token = header.replace(
+      "Bearer ",
+      ""
+    );
 
-      if (!hasPermission) {
-        return res.status(403).json({
-          message:
-            "Permission denied",
-        });
-      }
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
 
-      next();
-    } catch (error) {
-      next(error);
-    }
-  };
+    req.user = decoded;
+
+    next();
+  } catch {
+    return res.status(401).json({
+      message: "Invalid Token",
+    });
+  }
 }

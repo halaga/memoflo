@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
+import authRoutes from "./modules/auth/auth.routes.js";
 
 const app = express();
 
@@ -33,5 +34,7 @@ app.get("/", (req, res) => {
 app.use(notFound);
 
 app.use(errorHandler);
+
+app.use("/api/v1/auth", authRoutes);
 
 export default app;
