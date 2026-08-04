@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import BaseSchema from "../../database/BaseSchema.js";
+
 const sbuSchema = new mongoose.Schema(
   {
     company: {
@@ -11,18 +12,11 @@ const sbuSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true,
     },
 
-    code: {
-      type: String,
-      trim: true,
-    },
+    code: String,
 
-    description: {
-      type: String,
-      default: "",
-    },
+    description: String,
 
     head: {
       type: mongoose.Schema.Types.ObjectId,
@@ -36,11 +30,6 @@ const sbuSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-sbuSchema.index({
-  company: 1,
-  name: 1,
-});
 
 export default mongoose.model(
   "SBU",
