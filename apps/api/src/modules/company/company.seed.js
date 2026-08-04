@@ -12,14 +12,21 @@ export async function seedCompany() {
 
   company = await Company.create({
     name: "Ringo Telecommunications",
+
     code: "RINGO",
-    email: "info@ringo.ng",
+
+    slug: "ringo",
+
+    email: "admin@ringo.ng",
+
     phone: "+234000000000",
+
     website: "https://www.ringo.ng",
-    status: "ACTIVE",
+
+    industry: "Telecommunications",
   });
 
-  console.log("✔ Company created");
+  console.log("✔ Company Created");
 
   return company;
 }
