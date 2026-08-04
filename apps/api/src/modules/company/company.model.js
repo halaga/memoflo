@@ -1,11 +1,19 @@
 import mongoose from "mongoose";
-import BaseSchema from "../../shared/database/BaseSchema.js";
+import BaseSchema from "../../database/BaseSchema.js";
 
 const companySchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
+      trim: true,
+    },
+
+    code: {
+      type: String,
+      required: true,
+      uppercase: true,
+      unique: true,
       trim: true,
     },
 
@@ -37,35 +45,17 @@ const companySchema = new mongoose.Schema(
       default: "#1E293B",
     },
 
-    email: {
-      type: String,
-      default: "",
-    },
+    email: String,
 
-    phone: {
-      type: String,
-      default: "",
-    },
+    phone: String,
 
-    website: {
-      type: String,
-      default: "",
-    },
+    website: String,
 
-    address: {
-      type: String,
-      default: "",
-    },
+    address: String,
 
-    city: {
-      type: String,
-      default: "",
-    },
+    city: String,
 
-    state: {
-      type: String,
-      default: "",
-    },
+    state: String,
 
     country: {
       type: String,
@@ -77,16 +67,7 @@ const companySchema = new mongoose.Schema(
       default: "Africa/Lagos",
     },
 
-    industry: {
-      type: String,
-      default: "",
-    },
-
-    subscription: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Subscription",
-      default: null,
-    },
+    industry: String,
 
     settings: {
       type: Object,

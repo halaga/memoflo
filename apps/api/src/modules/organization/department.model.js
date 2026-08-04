@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
-import BaseSchema from "./BaseSchema.js";
-
+import BaseSchema from "../../database/BaseSchema.js";
 const departmentSchema = new mongoose.Schema(
   {
     company: {

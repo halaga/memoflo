@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import BaseSchema from "./BaseSchema.js";
+import BaseSchema from "../../database/BaseSchema.js";
 
 const roleSchema = new mongoose.Schema(
   {
@@ -32,11 +32,10 @@ const roleSchema = new mongoose.Schema(
     },
 
     permissions: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Permission",
-  },
-],
+      {
+        type: String,
+      },
+    ],
 
     isSystem: {
       type: Boolean,
@@ -49,11 +48,6 @@ const roleSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-roleSchema.index({
-  company: 1,
-  name: 1,
-});
 
 export default mongoose.model(
   "Role",

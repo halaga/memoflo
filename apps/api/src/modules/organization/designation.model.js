@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import BaseSchema from "../../shared/database/BaseSchema.js";
+import BaseSchema from "../../database/BaseSchema.js";
 
 const designationSchema = new mongoose.Schema(
   {

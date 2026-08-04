@@ -1,7 +1,7 @@
 import express from "express";
 
 import * as controller from "./auth.controller.js";
-import authorize from "../../shared/middleware/authorize.js";
+import authorize from "../../middleware/authorize.js";
 
 const router = express.Router();
 
