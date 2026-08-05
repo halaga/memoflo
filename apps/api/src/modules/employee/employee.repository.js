@@ -14,8 +14,12 @@ class EmployeeRepository {
 
   async findByEmail(email) {
     return Employee.findOne({
-      email: email.toLowerCase(),
-    });
+    email: email.toLowerCase(),
+  })
+ .select("+password")
+ .populate("company")
+ .populate("role")
+ .populate("position");
   }
 
   async findByEmployeeNo(employeeNo) {
