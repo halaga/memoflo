@@ -5,6 +5,7 @@ class AuthRepository {
     return Employee.findOne({
       email: email.toLowerCase(),
     })
+      .select("+password")
       .populate("company")
       .populate("role")
       .populate("position");
@@ -15,6 +16,14 @@ class AuthRepository {
       lastLogin: new Date(),
     });
   }
+
+  async findById(id) {
+  return Employee.findById(id)
+    .populate("company")
+    .populate("role")
+    .populate("position")
+    .select("-password");
+}
 }
 
 export default new AuthRepository();

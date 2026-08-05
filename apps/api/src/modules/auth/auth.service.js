@@ -37,11 +37,19 @@ class AuthService {
       role: employee.role?._id,
     });
 
+    // Remove password before returning
+    const employeeObject = employee.toObject();
+    delete employeeObject.password;
+
     return {
       success: true,
       token,
-      employee,
+      employee: employeeObject,
     };
+  }
+
+  async me(id) {
+    return await AuthRepository.findById(id);
   }
 }
 

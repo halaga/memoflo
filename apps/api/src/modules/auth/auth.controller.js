@@ -12,6 +12,19 @@ class AuthController {
       next(error);
     }
   }
+
+  async me(req, res, next) {
+  try {
+    const employee = await AuthService.me(req.user.id);
+
+    res.json({
+      success: true,
+      employee,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
 }
 
 export default new AuthController();
