@@ -1,14 +1,20 @@
-import User from "./user.model.js";
+import Employee from "../employee/employee.model.js";
 
-export async function findUserByEmail(email) {
-  return User.findOne({ email }).select("+password");
+class AuthRepository {
+  async findByEmail(email) {
+    return Employee.findOne({
+      email: email.toLowerCase(),
+    })
+      .populate("company")
+      .populate("role")
+      .populate("position");
+  }
+
+  async updateLastLogin(id) {
+    return Employee.findByIdAndUpdate(id, {
+      lastLogin: new Date(),
+    });
+  }
 }
 
-export async function findUserById(id) {
-  return User.findById(id)
-    .populate("company")
-    .populate("department")
-    .populate("sbu")
-    .populate("designation")
-    .populate("role");
-}
+export default new AuthRepository();

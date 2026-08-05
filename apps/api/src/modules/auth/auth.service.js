@@ -1,35 +1,48 @@
-import {
-  findUserByEmail,
-  findUserById,
-} from "./auth.repository.js";
-
+import AuthRepository from "./auth.repository.js";
 import { comparePassword } from "./password.js";
 import { generateToken } from "./jwt.js";
 
-export async function login(email, password) {
-  const user = await findUserByEmail(email);
+class AuthService {
+  async login(email, password) {
+    console.log("========== LOGIN ==========");
+    console.log("Email:", email);
+    console.log("Password Received:", password);
 
-  if (!user)
-    throw new Error("Invalid credentials");
+    const employee = await AuthRepository.findByEmail(email);
 
-  const valid = await comparePassword(
-    password,
-    user.password
-  );
+    console.log("Employee Found:", !!employee);
 
-  if (!valid)
-    throw new Error("Invalid credentials");
+    if (!employee) {
+      throw new Error("Invalid credentials");
+    }
 
-  const token = generateToken(user);
+    console.log("Stored Hash:", employee.password);
 
-  const profile = await findUserById(user._id);
+    const valid = await comparePassword(
+      password,
+      employee.password
+    );
 
-  return {
-    token,
-    user: profile,
-  };
+    console.log("Password Match:", valid);
+
+    if (!valid) {
+      throw new Error("Invalid credentials");
+    }
+
+    await AuthRepository.updateLastLogin(employee._id);
+
+    const token = generateToken({
+      id: employee._id,
+      company: employee.company?._id,
+      role: employee.role?._id,
+    });
+
+    return {
+      success: true,
+      token,
+      employee,
+    };
+  }
 }
 
-export async function me(id) {
-  return findUserById(id);
-}
+export default new AuthService();

@@ -1,3 +1,4 @@
+import "./database/registerModels.js";
 import app from "./app.js";
 import env from "./config/env.js";
 import connectDatabase from "./database/mongodb.js";
