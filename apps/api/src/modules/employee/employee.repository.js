@@ -1,0 +1,56 @@
+import Employee from "./employee.model.js";
+
+class EmployeeRepository {
+  async create(data) {
+    return Employee.create(data);
+  }
+
+  async findById(id) {
+    return Employee.findById(id)
+      .populate("company")
+      .populate("position")
+      .populate("role");
+  }
+
+  async findByEmail(email) {
+    return Employee.findOne({
+      email: email.toLowerCase(),
+    });
+  }
+
+  async findByEmployeeNo(employeeNo) {
+    return Employee.findOne({ employeeNo });
+  }
+
+  async findAll(companyId) {
+    return Employee.find({
+      company: companyId,
+      active: true,
+    })
+      .populate("position")
+      .populate("role")
+      .sort({
+        createdAt: -1,
+      });
+  }
+
+  async update(id, payload) {
+    return Employee.findByIdAndUpdate(id, payload, {
+      new: true,
+      runValidators: true,
+    });
+  }
+
+  async deactivate(id) {
+    return Employee.findByIdAndUpdate(
+      id,
+      {
+        active: false,
+        employmentStatus: "Inactive",
+      },
+      { new: true }
+    );
+  }
+}
+
+export default new EmployeeRepository();
