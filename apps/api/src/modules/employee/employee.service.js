@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import EmployeeRepository from "./employee.repository.js";
+import { validateCreateEmployee } from "./employee.validator.js";
 
 class EmployeeService {
   async generateEmployeeNo(companyCode = "MEM") {
@@ -11,36 +12,69 @@ class EmployeeService {
   }
 
   async createEmployee(payload) {
-    const existing = await EmployeeRepository.findByEmail(payload.email);
+    validateCreateEmployee(payload);
+
+    const existing = await EmployeeRepository.findByEmail(
+      payload.email
+    );
 
     if (existing) {
       throw new Error("Email already exists");
     }
 
-    payload.employeeNo = await this.generateEmployeeNo();
+    payload.employeeNo =
+      payload.employeeNo ||
+      (await this.generateEmployeeNo());
 
     payload.password = await bcrypt.hash(
       payload.password,
       10
     );
 
-    return EmployeeRepository.create(payload);
+    const employee =
+      await EmployeeRepository.create(payload);
+
+    const result = employee.toObject();
+    delete result.password;
+
+    return result;
   }
 
-  async getEmployees(companyId) {
+  async listEmployees(companyId) {
     return EmployeeRepository.findAll(companyId);
   }
 
   async getEmployee(id) {
-    return EmployeeRepository.findById(id);
+    const employee =
+      await EmployeeRepository.findById(id);
+
+    if (!employee) {
+      throw new Error("Employee not found");
+    }
+
+    return employee;
   }
 
   async updateEmployee(id, payload) {
-    return EmployeeRepository.update(id, payload);
+    const employee =
+      await EmployeeRepository.update(id, payload);
+
+    if (!employee) {
+      throw new Error("Employee not found");
+    }
+
+    return employee;
   }
 
-  async deactivateEmployee(id) {
-    return EmployeeRepository.deactivate(id);
+  async deleteEmployee(id) {
+    const employee =
+      await EmployeeRepository.softDelete(id);
+
+    if (!employee) {
+      throw new Error("Employee not found");
+    }
+
+    return employee;
   }
 }
 

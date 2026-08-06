@@ -3,33 +3,45 @@ import EmployeeService from "./employee.service.js";
 class EmployeeController {
   async create(req, res, next) {
     try {
-      const employee = await EmployeeService.createEmployee(req.body);
+      const employee =
+        await EmployeeService.createEmployee(req.body);
 
-      res.status(201).json(employee);
+      res.status(201).json({
+        success: true,
+        data: employee,
+      });
     } catch (error) {
       next(error);
     }
   }
 
-  async getAll(req, res, next) {
+  async list(req, res, next) {
     try {
-      const employees = await EmployeeService.getEmployees(
-        req.params.companyId
-      );
+      const employees =
+        await EmployeeService.listEmployees(
+          req.user.company
+        );
 
-      res.json(employees);
+      res.json({
+        success: true,
+        data: employees,
+      });
     } catch (error) {
       next(error);
     }
   }
 
-  async getOne(req, res, next) {
+  async show(req, res, next) {
     try {
-      const employee = await EmployeeService.getEmployee(
-        req.params.id
-      );
+      const employee =
+        await EmployeeService.getEmployee(
+          req.params.id
+        );
 
-      res.json(employee);
+      res.json({
+        success: true,
+        data: employee,
+      });
     } catch (error) {
       next(error);
     }
@@ -37,24 +49,32 @@ class EmployeeController {
 
   async update(req, res, next) {
     try {
-      const employee = await EmployeeService.updateEmployee(
-        req.params.id,
-        req.body
-      );
+      const employee =
+        await EmployeeService.updateEmployee(
+          req.params.id,
+          req.body
+        );
 
-      res.json(employee);
+      res.json({
+        success: true,
+        data: employee,
+      });
     } catch (error) {
       next(error);
     }
   }
 
-  async deactivate(req, res, next) {
+  async remove(req, res, next) {
     try {
-      const employee = await EmployeeService.deactivateEmployee(
-        req.params.id
-      );
+      const employee =
+        await EmployeeService.deleteEmployee(
+          req.params.id
+        );
 
-      res.json(employee);
+      res.json({
+        success: true,
+        data: employee,
+      });
     } catch (error) {
       next(error);
     }

@@ -55,6 +55,42 @@ class EmployeeRepository {
       { new: true }
     );
   }
+
+  async create(data) {
+    return Employee.create(data);
+}
+
+async findAll(company) {
+    return Employee.find({ company, deletedAt: null })
+        .populate("position")
+        .populate("role");
+}
+
+async findById(id) {
+    return Employee.findById(id)
+        .populate("company")
+        .populate("position")
+        .populate("role");
+}
+
+async update(id, data) {
+    return Employee.findByIdAndUpdate(
+        id,
+        data,
+        { new: true }
+    );
+}
+
+async softDelete(id) {
+    return Employee.findByIdAndUpdate(
+        id,
+        {
+            deletedAt: new Date(),
+            active: false,
+        },
+        { new: true }
+    );
+}
 }
 
 export default new EmployeeRepository();

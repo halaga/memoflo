@@ -1,19 +1,28 @@
-import Joi from "joi";
+export function validateCreateEmployee(data) {
+  const required = [
+    "company",
+    "firstName",
+    "lastName",
+    "email",
+    "password",
+  ];
 
-export const createEmployeeSchema = Joi.object({
-  company: Joi.string().required(),
+  for (const field of required) {
+    if (!data[field]) {
+      throw new Error(`${field} is required`);
+    }
+  }
 
-  firstName: Joi.string().required(),
+  const emailRegex =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  lastName: Joi.string().required(),
+  if (!emailRegex.test(data.email)) {
+    throw new Error("Invalid email address");
+  }
 
-  email: Joi.string().email().required(),
-
-  password: Joi.string().min(6).required(),
-
-  phone: Joi.string().allow(""),
-
-  role: Joi.string().allow(null, ""),
-
-  position: Joi.string().allow(null, ""),
-});
+  if (data.password.length < 6) {
+    throw new Error(
+      "Password must be at least 6 characters"
+    );
+  }
+}
