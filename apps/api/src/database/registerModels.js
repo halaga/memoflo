@@ -24,3 +24,6 @@ import "../modules/workflow/workflowInstance.model.js";
 
 // Business Service
 import "../modules/business-service/businessService.model.js";
+
+//Memo
+import "../modules/memo/memo.model.js";

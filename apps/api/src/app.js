@@ -6,11 +6,12 @@ import cookieParser from "cookie-parser";
 
 import authRoutes from "./modules/auth/auth.routes.js";
 import employeeRoutes from "./modules/employee/employee.routes.js";
-
+import memoRoutes from "./modules/memo/memo.routes.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
 
 const app = express();
+app.use("/api/memos", memoRoutes);
 
 app.use(helmet());
 app.use(cors());
