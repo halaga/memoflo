@@ -5,7 +5,7 @@ import "../modules/company/company.model.js";
 import "../modules/organization/sbu.model.js";
 import "../modules/organization/department.model.js";
 import "../modules/organization/designation.model.js";
-import "../modules/organization/position.model.js";
+import "../modules/position/position.model.js";
 
 // Auth
 import "../modules/auth/role.model.js";

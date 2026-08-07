@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-
+import positionRoutes from "./modules/position/position.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import employeeRoutes from "./modules/employee/employee.routes.js";
 import memoRoutes from "./modules/memo/memo.routes.js";
@@ -11,7 +11,6 @@ import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
 
 const app = express();
-app.use("/api/memos", memoRoutes);
 
 app.use(helmet());
 app.use(cors());
@@ -32,6 +31,11 @@ app.get("/", (req, res) => {
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/memos", memoRoutes);
+app.use("/api/positions", positionRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/employees", employeeRoutes);
+
 
 // Error Handlers (ALWAYS LAST)
 app.use(notFound);
