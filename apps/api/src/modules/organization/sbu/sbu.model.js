@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-import BaseSchema from "../../database/BaseSchema.js";
+import BaseSchema from "../../../database/BaseSchema.js";
 
-const departmentSchema = new mongoose.Schema(
+const sbuSchema = new mongoose.Schema(
   {
     company: {
       type: mongoose.Schema.Types.ObjectId,
@@ -12,25 +12,11 @@ const departmentSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true,
     },
 
-    code: {
-      type: String,
-      uppercase: true,
-      trim: true,
-    },
+    code: String,
 
-    description: {
-      type: String,
-      default: "",
-    },
-
-    sbu: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "SBU",
-      default: null,
-    },
+    description: String,
 
     head: {
       type: mongoose.Schema.Types.ObjectId,
@@ -46,6 +32,6 @@ const departmentSchema = new mongoose.Schema(
 );
 
 export default mongoose.model(
-  "Department",
-  departmentSchema
+  "SBU",
+  sbuSchema
 );

@@ -2,9 +2,9 @@
 import "../modules/company/company.model.js";
 
 // Organization
-import "../modules/organization/sbu.model.js";
-import "../modules/organization/department.model.js";
-import "../modules/organization/designation.model.js";
+import "../modules/organization/sbu/sbu.model.js";
+import "../modules/organization/department/department.model.js";
+import "../modules/organization/designation/designation.model.js";
 import "../modules/position/position.model.js";
 
 // Auth
@@ -25,5 +25,5 @@ import "../modules/workflow/workflowInstance.model.js";
 // Business Service
 import "../modules/business-service/businessService.model.js";
 
-//Memo
+// Memo
 import "../modules/memo/memo.model.js";

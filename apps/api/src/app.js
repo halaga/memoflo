@@ -7,6 +7,7 @@ import positionRoutes from "./modules/position/position.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import employeeRoutes from "./modules/employee/employee.routes.js";
 import memoRoutes from "./modules/memo/memo.routes.js";
+import designationRoutes from "./modules/organization/designation/designation.routes.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
 
@@ -35,7 +36,7 @@ app.use("/api/memos", memoRoutes);
 app.use("/api/positions", positionRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
-
+app.use("/api/designations", designationRoutes);
 
 // Error Handlers (ALWAYS LAST)
 app.use(notFound);
