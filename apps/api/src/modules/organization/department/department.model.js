@@ -9,6 +9,12 @@ const departmentSchema = new mongoose.Schema(
       required: true,
     },
 
+    sbu: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SBU",
+      required: true,
+    },
+
     name: {
       type: String,
       required: true,
@@ -17,8 +23,9 @@ const departmentSchema = new mongoose.Schema(
 
     code: {
       type: String,
-      uppercase: true,
+      required: true,
       trim: true,
+      uppercase: true,
     },
 
     description: {
@@ -26,15 +33,9 @@ const departmentSchema = new mongoose.Schema(
       default: "",
     },
 
-    sbu: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "SBU",
-      default: null,
-    },
-
     head: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Employee",
       default: null,
     },
 
@@ -45,7 +46,9 @@ const departmentSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model(
-  "Department",
-  departmentSchema
+departmentSchema.index(
+  { company: 1, code: 1 },
+  { unique: true }
 );
+
+export default mongoose.model("Department", departmentSchema);
