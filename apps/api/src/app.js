@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import positionRoutes from "./modules/position/position.routes.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import employeeRoutes from "./modules/employee/employee.routes.js";
+import workflowRoutes from "./modules/workflow/workflow.routes.js";
 import memoRoutes from "./modules/memo/memo.routes.js";
 import departmentRoutes from "./modules/organization/department/department.routes.js";
 import designationRoutes from "./modules/organization/designation/designation.routes.js";
@@ -37,6 +38,7 @@ app.use("/api/memos", memoRoutes);
 app.use("/api/positions", positionRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/designations", designationRoutes);
+app.use("/api/workflow", workflowRoutes);
 
 // Error Handlers (ALWAYS LAST)
 app.use(notFound);
