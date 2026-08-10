@@ -1,4 +1,5 @@
 import Position from "./position.model.js";
+import Employee from "../employee/employee.model.js";
 
 class PositionRepository {
   async create(payload) {
@@ -43,29 +44,53 @@ class PositionRepository {
     );
   }
 
-  async assignEmployee(positionId, employeeId) {
-  return Position.findByIdAndUpdate(
+ async assignEmployee(positionId, employeeId) {
+  const position = await Position.findByIdAndUpdate(
     positionId,
     {
       occupant: employeeId,
     },
     {
       new: true,
-      runValidators: true,
     }
   );
+
+  if (!position) {
+    throw new Error("Position not found");
+  }
+
+  await Employee.findByIdAndUpdate(
+    employeeId,
+    {
+      position: positionId,
+    }
+  );
+
+  return position;
 }
 
 async vacate(positionId) {
-  return Position.findByIdAndUpdate(
-    positionId,
-    {
-      occupant: null,
-    },
-    {
-      new: true,
-    }
-  );
+  const position = await Position.findById(positionId);
+
+  if (!position) {
+    throw new Error("Position not found");
+  }
+
+  const employeeId = position.occupant;
+
+  position.occupant = null;
+  await position.save();
+
+  if (employeeId) {
+    await Employee.findByIdAndUpdate(
+      employeeId,
+      {
+        position: null,
+      }
+    );
+  }
+
+  return position;
 }
 
 }

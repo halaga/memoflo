@@ -91,6 +91,7 @@ async softDelete(id) {
         { new: true }
     );
 }
+
 }
 
 export default new EmployeeRepository();
