@@ -20,4 +20,5 @@ router.post("/:id/vacate", PositionController.vacate);
 
 router.delete("/:id", PositionController.remove);
 
+console.log("POSITION ROUTES LOADED");
 export default router;

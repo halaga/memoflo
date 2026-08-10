@@ -51,6 +51,12 @@ const employeeSchema = new mongoose.Schema(
       default: null,
     },
 
+    reportsTo: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Employee",
+  default: null,
+},
+
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Role",

@@ -78,10 +78,12 @@ class PositionController {
   
 async assign(req, res, next) {
   try {
-    const position = await PositionService.assignEmployee(
-      req.params.id,
-      req.body.employeeId
-    );
+    const position =
+      await PositionService.assignEmployee(
+        req.params.id,
+        req.body.employeeId,
+        req.user.company
+      );
 
     res.json({
       success: true,
@@ -94,9 +96,11 @@ async assign(req, res, next) {
 
 async vacate(req, res, next) {
   try {
-    const position = await PositionService.vacatePosition(
-      req.params.id
-    );
+    const position =
+      await PositionService.vacatePosition(
+        req.params.id,
+        req.user.company
+      );
 
     res.json({
       success: true,

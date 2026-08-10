@@ -26,17 +26,43 @@ class PositionService {
     return PositionRepository.deactivate(id);
   }
 
-  async assignEmployee(positionId, employeeId) {
-    return PositionRepository.update(positionId, {
-      occupant: employeeId,
-    });
+  async assignEmployee(positionId, employeeId, companyId) {
+  const position =
+    await PositionRepository.findById(positionId);
+
+  if (!position) {
+    throw new Error("Position not found");
   }
 
-  async vacatePosition(positionId) {
-    return PositionRepository.update(positionId, {
-      occupant: null,
-    });
+  if (position.company.toString() !== companyId.toString()) {
+    throw new Error("Unauthorized position");
   }
+
+  if (position.occupant) {
+    throw new Error("Position already occupied");
+  }
+
+  return PositionRepository.assignEmployee(
+    positionId,
+    employeeId
+  );
+}
+
+  async vacatePosition(positionId, companyId) {
+  const position =
+    await PositionRepository.findById(positionId);
+
+  if (!position) {
+    throw new Error("Position not found");
+  }
+
+  if (position.company.toString() !== companyId.toString()) {
+    throw new Error("Unauthorized position");
+  }
+
+  return PositionRepository.vacate(positionId);
+}
+
 }
 
 export default new PositionService();

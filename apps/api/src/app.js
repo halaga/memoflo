@@ -35,8 +35,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/memos", memoRoutes);
 app.use("/api/positions", positionRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api/employees", employeeRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/designations", designationRoutes);
 

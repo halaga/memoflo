@@ -42,6 +42,32 @@ class PositionRepository {
       { new: true }
     );
   }
+
+  async assignEmployee(positionId, employeeId) {
+  return Position.findByIdAndUpdate(
+    positionId,
+    {
+      occupant: employeeId,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+}
+
+async vacate(positionId) {
+  return Position.findByIdAndUpdate(
+    positionId,
+    {
+      occupant: null,
+    },
+    {
+      new: true,
+    }
+  );
+}
+
 }
 
 export default new PositionRepository();
