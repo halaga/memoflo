@@ -13,6 +13,7 @@ const workflowStepSchema = new mongoose.Schema(
     order: {
       type: Number,
       required: true,
+      min: 1,
     },
 
     name: {

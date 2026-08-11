@@ -1,15 +1,13 @@
 import WorkflowRepository from "./workflow.repository.js";
-import WorkflowResolver from "./workflow.resolver.js";
+import workflowResolver from "./workflow.resolver.js";
+import {
+  validateCreateWorkflow,
+  validateCreateWorkflowStep,
+} from "./workflow.validator.js";
 
 class WorkflowService {
   async createWorkflow(companyId, payload) {
-    if (!payload.name) {
-      throw new Error("Workflow name is required");
-    }
-
-    if (!payload.code) {
-      throw new Error("Workflow code is required");
-    }
+    validateCreateWorkflow(payload);
 
     return WorkflowRepository.create({
       ...payload,
@@ -23,14 +21,19 @@ class WorkflowService {
 
   async getWorkflow(companyId, id) {
     const workflow =
-      await WorkflowRepository.findById(id, companyId);
+      await WorkflowRepository.findById(
+        id,
+        companyId
+      );
 
     if (!workflow) {
       throw new Error("Workflow not found");
     }
 
     const steps =
-      await WorkflowRepository.findSteps(workflow._id);
+      await WorkflowRepository.findSteps(
+        workflow._id
+      );
 
     return {
       workflow,
@@ -38,22 +41,44 @@ class WorkflowService {
     };
   }
 
-  async updateWorkflow(companyId, id, payload) {
-    return WorkflowRepository.update(
-      id,
-      companyId,
-      payload
-    );
+  async updateWorkflow(
+    companyId,
+    id,
+    payload
+  ) {
+    const workflow =
+      await WorkflowRepository.update(
+        id,
+        companyId,
+        payload
+      );
+
+    if (!workflow) {
+      throw new Error("Workflow not found");
+    }
+
+    return workflow;
   }
 
   async deleteWorkflow(companyId, id) {
-    return WorkflowRepository.deactivate(
-      id,
-      companyId
-    );
+    const workflow =
+      await WorkflowRepository.deactivate(
+        id,
+        companyId
+      );
+
+    if (!workflow) {
+      throw new Error("Workflow not found");
+    }
+
+    return workflow;
   }
 
-  async addStep(companyId, workflowId, payload) {
+  async addStep(
+    companyId,
+    workflowId,
+    payload
+  ) {
     const workflow =
       await WorkflowRepository.findById(
         workflowId,
@@ -64,13 +89,7 @@ class WorkflowService {
       throw new Error("Workflow not found");
     }
 
-    if (!payload.name) {
-      throw new Error("Step name is required");
-    }
-
-    if (!payload.action) {
-      throw new Error("Step action is required");
-    }
+    validateCreateWorkflowStep(payload);
 
     return WorkflowRepository.createStep({
       ...payload,
@@ -78,13 +97,126 @@ class WorkflowService {
     });
   }
 
- async resolvePosition(positionId, companyId) {
-  return WorkflowResolver.resolvePosition(
+  async resolvePosition(
     positionId,
     companyId
-  );
-}
+  ) {
+    return workflowResolver.resolvePosition(
+      positionId,
+      companyId
+    );
+  }
 
+  async startWorkflow(
+    companyId,
+    workflowId,
+    resourceType,
+    resourceId
+  ) {
+    const workflow =
+      await WorkflowRepository.findById(
+        workflowId,
+        companyId
+      );
+
+    if (!workflow) {
+      throw new Error("Workflow not found");
+    }
+
+    const firstStep =
+      await WorkflowRepository.findFirstStep(
+        workflowId
+      );
+
+    if (!firstStep) {
+      throw new Error(
+        "Workflow has no active steps"
+      );
+    }
+
+    if (firstStep.position) {
+      await workflowResolver.resolvePosition(
+        firstStep.position._id,
+        companyId
+      );
+    }
+
+    return WorkflowRepository.createInstance({
+      company: companyId,
+      workflow: workflowId,
+      resourceType,
+      resourceId,
+      currentStep: firstStep._id,
+      status: "running",
+      startedAt: new Date(),
+    });
+  }
+
+  async getWorkflowInstance(
+    companyId,
+    instanceId
+  ) {
+    const instance =
+      await WorkflowRepository.findInstance(
+        instanceId,
+        companyId
+      );
+
+    if (!instance) {
+      throw new Error(
+        "Workflow instance not found"
+      );
+    }
+
+    return instance;
+  }
+
+  async resolveCurrentStep(
+    companyId,
+    instanceId
+  ) {
+    const instance =
+      await WorkflowRepository.findInstance(
+        instanceId,
+        companyId
+      );
+
+    if (!instance) {
+      throw new Error(
+        "Workflow instance not found"
+      );
+    }
+
+    if (!instance.currentStep) {
+      throw new Error(
+        "Workflow instance has no current step"
+      );
+    }
+
+    const step = instance.currentStep;
+
+    if (!step.position) {
+      return {
+        instance,
+        step,
+        employee: null,
+        position: null,
+      };
+    }
+
+    const resolved =
+      await workflowResolver.resolvePosition(
+        step.position._id,
+        companyId
+      );
+
+    return {
+      instance,
+      step,
+      position: resolved.position,
+      employee: resolved.employee,
+    };
+  }
 }
 
 export default new WorkflowService();

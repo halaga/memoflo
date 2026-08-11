@@ -1,5 +1,6 @@
 import Workflow from "./workflow.model.js";
 import WorkflowStep from "./workflowStep.model.js";
+import WorkflowInstance from "./workflowInstance.model.js";
 
 class WorkflowRepository {
   async create(data) {
@@ -28,13 +29,14 @@ class WorkflowRepository {
       {
         _id: id,
         company: companyId,
+        isActive: true,
       },
       data,
       {
         new: true,
         runValidators: true,
       }
-    );
+    ).populate("businessService");
   }
 
   async deactivate(id, companyId) {
@@ -42,6 +44,7 @@ class WorkflowRepository {
       {
         _id: id,
         company: companyId,
+        isActive: true,
       },
       {
         isActive: false,
@@ -64,6 +67,76 @@ class WorkflowRepository {
     })
       .populate("position")
       .sort({ order: 1 });
+  }
+
+  async findStepByOrder(workflowId, order) {
+    return WorkflowStep.findOne({
+      workflow: workflowId,
+      order,
+      isActive: true,
+    }).populate("position");
+  }
+
+  async findFirstStep(workflowId) {
+    return WorkflowStep.findOne({
+      workflow: workflowId,
+      isActive: true,
+    })
+      .sort({ order: 1 })
+      .populate("position");
+  }
+
+  async findNextStep(workflowId, currentOrder) {
+    return WorkflowStep.findOne({
+      workflow: workflowId,
+      order: { $gt: currentOrder },
+      isActive: true,
+    })
+      .sort({ order: 1 })
+      .populate("position");
+  }
+
+  async createInstance(data) {
+    return WorkflowInstance.create(data);
+  }
+
+  async findInstance(id, companyId) {
+    return WorkflowInstance.findOne({
+      _id: id,
+      company: companyId,
+    })
+      .populate("workflow")
+      .populate("currentStep");
+  }
+
+  async findInstanceByResource(
+    companyId,
+    resourceType,
+    resourceId
+  ) {
+    return WorkflowInstance.findOne({
+      company: companyId,
+      resourceType,
+      resourceId,
+    })
+      .populate("workflow")
+      .populate("currentStep");
+  }
+
+  async updateInstance(id, companyId, data) {
+    return WorkflowInstance.findOneAndUpdate(
+      {
+        _id: id,
+        company: companyId,
+      },
+      data,
+      {
+        new: true,
+        runValidators: true,
+      }
+    )
+      .populate("workflow")
+      .populate("currentStep");
   }
 }
 

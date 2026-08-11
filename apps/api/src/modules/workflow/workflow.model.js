@@ -10,6 +10,13 @@ const workflowSchema = new mongoose.Schema(
       index: true,
     },
 
+    businessService: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BusinessService",
+      default: null,
+      index: true,
+    },
+
     name: {
       type: String,
       required: true,
@@ -26,12 +33,13 @@ const workflowSchema = new mongoose.Schema(
     description: {
       type: String,
       default: "",
+      trim: true,
     },
 
-    businessService: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "BusinessService",
-      default: null,
+   version: {
+      type: Number,
+      default: 1,
+      min: 1,
     },
 
     active: {
