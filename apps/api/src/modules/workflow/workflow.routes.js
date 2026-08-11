@@ -6,9 +6,19 @@ const router = express.Router();
 
 router.use(authenticate);
 
-router.get(
-  "/resolve-position/:positionId",
-  WorkflowController.resolvePosition
+router.post("/", WorkflowController.create);
+
+router.get("/", WorkflowController.list);
+
+router.get("/:id", WorkflowController.show);
+
+router.patch("/:id", WorkflowController.update);
+
+router.delete("/:id", WorkflowController.remove);
+
+router.post(
+  "/:id/steps",
+  WorkflowController.addStep
 );
 
 export default router;

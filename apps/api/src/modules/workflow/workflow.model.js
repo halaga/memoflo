@@ -1,40 +1,54 @@
 import mongoose from "mongoose";
 import BaseSchema from "../../database/BaseSchema.js";
-const workflowSchema =
-new mongoose.Schema(
-{
-    company:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Company",
-        required:true
+
+const workflowSchema = new mongoose.Schema(
+  {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+      index: true,
     },
 
-    name:{
-        type:String,
-        required:true
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
 
-    description:String,
-
-    module:{
-        type:String,
-        default:"memo"
+    code: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
     },
 
-    isActive:{
-        type:Boolean,
-        default:true
+    description: {
+      type: String,
+      default: "",
     },
 
-    ...BaseSchema
+    businessService: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BusinessService",
+      default: null,
+    },
 
-},
-{
-timestamps:true
-}
+    active: {
+      type: Boolean,
+      default: true,
+    },
+
+    ...BaseSchema,
+  },
+  {
+    timestamps: true,
+  }
 );
 
-export default mongoose.model(
-"Workflow",
-workflowSchema
+workflowSchema.index(
+  { company: 1, code: 1 },
+  { unique: true }
 );
+
+export default mongoose.model("Workflow", workflowSchema);
