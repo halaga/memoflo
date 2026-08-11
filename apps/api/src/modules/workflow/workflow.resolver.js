@@ -10,7 +10,8 @@ class WorkflowResolver {
     }).populate({
       path: "occupant",
       model: Employee,
-      select: "_id employeeNo firstName lastName email position",
+      select:
+        "_id employeeNo firstName lastName email position",
     });
 
     if (!position) {
@@ -18,7 +19,9 @@ class WorkflowResolver {
     }
 
     if (!position.isWorkflowNode) {
-      throw new Error("Position is not configured as a workflow node");
+      throw new Error(
+        "Position is not configured as a workflow node"
+      );
     }
 
     if (!position.occupant) {
@@ -38,7 +41,10 @@ class WorkflowResolver {
 
     for (const positionId of positionIds) {
       results.push(
-        await this.resolvePosition(positionId, companyId)
+        await this.resolvePosition(
+          positionId,
+          companyId
+        )
       );
     }
 

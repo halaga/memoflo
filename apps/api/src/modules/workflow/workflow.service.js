@@ -1,4 +1,5 @@
 import WorkflowRepository from "./workflow.repository.js";
+import WorkflowResolver from "./workflow.resolver.js";
 
 class WorkflowService {
   async createWorkflow(companyId, payload) {
@@ -76,6 +77,14 @@ class WorkflowService {
       workflow: workflowId,
     });
   }
+
+ async resolvePosition(positionId, companyId) {
+  return WorkflowResolver.resolvePosition(
+    positionId,
+    companyId
+  );
+}
+
 }
 
 export default new WorkflowService();

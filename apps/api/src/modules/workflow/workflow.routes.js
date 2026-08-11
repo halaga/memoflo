@@ -10,6 +10,11 @@ router.post("/", WorkflowController.create);
 
 router.get("/", WorkflowController.list);
 
+router.get(
+  "/resolve-position/:positionId",
+  WorkflowController.resolvePosition
+);
+
 router.get("/:id", WorkflowController.show);
 
 router.patch("/:id", WorkflowController.update);
