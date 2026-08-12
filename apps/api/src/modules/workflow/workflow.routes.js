@@ -7,6 +7,7 @@ const router = express.Router();
 router.use(authenticate);
 
 // Workflow definitions
+
 router.post(
   "/",
   WorkflowController.create
@@ -17,33 +18,15 @@ router.get(
   WorkflowController.list
 );
 
+// Position resolution
+
 router.get(
   "/resolve-position/:positionId",
   WorkflowController.resolvePosition
 );
 
-router.get(
-  "/:id",
-  WorkflowController.show
-);
-
-router.patch(
-  "/:id",
-  WorkflowController.update
-);
-
-router.delete(
-  "/:id",
-  WorkflowController.remove
-);
-
-// Workflow steps
-router.post(
-  "/:id/steps",
-  WorkflowController.addStep
-);
-
 // Workflow execution
+
 router.post(
   "/:id/start",
   WorkflowController.start
@@ -72,6 +55,30 @@ router.post(
 router.post(
   "/instances/:instanceId/cancel",
   WorkflowController.cancel
+);
+
+// Workflow steps
+
+router.post(
+  "/:id/steps",
+  WorkflowController.addStep
+);
+
+// Workflow definition by ID
+
+router.get(
+  "/:id",
+  WorkflowController.show
+);
+
+router.patch(
+  "/:id",
+  WorkflowController.update
+);
+
+router.delete(
+  "/:id",
+  WorkflowController.remove
 );
 
 export default router;

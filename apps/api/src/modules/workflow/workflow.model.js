@@ -36,7 +36,7 @@ const workflowSchema = new mongoose.Schema(
       trim: true,
     },
 
-   version: {
+    version: {
       type: Number,
       default: 1,
       min: 1,
@@ -59,4 +59,7 @@ workflowSchema.index(
   { unique: true }
 );
 
-export default mongoose.model("Workflow", workflowSchema);
+export default mongoose.model(
+  "Workflow",
+  workflowSchema
+);

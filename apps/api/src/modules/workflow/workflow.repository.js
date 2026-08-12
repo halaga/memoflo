@@ -104,9 +104,16 @@ class WorkflowRepository {
     return WorkflowInstance.findOne({
       _id: id,
       company: companyId,
+      isActive: true,
     })
       .populate("workflow")
-      .populate("currentStep");
+      .populate("currentStep")
+      .populate("currentPosition")
+      .populate("currentEmployee")
+      .populate("startedBy")
+      .populate("completedBy")
+      .populate("rejectedBy")
+      .populate("cancelledBy");
   }
 
   async findInstanceByResource(
@@ -118,9 +125,12 @@ class WorkflowRepository {
       company: companyId,
       resourceType,
       resourceId,
+      isActive: true,
     })
       .populate("workflow")
-      .populate("currentStep");
+      .populate("currentStep")
+      .populate("currentPosition")
+      .populate("currentEmployee");
   }
 
   async updateInstance(id, companyId, data) {
@@ -128,6 +138,7 @@ class WorkflowRepository {
       {
         _id: id,
         company: companyId,
+        isActive: true,
       },
       data,
       {
@@ -136,7 +147,9 @@ class WorkflowRepository {
       }
     )
       .populate("workflow")
-      .populate("currentStep");
+      .populate("currentStep")
+      .populate("currentPosition")
+      .populate("currentEmployee");
   }
 }
 

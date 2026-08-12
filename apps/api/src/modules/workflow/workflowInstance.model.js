@@ -21,6 +21,7 @@ const workflowInstanceSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      lowercase: true,
     },
 
     resourceId: {
@@ -32,6 +33,18 @@ const workflowInstanceSchema = new mongoose.Schema(
     currentStep: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "WorkflowStep",
+      default: null,
+    },
+
+    currentPosition: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Position",
+      default: null,
+    },
+
+    currentEmployee: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee",
       default: null,
     },
 
@@ -48,6 +61,12 @@ const workflowInstanceSchema = new mongoose.Schema(
       index: true,
     },
 
+    startedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee",
+      default: null,
+    },
+
     startedAt: {
       type: Date,
       default: null,
@@ -59,6 +78,28 @@ const workflowInstanceSchema = new mongoose.Schema(
     },
 
     completedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee",
+      default: null,
+    },
+
+    rejectedAt: {
+      type: Date,
+      default: null,
+    },
+
+    rejectedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee",
+      default: null,
+    },
+
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
+
+    cancelledBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
       default: null,

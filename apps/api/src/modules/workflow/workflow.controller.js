@@ -105,7 +105,11 @@ class WorkflowController {
     }
   }
 
-  async resolvePosition(req, res, next) {
+  async resolvePosition(
+    req,
+    res,
+    next
+  ) {
     try {
       const result =
         await WorkflowService.resolvePosition(
@@ -134,7 +138,8 @@ class WorkflowController {
           req.user.company,
           req.params.id,
           resourceType,
-          resourceId
+          resourceId,
+          req.user._id
         );
 
       res.status(201).json({
@@ -185,7 +190,8 @@ class WorkflowController {
       const instance =
         await WorkflowEngine.advance(
           req.user.company,
-          req.params.instanceId
+          req.params.instanceId,
+          req.user._id
         );
 
       res.json({
@@ -202,7 +208,8 @@ class WorkflowController {
       const instance =
         await WorkflowEngine.reject(
           req.user.company,
-          req.params.instanceId
+          req.params.instanceId,
+          req.user._id
         );
 
       res.json({
@@ -219,7 +226,8 @@ class WorkflowController {
       const instance =
         await WorkflowEngine.cancel(
           req.user.company,
-          req.params.instanceId
+          req.params.instanceId,
+          req.user._id
         );
 
       res.json({

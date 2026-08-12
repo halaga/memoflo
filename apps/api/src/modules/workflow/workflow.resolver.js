@@ -15,7 +15,9 @@ class WorkflowResolver {
     });
 
     if (!position) {
-      throw new Error("Workflow position not found");
+      throw new Error(
+        "Workflow position not found"
+      );
     }
 
     if (!position.isWorkflowNode) {
