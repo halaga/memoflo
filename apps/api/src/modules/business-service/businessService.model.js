@@ -7,6 +7,7 @@ const businessServiceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Company",
       required: true,
+      index: true,
     },
 
     name: {
@@ -25,11 +26,13 @@ const businessServiceSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
+      trim: true,
     },
 
     description: {
       type: String,
       default: "",
+      trim: true,
     },
 
     ownerDepartment: {
@@ -47,16 +50,19 @@ const businessServiceSchema = new mongoose.Schema(
     icon: {
       type: String,
       default: "",
+      trim: true,
     },
 
     color: {
       type: String,
       default: "#2563EB",
+      trim: true,
     },
 
     requiredAttachments: [
       {
         type: String,
+        trim: true,
       },
     ],
 
@@ -72,10 +78,15 @@ const businessServiceSchema = new mongoose.Schema(
   }
 );
 
-businessServiceSchema.index({
-  company: 1,
-  slug: 1,
-});
+businessServiceSchema.index(
+  {
+    company: 1,
+    slug: 1,
+  },
+  {
+    unique: true,
+  }
+);
 
 export default mongoose.model(
   "BusinessService",

@@ -62,7 +62,7 @@ const memoSchema = new mongoose.Schema(
       required: true,
     },
 
-    requestingSBU: {
+    requestingSbu: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SBU",
       required: true,
