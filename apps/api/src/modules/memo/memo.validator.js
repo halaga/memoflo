@@ -3,7 +3,7 @@ export function validateCreateMemo(data) {
     "title",
     "body",
     "businessService",
-    "requestingSBU",
+    "requestingSbu",
   ];
 
   for (const field of required) {

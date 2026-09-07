@@ -1,8 +1,12 @@
 import BusinessService from "./businessService.model.js";
 import Department from "../organization/department/department.model.js";
 
-export async function seedBusinessServices(company) {
-  console.log("\n🏢 Seeding Business Services...");
+export async function seedBusinessServices(
+  company
+) {
+  console.log(
+    "\n🏢 Seeding Business Services..."
+  );
 
   const departments = await Department.find({
     company: company._id,
@@ -16,6 +20,7 @@ export async function seedBusinessServices(company) {
     // =========================
     // IT
     // =========================
+
     {
       name: "Laptop Request",
       slug: "laptop-request",
@@ -52,6 +57,7 @@ export async function seedBusinessServices(company) {
     // =========================
     // ADMINISTRATION
     // =========================
+
     {
       name: "Fuel Request",
       slug: "fuel-request",
@@ -88,6 +94,7 @@ export async function seedBusinessServices(company) {
     // =========================
     // HR
     // =========================
+
     {
       name: "Recruitment",
       slug: "recruitment",
@@ -113,6 +120,7 @@ export async function seedBusinessServices(company) {
     // =========================
     // GENERAL
     // =========================
+
     {
       name: "General Memo",
       slug: "general-memo",
@@ -144,12 +152,19 @@ export async function seedBusinessServices(company) {
 
     await BusinessService.create({
       company: company._id,
-      ...service,
-      ownerDepartment: service.ownerDepartment._id,
+      name: service.name,
+      slug: service.slug,
+      category: service.category,
+      ownerDepartment:
+        service.ownerDepartment._id,
+      icon: service.icon,
+      color: service.color,
     });
 
     console.log(`✔ ${service.name}`);
   }
 
-  console.log("✅ Business Services Seed Complete");
+  console.log(
+    "✅ Business Services Seed Complete"
+  );
 }

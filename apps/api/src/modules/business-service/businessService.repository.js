@@ -29,7 +29,7 @@ class BusinessServiceRepository {
 
   async findBySlug(slug, companyId) {
     return BusinessService.findOne({
-      slug,
+      slug: slug.toLowerCase(),
       company: companyId,
       isActive: true,
       active: true,
@@ -44,6 +44,7 @@ class BusinessServiceRepository {
         _id: id,
         company: companyId,
         isActive: true,
+        active: true,
       },
       data,
       {
@@ -61,15 +62,37 @@ class BusinessServiceRepository {
         _id: id,
         company: companyId,
         isActive: true,
+        active: true,
       },
       {
         isActive: false,
         active: false,
+        deletedAt: new Date(),
       },
       {
         new: true,
       }
     );
+  }
+
+  async assignWorkflow(id, companyId, workflowId) {
+    return BusinessService.findOneAndUpdate(
+      {
+        _id: id,
+        company: companyId,
+        isActive: true,
+        active: true,
+      },
+      {
+        workflow: workflowId,
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    )
+      .populate("ownerDepartment")
+      .populate("workflow");
   }
 }
 
