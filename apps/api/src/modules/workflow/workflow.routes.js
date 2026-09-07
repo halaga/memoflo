@@ -57,11 +57,31 @@ router.post(
   WorkflowController.cancel
 );
 
+router.post(
+  "/instances/:instanceId/resubmit",
+  WorkflowController.resubmitInstance
+);
+
 // Workflow steps
 
 router.post(
   "/:id/steps",
   WorkflowController.addStep
+);
+
+router.patch(
+  "/:id/steps/:stepId",
+  WorkflowController.updateStep
+);
+
+router.patch(
+  "/:id/steps/:stepId/reactivate",
+  WorkflowController.reactivateStep
+);
+
+router.delete(
+  "/:id/steps/:stepId",
+  WorkflowController.deleteStep
 );
 
 // Workflow definition by ID

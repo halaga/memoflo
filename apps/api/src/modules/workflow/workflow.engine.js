@@ -1,7 +1,13 @@
 import WorkflowRepository from "./workflow.repository.js";
 import WorkflowResolver from "./workflow.resolver.js";
+import Memo from "../memo/memo.model.js";
+import WorkflowInstance from "./workflowInstance.model.js";
+import WorkflowStep from "./workflowStep.model.js";
 
 class WorkflowEngine {
+  /**
+   * Start a workflow for a resource
+   */
   async start(
     companyId,
     workflowId,
@@ -10,15 +16,11 @@ class WorkflowEngine {
     userId = null
   ) {
     if (!resourceType) {
-      throw new Error(
-        "Workflow resource type is required"
-      );
+      throw new Error("Workflow resource type is required");
     }
 
     if (!resourceId) {
-      throw new Error(
-        "Workflow resource ID is required"
-      );
+      throw new Error("Workflow resource ID is required");
     }
 
     const workflow =
@@ -28,9 +30,11 @@ class WorkflowEngine {
       );
 
     if (!workflow) {
-      throw new Error(
-        "Workflow not found"
-      );
+      throw new Error("Workflow not found");
+    }
+
+    if (!workflow.active || !workflow.isActive) {
+      throw new Error("Workflow is inactive");
     }
 
     const existingInstance =
@@ -57,41 +61,95 @@ class WorkflowEngine {
       );
     }
 
-    let currentPosition = null;
-    let currentEmployee = null;
+    const resolved =
+      firstStep.position
+        ? await WorkflowResolver.resolvePosition(
+            firstStep.position._id,
+             oldInstance.company
+          )
+        : null;
 
-    if (firstStep.position) {
-      const resolved =
-        await WorkflowResolver.resolvePosition(
-          firstStep.position._id,
-          companyId
-        );
+    const currentPosition =
+      resolved?.position?._id || null;
 
-      currentPosition =
-        resolved.position._id;
+    const currentEmployee =
+      resolved?.employee?._id || null;
 
-      currentEmployee =
-        resolved.employee._id;
-    }
+    const instance =
+      await WorkflowRepository.createInstance({
+        company: companyId,
+        workflow: workflowId,
+        resourceType,
+        resourceId,
 
-    return WorkflowRepository.createInstance({
-      company: companyId,
-      workflow: workflowId,
+        currentStep: firstStep._id,
+        currentPosition,
+        currentEmployee,
 
+        status: "running",
+
+        startedBy: userId,
+        startedAt: new Date(),
+      });
+
+    await this.syncResource(
+      companyId,
       resourceType,
       resourceId,
+      {
+        workflow: workflowId,
+        workflowInstance: instance._id,
 
-      currentStep: firstStep._id,
-      currentPosition,
-      currentEmployee,
+        currentStep: firstStep.order,
+        currentApprover: currentEmployee,
 
-      status: "running",
+        status: "Pending",
+      }
+    );
 
-      startedBy: userId,
-      startedAt: new Date(),
-    });
+    return WorkflowRepository.findInstance(
+      instance._id,
+      companyId
+    );
   }
 
+  /**
+   * Make sure the current user is the employee
+   * assigned to the current workflow step.
+   */
+  async authorizeCurrentEmployee(
+    instance,
+    userId
+  ) {
+    if (!userId) {
+      throw new Error(
+        "Authenticated user is required"
+      );
+    }
+
+    if (!instance.currentEmployee) {
+      throw new Error(
+        "Current workflow step has no assigned employee"
+      );
+    }
+
+    const currentEmployeeId =
+      instance.currentEmployee._id ||
+      instance.currentEmployee;
+
+    if (
+      String(currentEmployeeId) !==
+      String(userId)
+    ) {
+      throw new Error(
+        "You are not authorized to perform this workflow action"
+      );
+    }
+  }
+
+  /**
+   * Advance workflow
+   */
   async advance(
     companyId,
     instanceId,
@@ -109,9 +167,7 @@ class WorkflowEngine {
       );
     }
 
-    if (
-      instance.status !== "running"
-    ) {
+    if (instance.status !== "running") {
       throw new Error(
         `Workflow cannot advance from status "${instance.status}"`
       );
@@ -123,6 +179,12 @@ class WorkflowEngine {
       );
     }
 
+    // SECURITY CHECK
+    await this.authorizeCurrentEmployee(
+      instance,
+      userId
+    );
+
     const currentOrder =
       instance.currentStep.order;
 
@@ -132,50 +194,117 @@ class WorkflowEngine {
         currentOrder
       );
 
+    /**
+     * ================================
+     * WORKFLOW COMPLETE
+     * ================================
+     */
     if (!nextStep) {
-      return WorkflowRepository.updateInstance(
+      const completedInstance =
+        await WorkflowRepository.updateInstance(
+          instanceId,
+          companyId,
+          {
+            status: "completed",
+
+            currentStep: null,
+            currentPosition: null,
+            currentEmployee: null,
+
+            completedAt: new Date(),
+            completedBy: userId,
+          }
+        );
+
+      await this.syncResource(
+        companyId,
+        instance.resourceType,
+        instance.resourceId,
+        {
+          status: instance.currentEmployee.action === "pay"
+          ? "Completed"
+          : "Approved",
+
+          currentStep: null,
+          currentApprover: null,
+
+          workflowInstance:
+            instance._id,
+        }
+      );
+
+      return completedInstance;
+    }
+
+    /**
+     * ================================
+     * RESOLVE NEXT POSITION
+     * ================================
+     */
+
+    const resolved =
+      nextStep.position
+        ? await WorkflowResolver.resolvePosition(
+            nextStep.position._id,
+            companyId
+          )
+        : null;
+
+    const currentPosition =
+      resolved?.position?._id || null;
+
+    const currentEmployee =
+      resolved?.employee?._id || null;
+
+    /**
+     * ================================
+     * UPDATE INSTANCE
+     * ================================
+     */
+
+    const updatedInstance =
+      await WorkflowRepository.updateInstance(
         instanceId,
         companyId,
         {
-          status: "completed",
-          currentStep: null,
-          currentPosition: null,
-          currentEmployee: null,
-          completedAt: new Date(),
-          completedBy: userId,
+          currentStep: nextStep._id,
+
+          currentPosition,
+          currentEmployee,
+
+          status: "running",
         }
       );
-    }
 
-    let currentPosition = null;
-    let currentEmployee = null;
+    /**
+     * ================================
+     * SYNC RESOURCE
+     * ================================
+     */
 
-    if (nextStep.position) {
-      const resolved =
-        await WorkflowResolver.resolvePosition(
-          nextStep.position._id,
-          companyId
-        );
-
-      currentPosition =
-        resolved.position._id;
-
-      currentEmployee =
-        resolved.employee._id;
-    }
-
-    return WorkflowRepository.updateInstance(
-      instanceId,
+    await this.syncResource(
       companyId,
+      instance.resourceType,
+      instance.resourceId,
       {
-        currentStep: nextStep._id,
-        currentPosition,
-        currentEmployee,
-        status: "running",
+        status: "Pending",
+
+        currentStep: nextStep.order,
+
+        currentApprover:
+          currentEmployee,
+
+        workflowInstance:
+          instance._id,
       }
     );
+
+    return updatedInstance;
   }
 
+  /**
+   * Reject workflow
+   */
   async reject(
     companyId,
     instanceId,
@@ -193,25 +322,55 @@ class WorkflowEngine {
       );
     }
 
-    if (
-      instance.status !== "running"
-    ) {
+    if (instance.status !== "running") {
       throw new Error(
         `Workflow cannot be rejected from status "${instance.status}"`
       );
     }
 
-    return WorkflowRepository.updateInstance(
-      instanceId,
+    // SECURITY CHECK
+    await this.authorizeCurrentEmployee(
+      instance,
+      userId
+    );
+
+    const updatedInstance =
+      await WorkflowRepository.updateInstance(
+        instanceId,
+        companyId,
+        {
+          status: "rejected",
+
+          rejectedAt: new Date(),
+          rejectedBy: userId,
+
+          currentStep: null,
+          currentPosition: null,
+          currentEmployee: null,
+        }
+      );
+
+    await this.syncResource(
       companyId,
+      instance.resourceType,
+      instance.resourceId,
       {
-        status: "rejected",
-        rejectedAt: new Date(),
-        rejectedBy: userId,
+        status: "Rejected",
+
+        currentStep: null,
+        currentApprover: null,
+
+        workflowInstance:
+          instance._id,
       }
     );
+
+    return updatedInstance;
   }
 
+  /**
+   * Cancel workflow
+   */
   async cancel(
     companyId,
     instanceId,
@@ -229,22 +388,160 @@ class WorkflowEngine {
       );
     }
 
-    if (
-      instance.status !== "running"
-    ) {
+    if (instance.status !== "running") {
       throw new Error(
         `Workflow cannot be cancelled from status "${instance.status}"`
       );
     }
 
-    return WorkflowRepository.updateInstance(
-      instanceId,
+    // SECURITY CHECK
+    await this.authorizeCurrentEmployee(
+      instance,
+      userId
+    );
+
+    const updatedInstance =
+      await WorkflowRepository.updateInstance(
+        instanceId,
+        companyId,
+        {
+          status: "cancelled",
+
+          cancelledAt: new Date(),
+          cancelledBy: userId,
+
+          currentStep: null,
+          currentPosition: null,
+          currentEmployee: null,
+        }
+      );
+
+    await this.syncResource(
       companyId,
+      instance.resourceType,
+      instance.resourceId,
       {
-        status: "cancelled",
-        cancelledAt: new Date(),
-        cancelledBy: userId,
+        status: "Cancelled",
+
+        currentStep: null,
+        currentApprover: null,
+
+        workflowInstance:
+          instance._id,
       }
+    );
+
+    return updatedInstance;
+  }
+
+    async resubmit({
+    instanceId,
+    employeeId,
+  }) {
+    const oldInstance =
+      await WorkflowInstance.findById(
+        instanceId
+      );
+
+    if (!oldInstance) {
+      throw new Error(
+        "Workflow instance not found"
+      );
+    }
+
+    if (oldInstance.status !== "rejected") {
+      throw new Error(
+        "Only rejected workflow instances can be resubmitted"
+      );
+    }
+
+    if (
+      oldInstance.resourceType !== "memo"
+    ) {
+      throw new Error(
+        "Only memo workflows can currently be resubmitted"
+      );
+    }
+
+    const firstStep =
+      await WorkflowStep.findOne({
+        workflow: oldInstance.workflow,
+        order: 1,
+        isActive: true,
+      }).populate({
+        path: "position",
+      });
+
+    if (!firstStep) {
+      throw new Error(
+        "Workflow has no active starting step"
+      );
+    }
+
+    let currentPosition = null;
+    let currentEmployee = null;
+
+    if (firstStep.position) {
+      const resolved =
+        await WorkflowResolver.resolvePosition(
+          firstStep.position._id,
+          oldInstance.company
+        );
+
+      currentPosition = resolved.position;
+      currentEmployee = resolved.employee;
+    }
+
+    const newInstance =
+      await WorkflowInstance.create({
+        company: oldInstance.company,
+        workflow: oldInstance.workflow,
+        resourceType: oldInstance.resourceType,
+        resourceId: oldInstance.resourceId,
+
+        currentStep: firstStep._id,
+
+        currentPosition:
+          currentPosition?._id || null,
+
+        currentEmployee:
+          currentEmployee?._id || null,
+
+        status: "running",
+
+        startedBy: employeeId,
+        startedAt: new Date(),
+      });
+
+    return newInstance;
+  }
+
+  /**
+   * Sync workflow state to resource
+   */
+  async syncResource(
+    companyId,
+    resourceType,
+    resourceId,
+    data
+  ) {
+    if (resourceType === "memo") {
+      return Memo.findOneAndUpdate(
+        {
+          _id: resourceId,
+          company: companyId,
+          isActive: true,
+        },
+        data,
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+    }
+
+    throw new Error(
+      `Unsupported workflow resource type: ${resourceType}`
     );
   }
 }

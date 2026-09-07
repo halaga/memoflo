@@ -105,11 +105,45 @@ class WorkflowController {
     }
   }
 
-  async resolvePosition(
-    req,
-    res,
-    next
-  ) {
+  async updateStep(req, res, next) {
+    try {
+      const step =
+        await WorkflowService.updateStep(
+          req.user.company,
+          req.params.id,
+          req.params.stepId,
+          req.body
+        );
+
+      res.json({
+        success: true,
+        data: step,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async reactivateStep(req, res, next) {
+  try {
+    const step =
+      await WorkflowService.reactivateStep(
+        req.user.company,
+        req.params.id,
+        req.params.stepId,
+        req.body
+      );
+
+    res.json({
+      success: true,
+      data: step,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+  async resolvePosition(req, res, next) {
     try {
       const result =
         await WorkflowService.resolvePosition(
@@ -139,7 +173,7 @@ class WorkflowController {
           req.params.id,
           resourceType,
           resourceId,
-          req.user._id
+          req.user.id
         );
 
       res.status(201).json({
@@ -191,7 +225,7 @@ class WorkflowController {
         await WorkflowEngine.advance(
           req.user.company,
           req.params.instanceId,
-          req.user._id
+          req.user.id
         );
 
       res.json({
@@ -209,7 +243,7 @@ class WorkflowController {
         await WorkflowEngine.reject(
           req.user.company,
           req.params.instanceId,
-          req.user._id
+          req.user.id
         );
 
       res.json({
@@ -227,7 +261,7 @@ class WorkflowController {
         await WorkflowEngine.cancel(
           req.user.company,
           req.params.instanceId,
-          req.user._id
+          req.user.id
         );
 
       res.json({
@@ -238,6 +272,43 @@ class WorkflowController {
       next(err);
     }
   }
+
+  async deleteStep(req, res, next) {
+  try {
+    const step =
+      await WorkflowService.deleteStep(
+        req.user.company,
+        req.params.id,
+        req.params.stepId
+      );
+
+    res.json({
+      success: true,
+      data: step,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async resubmitInstance(req, res, next) {
+  try {
+    const result =
+      await WorkflowService.resubmitInstance(
+        req.user.company,
+        req.params.instanceId,
+        req.user.id
+      );
+
+       res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+ }
+
 }
 
 export default new WorkflowController();

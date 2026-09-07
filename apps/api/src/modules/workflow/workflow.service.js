@@ -1,5 +1,7 @@
 import WorkflowRepository from "./workflow.repository.js";
 import WorkflowResolver from "./workflow.resolver.js";
+import WorkflowEngine from "./workflow.engine.js";
+
 import {
   validateCreateWorkflow,
   validateCreateWorkflowStep,
@@ -194,6 +196,118 @@ class WorkflowService {
       employee: resolved.employee,
     };
   }
+
+  async updateStep(
+  companyId,
+  workflowId,
+  stepId,
+  payload
+) {
+  const workflow =
+    await WorkflowRepository.findById(
+      workflowId,
+      companyId
+    );
+
+  if (!workflow) {
+    throw new Error(
+      "Workflow not found"
+    );
+  }
+
+  return WorkflowRepository.updateStep(
+    workflowId,
+    stepId,
+    payload
+  );
+}
+
+async reactivateStep(
+  companyId,
+  workflowId,
+  stepId,
+  payload
+) {
+  const workflow =
+    await WorkflowRepository.findById(
+      workflowId,
+      companyId
+    );
+
+  if (!workflow) {
+    throw new Error(
+      "Workflow not found"
+    );
+  }
+
+  return WorkflowRepository.reactivateStep(
+    workflowId,
+    stepId,
+    payload
+  );
+}
+
+async deleteStep(
+  companyId,
+  workflowId,
+  stepId
+) {
+  const workflow =
+    await WorkflowRepository.findById(
+      workflowId,
+      companyId
+    );
+
+  if (!workflow) {
+    throw new Error(
+      "Workflow not found"
+    );
+  }
+
+  const step =
+    await WorkflowRepository.deactivateStep(
+      workflowId,
+      stepId
+    );
+
+  if (!step) {
+    throw new Error(
+      "Workflow step not found"
+    );
+  }
+
+  return step;
+}
+
+async resubmitInstance(
+  companyId,
+  instanceId,
+  employeeId
+) {
+  const instance =
+    await WorkflowRepository.findInstance(
+      instanceId,
+      companyId
+    );
+
+  if (!instance) {
+    throw new Error(
+      "Workflow instance not found"
+    );
+  }
+
+  if (instance.status !== "rejected") {
+    throw new Error(
+      "Only rejected workflow instances can be resubmitted"
+    );
+  }
+
+  return WorkflowEngine.resubmit({
+    instanceId,
+    employeeId,
+  });
+}
+
 }
 
 export default new WorkflowService();

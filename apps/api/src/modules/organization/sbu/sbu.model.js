@@ -12,15 +12,23 @@ const sbuSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
+      trim: true,
     },
 
-    code: String,
+    code: {
+      type: String,
+      trim: true,
+      uppercase: true,
+    },
 
-    description: String,
+    description: {
+      type: String,
+      default: "",
+    },
 
     head: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Employee",
       default: null,
     },
 
@@ -31,7 +39,15 @@ const sbuSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model(
-  "SBU",
-  sbuSchema
+sbuSchema.index(
+  {
+    company: 1,
+    code: 1,
+  },
+  {
+    unique: true,
+    sparse: true,
+  }
 );
+
+export default mongoose.model("SBU", sbuSchema);
