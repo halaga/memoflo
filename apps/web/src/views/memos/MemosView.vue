@@ -2,13 +2,14 @@
 import { computed, onMounted, ref } from "vue";
 import { RouterLink } from "vue-router";
 import { api } from "../../services/api";
+import MemoTable from "../../components/memos/MemoTable.vue";
 
 const memos = ref([]);
 const loading = ref(true);
 const error = ref("");
 
 const search = ref("");
-const statusFilter = ref("");
+const status = ref("");
 
 onMounted(loadMemos);
 
@@ -21,9 +22,12 @@ async function loadMemos() {
 
     memos.value = Array.isArray(result)
       ? result
-      : result?.memos || result?.data || [];
+      : result?.memos ||
+        result?.data ||
+        [];
   } catch (err) {
-    error.value = err.message || "Failed to load memos.";
+    error.value =
+      err.message || "Failed to load memos.";
   } finally {
     loading.value = false;
   }
@@ -39,15 +43,12 @@ const filteredMemos = computed(() => {
       memo.referenceNo?.toLowerCase().includes(query);
 
     const matchesStatus =
-      !statusFilter.value || memo.status === statusFilter.value;
+      !status.value ||
+      memo.status === status.value;
 
     return matchesSearch && matchesStatus;
   });
 });
-
-function serviceName(memo) {
-  return memo.businessService?.name || "General Memo";
-}
 </script>
 
 <template>
@@ -55,10 +56,15 @@ function serviceName(memo) {
     <div class="page-header">
       <div>
         <h1>My Memos</h1>
-        <p>View and manage your submitted memos.</p>
+        <p>
+          Create, track and manage your business requests.
+        </p>
       </div>
 
-      <RouterLink to="/memos/create" class="btn btn-primary">
+      <RouterLink
+        to="/memos/create"
+        class="btn btn-primary"
+      >
         + Create Memo
       </RouterLink>
     </div>
@@ -68,10 +74,13 @@ function serviceName(memo) {
         v-model="search"
         class="input"
         type="search"
-        placeholder="Search memos..."
+        placeholder="Search by title or reference..."
       />
 
-      <select v-model="statusFilter" class="input">
+      <select
+        v-model="status"
+        class="input"
+      >
         <option value="">All statuses</option>
         <option>Draft</option>
         <option>Pending</option>
@@ -82,38 +91,30 @@ function serviceName(memo) {
       </select>
     </div>
 
-    <div v-if="error" class="alert alert-error">
+    <div
+      v-if="error"
+      class="alert alert-error"
+    >
       {{ error }}
     </div>
 
-    <div v-if="loading" class="empty-state">
+    <div
+      v-if="loading"
+      class="empty-state"
+    >
       Loading memos...
     </div>
 
-    <div v-else-if="filteredMemos.length === 0" class="empty-state">
+    <div
+      v-else-if="filteredMemos.length === 0"
+      class="empty-state"
+    >
       No memos found.
     </div>
 
-    <div v-else class="memo-grid">
-      <RouterLink
-        v-for="memo in filteredMemos"
-        :key="memo._id"
-        :to="`/memos/${memo._id}`"
-        class="card memo-card"
-      >
-        <div class="memo-card-top">
-          <span>{{ memo.referenceNo || "No reference" }}</span>
-          <span class="status-badge">{{ memo.status }}</span>
-        </div>
-
-        <h2>{{ memo.title }}</h2>
-
-        <p>{{ serviceName(memo) }}</p>
-
-        <small>
-          {{ memo.priority || "Normal" }}
-        </small>
-      </RouterLink>
-    </div>
+    <MemoTable
+      v-else
+      :memos="filteredMemos"
+    />
   </div>
 </template>
