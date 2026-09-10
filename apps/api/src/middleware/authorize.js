@@ -1,37 +1,79 @@
-import jwt from "jsonwebtoken";
+import PermissionService from "../modules/auth/permission.service.js";
 
-export default function authorize(
-  req,
-  res,
-  next
-) {
-  try {
-    const header =
-      req.headers.authorization;
-
-    if (!header)
-      return res
-        .status(401)
-        .json({
-          message: "Unauthorized",
+export function authorize(...requiredPermissions) {
+  return async (req, res, next) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
         });
+      }
 
-    const token = header.replace(
-      "Bearer ",
-      ""
-    );
+      if (!requiredPermissions.length) {
+        return next();
+      }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+      const permissions =
+        await PermissionService.getEmployeePermissions(
+          req.user.id
+        );
 
-    req.user = decoded;
+      const allowed = requiredPermissions.every(
+        (permission) => permissions.includes(permission)
+      );
 
-    next();
-  } catch {
-    return res.status(401).json({
-      message: "Invalid Token",
-    });
-  }
+      if (!allowed) {
+        return res.status(403).json({
+          success: false,
+          message: "You do not have permission to perform this action",
+          requiredPermissions,
+        });
+      }
+
+      req.userPermissions = permissions;
+
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
 }
+
+export function authorizeAny(...requiredPermissions) {
+  return async (req, res, next) => {
+    try {
+      if (!req.user?.id) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      const permissions =
+        await PermissionService.getEmployeePermissions(
+          req.user.id
+        );
+
+      const allowed = requiredPermissions.some(
+        (permission) => permissions.includes(permission)
+      );
+
+      if (!allowed) {
+        return res.status(403).json({
+          success: false,
+          message: "You do not have permission to perform this action",
+          requiredPermissions,
+        });
+      }
+
+      req.userPermissions = permissions;
+
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+}
+
+export default authorize;

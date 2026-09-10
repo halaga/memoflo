@@ -10,9 +10,11 @@ import workflowRoutes from "./modules/workflow/workflow.routes.js";
 import memoRoutes from "./modules/memo/memo.routes.js";
 import departmentRoutes from "./modules/organization/department/department.routes.js";
 import designationRoutes from "./modules/organization/designation/designation.routes.js";
+import roleRoutes from "./modules/auth/role.routes.js";
 import businessServiceRoutes from "./modules/business-service/businessService.routes.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
+
 
 const app = express();
 
@@ -41,6 +43,7 @@ app.use("/api/departments", departmentRoutes);
 app.use("/api/designations", designationRoutes);
 app.use("/api/workflow", workflowRoutes);
 app.use("/api/business-services", businessServiceRoutes);
+app.use("/api/roles", roleRoutes);
 
 // Error Handlers (ALWAYS LAST)
 app.use(notFound);

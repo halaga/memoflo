@@ -14,22 +14,25 @@ class EmployeeRepository {
 
   async findByEmail(email) {
     return Employee.findOne({
-    email: email.toLowerCase(),
-  })
- .select("+password")
- .populate("company")
- .populate("role")
- .populate("position");
+      email: email.toLowerCase(),
+    })
+      .select("+password")
+      .populate("company")
+      .populate("role")
+      .populate("position");
   }
 
   async findByEmployeeNo(employeeNo) {
-    return Employee.findOne({ employeeNo });
+    return Employee.findOne({
+      employeeNo,
+    });
   }
 
   async findAll(companyId) {
     return Employee.find({
       company: companyId,
       active: true,
+      deletedAt: null,
     })
       .populate("position")
       .populate("role")
@@ -38,60 +41,33 @@ class EmployeeRepository {
       });
   }
 
-  async update(id, payload) {
-    return Employee.findByIdAndUpdate(id, payload, {
-      new: true,
-      runValidators: true,
-    });
+  async update(id, data) {
+    return Employee.findByIdAndUpdate(
+      id,
+      data,
+      {
+        new: true,
+        runValidators: true,
+      }
+    )
+      .populate("company")
+      .populate("position")
+      .populate("role");
   }
 
-  async deactivate(id) {
+  async softDelete(id) {
     return Employee.findByIdAndUpdate(
       id,
       {
+        deletedAt: new Date(),
         active: false,
         employmentStatus: "Inactive",
       },
-      { new: true }
+      {
+        new: true,
+      }
     );
   }
-
-  async create(data) {
-    return Employee.create(data);
-}
-
-async findAll(company) {
-    return Employee.find({ company, deletedAt: null })
-        .populate("position")
-        .populate("role");
-}
-
-async findById(id) {
-    return Employee.findById(id)
-        .populate("company")
-        .populate("position")
-        .populate("role");
-}
-
-async update(id, data) {
-    return Employee.findByIdAndUpdate(
-        id,
-        data,
-        { new: true }
-    );
-}
-
-async softDelete(id) {
-    return Employee.findByIdAndUpdate(
-        id,
-        {
-            deletedAt: new Date(),
-            active: false,
-        },
-        { new: true }
-    );
-}
-
 }
 
 export default new EmployeeRepository();
