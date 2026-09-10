@@ -22,27 +22,40 @@ async function request(path, options = {}) {
     headers,
   });
 
-  let result = {};
+  let result;
 
   try {
     result = await response.json();
   } catch {
-    // Empty response
+    result = {};
   }
 
   if (!response.ok) {
     throw new Error(
       result?.message ||
-      result?.error ||
-      `Request failed (${response.status})`
+        result?.error ||
+        `Request failed (${response.status})`
     );
   }
 
   return result;
 }
 
+function unwrap(result, keys = []) {
+  if (Array.isArray(result)) return result;
+
+  for (const key of keys) {
+    if (Array.isArray(result?.[key])) {
+      return result[key];
+    }
+  }
+
+  if (Array.isArray(result?.data)) return result.data;
+
+  return [];
+}
+
 export const api = {
-  // AUTH
   login(email, password) {
     return request("/auth/login", {
       method: "POST",
@@ -54,7 +67,26 @@ export const api = {
     return request("/auth/me");
   },
 
-  // MEMOS
+  listEmployees() {
+    return request("/employees");
+  },
+
+  listPositions() {
+    return request("/positions");
+  },
+
+  listDepartments() {
+    return request("/departments");
+  },
+
+  listDesignations() {
+    return request("/designations");
+  },
+
+  listBusinessServices() {
+    return request("/business-services");
+  },
+
   listMemos() {
     return request("/memos");
   },
@@ -77,7 +109,6 @@ export const api = {
     });
   },
 
-  // WORKFLOWS
   listWorkflows() {
     return request("/workflow");
   },
@@ -86,8 +117,53 @@ export const api = {
     return request(`/workflow/${id}`);
   },
 
-  getWorkflowInstance(instanceId) {
-    return request(`/workflow/instances/${instanceId}`);
+  updateWorkflow(id, payload) {
+    return request(`/workflow/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  deleteWorkflow(id) {
+    return request(`/workflow/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  addWorkflowStep(workflowId, payload) {
+    return request(`/workflow/${workflowId}/steps`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  updateWorkflowStep(workflowId, stepId, payload) {
+    return request(`/workflow/${workflowId}/steps/${stepId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  reactivateWorkflowStep(workflowId, stepId) {
+    return request(
+      `/workflow/${workflowId}/steps/${stepId}/reactivate`,
+      {
+        method: "PATCH",
+      }
+    );
+  },
+
+  deleteWorkflowStep(workflowId, stepId) {
+    return request(
+      `/workflow/${workflowId}/steps/${stepId}`,
+      {
+        method: "DELETE",
+      }
+    );
+  },
+
+  resolvePosition(positionId) {
+    return request(`/workflow/resolve-position/${positionId}`);
   },
 
   startWorkflow(workflowId, resourceType, resourceId) {
@@ -100,57 +176,56 @@ export const api = {
     });
   },
 
+  getWorkflowInstance(instanceId) {
+    return request(`/workflow/instances/${instanceId}`);
+  },
+
+  getCurrentWorkflowStep(instanceId) {
+    return request(
+      `/workflow/instances/${instanceId}/current-step`
+    );
+  },
+
   advanceWorkflow(instanceId) {
-    return request(`/workflow/instances/${instanceId}/advance`, {
-      method: "POST",
-    });
+    return request(
+      `/workflow/instances/${instanceId}/advance`,
+      {
+        method: "POST",
+      }
+    );
   },
 
   rejectWorkflow(instanceId) {
-    return request(`/workflow/instances/${instanceId}/reject`, {
-      method: "POST",
-    });
+    return request(
+      `/workflow/instances/${instanceId}/reject`,
+      {
+        method: "POST",
+      }
+    );
+  },
+
+  cancelWorkflow(instanceId) {
+    return request(
+      `/workflow/instances/${instanceId}/cancel`,
+      {
+        method: "POST",
+      }
+    );
   },
 
   resubmitWorkflow(instanceId) {
-    return request(`/workflow/instances/${instanceId}/resubmit`, {
-      method: "POST",
-    });
-  },
-
-  // ADMIN / ORGANIZATION
-  listEmployees() {
-    return request("/employees");
-  },
-
-  listPositions() {
-    return request("/positions");
-  },
-
-  listDepartments() {
-    return request("/departments");
-  },
-
-  listDesignations() {
-    return request("/designations");
-  },
-
-  listBusinessServices() {
-    return request("/business-services");
-  },
-
-  // COMMENTS
-  listMemoComments(memoId) {
-    return request(`/memo-comments/${memoId}`);
-  },
-
-  addMemoComment(memoId, body) {
-    return request(`/memo-comments/${memoId}`, {
-      method: "POST",
-      body: JSON.stringify({ body }),
-    });
+    return request(
+      `/workflow/instances/${instanceId}/resubmit`,
+      {
+        method: "POST",
+      }
+    );
   },
 };
+
+export function normalizeList(result, keys = []) {
+  return unwrap(result, keys);
+}
 
 export function saveSession(result) {
   if (result?.token) {
