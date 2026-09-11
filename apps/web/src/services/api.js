@@ -67,7 +67,58 @@ export const api = {
     return request("/auth/me");
   },
 
-  listEmployees() {
+  listRoles() {
+  return request("/roles");
+ },
+
+ getRole(id) {
+  return request(`/roles/${id}`);
+ },
+
+ listPermissions() {
+  return request("/roles/permissions");
+ },
+
+ createRole(data) {
+  return request("/roles", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+ },
+
+ updateRole(id, data) {
+  return request(`/roles/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+ },
+
+ deleteRole(id) {
+  return request(`/roles/${id}`, {
+    method: "DELETE",
+  });
+ },
+
+ assignEmployeeRole(roleId, employeeId) {
+  return request(
+    `/roles/${roleId}/assign/${employeeId}`,
+    {
+      method: "PATCH",
+    }
+  );
+ },
+
+
+  assignEmployeeRole(roleId, employeeId) {
+  return request(
+    `/roles/${roleId}/assign/${employeeId}`,
+    {
+      method: "PATCH",
+    }
+  );
+ },
+
+ listEmployees() {
     return request("/employees");
   },
 
@@ -224,8 +275,23 @@ export const api = {
 };
 
 export function normalizeList(result, keys = []) {
-  return unwrap(result, keys);
+  if (Array.isArray(result)) {
+    return result;
+  }
+
+  for (const key of keys) {
+    if (Array.isArray(result?.[key])) {
+      return result[key];
+    }
+  }
+
+  if (Array.isArray(result?.data)) {
+    return result.data;
+  }
+
+  return [];
 }
+
 
 export function saveSession(result) {
   if (result?.token) {

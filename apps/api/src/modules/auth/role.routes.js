@@ -51,6 +51,30 @@ router.get(
   }
 );
 
+router.patch(
+  "/:id/assign/:employeeId",
+  authorize("roles.update"),
+  async (req, res, next) => {
+    try {
+      const employee =
+        await RoleService.assignRole(
+          req.params.id,
+          req.params.employeeId,
+          req.user.company
+        );
+
+      res.json({
+        success: true,
+        data: employee,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+
+
 /**
  * GET /api/roles/:id
  */
@@ -143,6 +167,9 @@ router.delete(
       next(error);
     }
   }
+  
 );
+
+
 
 export default router;

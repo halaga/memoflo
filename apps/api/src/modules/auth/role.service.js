@@ -1,3 +1,4 @@
+import Employee from "../employee/employee.model.js"
 import Role from "./role.model.js";
 import Permission from "./permission.model.js";
 
@@ -177,6 +178,39 @@ class RoleService {
 
     return [...new Set(permissionNames)];
   }
+
+  async assignRole(roleId, employeeId, companyId) {
+  const role = await Role.findOne({
+    _id: roleId,
+    company: companyId,
+  });
+
+  if (!role) {
+    throw new Error("Role not found");
+  }
+
+  const employee = await Employee.findOne({
+    _id: employeeId,
+    company: companyId,
+    active: true,
+  });
+
+  if (!employee) {
+    throw new Error(
+      "Employee not found in this company"
+    );
+  }
+
+  employee.role = role._id;
+
+  await employee.save();
+
+  return Employee.findById(employee._id)
+    .populate("company")
+    .populate("position")
+    .populate("role");
+}
+
 }
 
 export default new RoleService();

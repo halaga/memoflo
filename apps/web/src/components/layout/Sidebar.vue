@@ -38,6 +38,12 @@ const navItems = [
     route: "/completed",
     icon: "✓",
   },
+
+  {
+    label: "Roles & Permissions",
+    route: "/roles",
+    icon: "⚙",
+  }
 ];
 
 const workspaceItems = [

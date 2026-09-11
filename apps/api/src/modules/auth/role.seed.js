@@ -1,3 +1,4 @@
+import "../../config/env.js";
 import mongoose from "mongoose";
 import Role from "./role.model.js";
 import Permission from "./permission.model.js";
@@ -193,15 +194,9 @@ const systemRoles = [
 ];
 
 async function seedRoles() {
-  const mongoUri = process.env.MONGO_URI;
+  
 
-  if (!mongoUri) {
-    throw new Error(
-      "MONGO_URI is not configured"
-    );
-  }
-
-  await mongoose.connect(mongoUri);
+  await mongoose.connect(process.env.MONGO_URI);
 
   console.log("MongoDB connected");
 
