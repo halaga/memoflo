@@ -39,11 +39,7 @@ const navItems = [
     icon: "✓",
   },
 
-  {
-    label: "Roles & Permissions",
-    route: "/roles",
-    icon: "⚙",
-  }
+  
 ];
 
 const workspaceItems = [
@@ -60,6 +56,12 @@ const adminItems = [
     route: "/administration",
     icon: "⚙",
   },
+
+  {
+    label: "Roles & Permissions",
+    route: "/roles",
+    icon: "⚙",
+  }
 ];
 
 function employeeName(user) {
