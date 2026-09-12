@@ -4,15 +4,15 @@ import Topbar from "../components/layout/Topbar.vue";
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="workspace-shell">
     <Sidebar />
 
-    <main class="main">
+    <div class="workspace-main">
       <Topbar />
 
-      <section class="content">
+      <main class="workspace-content">
         <router-view />
-      </section>
-    </main>
+      </main>
+    </div>
   </div>
 </template>

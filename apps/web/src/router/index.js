@@ -1,79 +1,106 @@
-import { createRouter, createWebHistory } from "vue-router";
+import {
+  createRouter,
+  createWebHistory,
+} from "vue-router";
 
 import LoginView from "../views/LoginView.vue";
 import WorkspaceView from "../views/WorkspaceView.vue";
+import DashboardView from "../views/DashboardView.vue";
+import ModulesView from "../views/modules/ModulesView.vue";
+
+import MemosView from "../views/memos/MemosView.vue";
+import CreateMemoView from "../views/memos/CreateMemoView.vue";
+import MemoDetailView from "../views/memos/MemoDetailView.vue";
+
+import ApprovalsView from "../views/approvals/ApprovalsView.vue";
+import CompletedView from "../views/approvals/CompletedView.vue";
+
+import AdministrationView from "../views/administration/AdministrationView.vue";
+import WorkflowSettingsView from "../views/administration/WorkflowSettingsView.vue";
+import RolesView from "../views/administration/RolesView.vue";
 
 const routes = [
   {
     path: "/login",
     name: "login",
     component: LoginView,
-    meta: { guest: true },
+    meta: {
+      guest: true,
+    },
   },
 
   {
     path: "/",
     component: WorkspaceView,
+    meta: {
+      requiresAuth: true,
+    },
     children: [
       {
         path: "",
-        redirect: "/dashboard",
-      },
-
-      {
-        path: "dashboard",
-        name: "dashboard",
-        component: () => import("../views/DashboardView.vue"),
-      },
-
-      {
-        path: "memos",
-        name: "memos",
-        component: () => import("../views/memos/MemosView.vue"),
-      },
-
-      {
-        path: "memos/create",
-        name: "create-memo",
-        component: () => import("../views/memos/CreateMemoView.vue"),
-      },
-
-      {
-        path: "memos/:id",
-        name: "memo-detail",
-        component: () => import("../views/memos/MemoDetailView.vue"),
-      },
-
-      {
-        path: "approvals",
-        name: "approvals",
-        component: () => import("../views/approvals/ApprovalsView.vue"),
-      },
-
-      {
-        path: "completed",
-        name: "completed",
-        component: () => import("../views/approvals/CompletedView.vue"),
+        redirect: "/modules",
       },
 
       {
         path: "modules",
         name: "modules",
-        component: () => import("../views/modules/ModulesView.vue"),
+        component: ModulesView,
+      },
+
+      // Keep dashboard available, but it is no longer
+      // the first page after login.
+      {
+        path: "dashboard",
+        name: "dashboard",
+        component: DashboardView,
+      },
+
+      {
+        path: "memos",
+        name: "memos",
+        component: MemosView,
+      },
+
+      {
+        path: "memos/create",
+        name: "create-memo",
+        component: CreateMemoView,
+      },
+
+      {
+        path: "memos/:id",
+        name: "memo-detail",
+        component: MemoDetailView,
+      },
+
+      {
+        path: "approvals",
+        name: "approvals",
+        component: ApprovalsView,
+      },
+
+      {
+        path: "completed",
+        name: "completed",
+        component: CompletedView,
       },
 
       {
         path: "administration",
         name: "administration",
-        component: () =>
-          import("../views/administration/AdministrationView.vue"),
+        component: AdministrationView,
       },
 
       {
         path: "administration/workflows",
         name: "workflow-settings",
-        component: () =>
-          import("../views/administration/WorkflowSettingsView.vue"),
+        component: WorkflowSettingsView,
+      },
+
+      {
+        path: "administration/roles",
+        name: "roles",
+        component: RolesView,
       },
     ],
   },
@@ -90,14 +117,19 @@ const router = createRouter({
 });
 
 router.beforeEach((to) => {
-  const token = localStorage.getItem("memoflo_token");
+  const token =
+    localStorage.getItem("memoflo_token");
 
-  if (to.meta.guest && token) {
-    return "/dashboard";
+  if (to.meta.requiresAuth && !token) {
+    return {
+      name: "login",
+    };
   }
 
-  if (!to.meta.guest && !token) {
-    return "/login";
+  if (to.meta.guest && token) {
+    return {
+      name: "modules",
+    };
   }
 
   return true;

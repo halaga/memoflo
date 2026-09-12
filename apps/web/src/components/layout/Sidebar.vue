@@ -1,258 +1,190 @@
 <script setup>
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-
 import {
   clearSession,
   getSavedEmployee,
 } from "../../services/api";
 
-const router = useRouter();
 const route = useRoute();
+const router = useRouter();
 
-const employee = computed(() => getSavedEmployee());
+const employee = computed(() =>
+  getSavedEmployee()
+);
 
-const navItems = [
-  {
-    label: "Dashboard",
-    route: "/dashboard",
-    icon: "▦",
-  },
-  {
-    label: "My Memos",
-    route: "/memos",
-    icon: "▤",
-  },
-  {
-    label: "Create Memo",
-    route: "/memos/create",
-    icon: "+",
-  },
-  {
-    label: "Approvals",
-    route: "/approvals",
-    icon: "✓",
-  },
-  {
-    label: "Completed",
-    route: "/completed",
-    icon: "✓",
-  },
+const roleName = computed(() =>
+  employee.value?.role?.name ||
+  "Employee"
+);
 
-  
-];
+const companyName = computed(() =>
+  employee.value?.company?.name ||
+  "MemoFlo"
+);
 
-const workspaceItems = [
-  {
-    label: "Modules",
-    route: "/modules",
-    icon: "◈",
-  },
-];
+const initials = computed(() => {
+  const first =
+    employee.value?.firstName?.[0] || "";
 
-const adminItems = [
-  {
-    label: "Administration",
-    route: "/administration",
-    icon: "⚙",
-  },
+  const last =
+    employee.value?.lastName?.[0] || "";
 
-  {
-    label: "Roles & Permissions",
-    route: "/roles",
-    icon: "⚙",
-  }
-];
+  return `${first}${last}`.toUpperCase() || "MF";
+});
 
-function employeeName(user) {
-  if (!user) return "Unknown User";
-
-  return (
-    [
-      user.firstName,
-      user.middleName,
-      user.lastName,
-    ]
-      .filter(Boolean)
-      .join(" ") ||
-    user.name ||
-    user.fullName ||
-    "Unknown User"
-  );
-}
-
-function employeeRole(user) {
-  return (
-    user?.position?.title ||
-    user?.position?.name ||
-    user?.designation?.name ||
-    user?.role ||
-    "Employee"
-  );
-}
-
-function initials(user) {
-  const name = employeeName(user);
-
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .map((part) => part[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "U"
-  );
-}
-
-function isActive(path) {
-  if (path === "/dashboard") {
-    return route.path === "/dashboard";
-  }
-
-  return route.path === path ||
-    route.path.startsWith(`${path}/`);
+function isActive(name) {
+  return route.name === name;
 }
 
 function logout() {
   clearSession();
 
-  router.replace("/login");
+  router.replace({
+    name: "login",
+  });
 }
 </script>
 
 <template>
-  <aside class="sidebar">
+  <aside class="app-sidebar">
 
-    <!-- BRAND -->
-
-    <div class="brand">
-      <div class="brand-mark">
-        M
-      </div>
+    <div class="sidebar-brand">
+      <div class="brand-mark">M</div>
 
       <div>
-        <div class="brand-name">
-          MemoFlo
-        </div>
-
-        <div class="brand-tag">
-          Workflow simplified
-        </div>
+        <strong>MemoFlo</strong>
+        <span>Workflow simplified</span>
       </div>
     </div>
 
-    <!-- MAIN -->
+    <div class="tenant-card">
+      <span class="tenant-label">
+        COMPANY
+      </span>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">
-        WORKSPACE
-      </div>
+      <strong>{{ companyName }}</strong>
+    </div>
 
-      <nav class="nav">
-        <button
-          v-for="item in navItems"
-          :key="item.route"
-          class="nav-item"
-          :class="{
-            active: isActive(item.route),
-          }"
-          @click="router.push(item.route)"
+    <nav class="sidebar-nav">
+
+      <div class="nav-section">
+        <span class="nav-section-title">
+          WORKSPACE
+        </span>
+
+        <router-link
+          to="/modules"
+          class="nav-link"
+          :class="{ active: isActive('modules') }"
         >
-          <span class="nav-icon">
-            {{ item.icon }}
-          </span>
+          <span class="nav-icon">◆</span>
+          <span>Module Hub</span>
+        </router-link>
 
-          <span>
-            {{ item.label }}
-          </span>
-        </button>
-      </nav>
-    </div>
+        <router-link
+          to="/memos"
+          class="nav-link"
+          :class="{ active: isActive('memos') }"
+        >
+          <span class="nav-icon">▤</span>
+          <span>My Memos</span>
+        </router-link>
 
-    <!-- PLATFORM -->
+        <router-link
+          to="/memos/create"
+          class="nav-link"
+          :class="{ active: isActive('create-memo') }"
+        >
+          <span class="nav-icon">＋</span>
+          <span>Create Memo</span>
+        </router-link>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">
-        MEMOFLO
+        <router-link
+          to="/approvals"
+          class="nav-link"
+          :class="{ active: isActive('approvals') }"
+        >
+          <span class="nav-icon">✓</span>
+          <span>Approvals</span>
+        </router-link>
+
+        <router-link
+          to="/completed"
+          class="nav-link"
+          :class="{ active: isActive('completed') }"
+        >
+          <span class="nav-icon">✓</span>
+          <span>Completed</span>
+        </router-link>
       </div>
 
-      <nav class="nav">
-        <button
-          v-for="item in workspaceItems"
-          :key="item.route"
-          class="nav-item"
+      <div class="nav-section">
+        <span class="nav-section-title">
+          ADMINISTRATION
+        </span>
+
+        <router-link
+          to="/administration"
+          class="nav-link"
           :class="{
-            active: isActive(item.route),
+            active: isActive('administration')
           }"
-          @click="router.push(item.route)"
         >
-          <span class="nav-icon">
-            {{ item.icon }}
-          </span>
+          <span class="nav-icon">⚙</span>
+          <span>Administration</span>
+        </router-link>
 
-          <span>
-            {{ item.label }}
-          </span>
-        </button>
-      </nav>
-    </div>
+        <router-link
+          to="/administration/workflows"
+          class="nav-link"
+          :class="{
+            active:
+              isActive('workflow-settings')
+          }"
+        >
+          <span class="nav-icon">◇</span>
+          <span>Workflow Settings</span>
+        </router-link>
 
-    <!-- ADMIN -->
-
-    <div class="sidebar-section">
-      <div class="sidebar-label">
-        ADMINISTRATION
+        <router-link
+          to="/administration/roles"
+          class="nav-link"
+          :class="{
+            active: isActive('roles')
+          }"
+        >
+          <span class="nav-icon">♙</span>
+          <span>Roles & Permissions</span>
+        </router-link>
       </div>
+    </nav>
 
-      <nav class="nav">
-        <button
-          v-for="item in adminItems"
-          :key="item.route"
-          class="nav-item"
-          :class="{
-            active: isActive(item.route),
-          }"
-          @click="router.push(item.route)"
-        >
-          <span class="nav-icon">
-            {{ item.icon }}
-          </span>
+    <div class="sidebar-account">
 
-          <span>
-            {{ item.label }}
-          </span>
-        </button>
-      </nav>
-    </div>
-
-    <!-- USER -->
-
-    <div class="sidebar-bottom">
-
-      <div class="demo-label">
+      <div class="account-label">
         SIGNED IN AS
       </div>
 
-      <div class="user-card">
-
+      <div class="account-row">
         <div class="avatar">
-          {{ initials(employee) }}
+          {{ initials }}
         </div>
 
-        <div class="user-info">
+        <div class="account-info">
           <strong>
-            {{ employeeName(employee) }}
+            {{ employee?.firstName }}
+            {{ employee?.lastName }}
           </strong>
 
           <span>
-            {{ employeeRole(employee) }}
+            {{ roleName }}
           </span>
         </div>
-
       </div>
 
       <button
+        type="button"
         class="logout-button"
         @click="logout"
       >
