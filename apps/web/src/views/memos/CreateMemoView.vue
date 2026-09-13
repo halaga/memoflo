@@ -1,276 +1,73 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import { api } from "../../services/api";
+import { api, normalizeList } from "../../services/api";
 
 const router = useRouter();
-
 const services = ref([]);
+const sbus = ref([]);
+const workflows = ref([]);
 const loading = ref(false);
-const loadingServices = ref(true);
+const loadingData = ref(true);
 const error = ref("");
 
-const form = ref({
-  title: "",
-  body: "",
-  category: "General",
-  priority: "Normal",
-  businessService: "",
-  requestingSBU: "",
-  beneficiarySBU: "",
-});
+const form = ref({ title:"", body:"", category:"General", priority:"Normal", businessService:"", requestingSbu:"", beneficiarySBU:"", workflow:"" });
 
-onMounted(loadServices);
-
-async function loadServices() {
+onMounted(loadData);
+async function loadData() {
+  loadingData.value = true; error.value = "";
   try {
-    const result =
-      await api.listBusinessServices();
-
-    services.value = Array.isArray(result)
-      ? result
-      : result?.services ||
-        result?.data ||
-        [];
-  } catch (err) {
-    error.value =
-      err.message ||
-      "Failed to load business services.";
-  } finally {
-    loadingServices.value = false;
-  }
+    const [servicesResult, sbusResult, workflowsResult] = await Promise.all([api.listBusinessServices(), api.listSBUs(), api.listWorkflows()]);
+    services.value = normalizeList(servicesResult, ["services"]);
+    sbus.value = normalizeList(sbusResult, ["sbus"]);
+    workflows.value = normalizeList(workflowsResult, ["workflows"]);
+  } catch (err) { error.value = err.message || "Unable to load memo options."; }
+  finally { loadingData.value = false; }
 }
 
 async function submit() {
   error.value = "";
-
-  if (!form.value.title.trim()) {
-    error.value = "Title is required.";
-    return;
-  }
-
-  if (!form.value.body.trim()) {
-    error.value = "Memo body is required.";
-    return;
-  }
-
-  if (!form.value.businessService) {
-    error.value =
-      "Please select a business service.";
-    return;
-  }
-
-  if (!form.value.requestingSBU.trim()) {
-    error.value =
-      "Requesting SBU is required.";
-    return;
-  }
+  if (!form.value.title.trim()) return (error.value = "Title is required.");
+  if (!form.value.body.trim()) return (error.value = "Memo body is required.");
+  if (!form.value.businessService) return (error.value = "Select a business service.");
+  if (!form.value.requestingSbu) return (error.value = "Select the requesting SBU.");
 
   loading.value = true;
-
   try {
     const result = await api.createMemo({
-      title: form.value.title.trim(),
-      body: form.value.body.trim(),
-      category: form.value.category,
-      priority: form.value.priority,
-      businessService:
-        form.value.businessService,
-      requestingSBU:
-        form.value.requestingSBU.trim(),
-      ...(form.value.beneficiarySBU.trim()
-        ? {
-            beneficiarySBU:
-              form.value.beneficiarySBU.trim(),
-          }
-        : {}),
+      title: form.value.title.trim(), body: form.value.body.trim(), category: form.value.category.trim() || "General", priority: form.value.priority,
+      businessService: form.value.businessService, requestingSbu: form.value.requestingSbu,
+      ...(form.value.beneficiarySBU ? { beneficiarySBU: form.value.beneficiarySBU } : {}),
+      ...(form.value.workflow ? { workflow: form.value.workflow } : {}),
     });
-
-    const memo =
-      result?.memo ||
-      result?.data ||
-      result;
-
-    if (!memo?._id) {
-      throw new Error(
-        "Memo was created but no memo ID was returned."
-      );
-    }
-
-    router.push(`/memos/${memo._id}`);
-  } catch (err) {
-    error.value =
-      err.message ||
-      "Failed to create memo.";
-  } finally {
-    loading.value = false;
-  }
+    const memo = result?.data || result?.memo || result;
+    if (!memo?._id) throw new Error("Memo was created but the API returned no memo ID.");
+    router.replace(`/memos/${memo._id}`);
+  } catch (err) { error.value = err.message || "Failed to create memo."; }
+  finally { loading.value = false; }
 }
 </script>
 
 <template>
   <div class="page">
-    <div class="page-header">
-      <div>
-        <h1>Create Memo</h1>
-        <p>
-          Submit a request into your organization's
-          workflow.
-        </p>
-      </div>
-    </div>
+    <div class="page-header"><div><span class="page-kicker">MEMO MANAGEMENT</span><h1>Create memo</h1><p>Start a business request and send it into the configured workflow.</p></div></div>
+    <div v-if="error" class="alert alert-error">{{ error }}</div>
+    <form class="memo-form-new" @submit.prevent="submit">
+      <section class="card form-main-new">
+        <div class="form-section-title"><span>01</span><div><h2>Memo details</h2><p>Describe what needs to happen.</p></div></div>
+        <label>Title<input v-model="form.title" class="input" placeholder="e.g. Office network equipment request" required /></label>
+        <label>Memo body<textarea v-model="form.body" class="input textarea" rows="10" placeholder="Explain the request, reason and any relevant details…" required /></label>
+        <div class="form-row"><label>Category<input v-model="form.category" class="input" placeholder="General" /></label><label>Priority<select v-model="form.priority" class="input"><option>Low</option><option>Normal</option><option>High</option><option>Critical</option></select></label></div>
+      </section>
 
-    <section class="card form-card">
-      <div
-        v-if="error"
-        class="alert alert-error"
-      >
-        {{ error }}
-      </div>
-
-      <form @submit.prevent="submit">
-        <div class="form-group">
-          <label for="title">Title</label>
-
-          <input
-            id="title"
-            v-model="form.title"
-            class="input"
-            required
-            placeholder="What is this memo about?"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="service">
-            Business Service
-          </label>
-
-          <select
-            id="service"
-            v-model="form.businessService"
-            class="input"
-            required
-            :disabled="loadingServices"
-          >
-            <option value="">
-              {{
-                loadingServices
-                  ? "Loading services..."
-                  : "Select a service"
-              }}
-            </option>
-
-            <option
-              v-for="service in services"
-              :key="service._id"
-              :value="service._id"
-            >
-              {{ service.name }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="category">
-              Category
-            </label>
-
-            <input
-              id="category"
-              v-model="form.category"
-              class="input"
-              placeholder="e.g. Procurement"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="priority">
-              Priority
-            </label>
-
-            <select
-              id="priority"
-              v-model="form.priority"
-              class="input"
-            >
-              <option>Normal</option>
-              <option>High</option>
-              <option>Urgent</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="requesting-sbu">
-            Requesting SBU ID
-          </label>
-
-          <input
-            id="requesting-sbu"
-            v-model="form.requestingSBU"
-            class="input"
-            required
-            placeholder="SBU ObjectId"
-          />
-
-          <small>
-            Temporary ID field until the SBU API is
-            exposed by the organization module.
-          </small>
-        </div>
-
-        <div class="form-group">
-          <label for="beneficiary-sbu">
-            Beneficiary SBU ID
-          </label>
-
-          <input
-            id="beneficiary-sbu"
-            v-model="form.beneficiarySBU"
-            class="input"
-            placeholder="Optional SBU ObjectId"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="body">
-            Memo Body
-          </label>
-
-          <textarea
-            id="body"
-            v-model="form.body"
-            class="input textarea"
-            rows="10"
-            required
-            placeholder="Describe the request..."
-          ></textarea>
-        </div>
-
-        <div class="form-actions">
-          <button
-            type="button"
-            class="btn"
-            @click="router.push('/memos')"
-          >
-            Cancel
-          </button>
-
-          <button
-            type="submit"
-            class="btn btn-primary"
-            :disabled="loading"
-          >
-            {{
-              loading
-                ? "Submitting..."
-                : "Submit Memo"
-            }}
-          </button>
-        </div>
-      </form>
-    </section>
+      <aside class="card form-side-new">
+        <div class="form-section-title"><span>02</span><div><h2>Routing</h2><p>Tell MemoFlo where this request belongs.</p></div></div>
+        <label>Business service<select v-model="form.businessService" class="input" :disabled="loadingData" required><option value="">{{ loadingData ? "Loading…" : "Select a service" }}</option><option v-for="service in services" :key="service._id" :value="service._id">{{ service.name }}</option></select></label>
+        <label>Requesting SBU<select v-model="form.requestingSbu" class="input" :disabled="loadingData" required><option value="">Select SBU</option><option v-for="sbu in sbus" :key="sbu._id" :value="sbu._id">{{ sbu.name }} ({{ sbu.code }})</option></select></label>
+        <label>Beneficiary SBU <span class="optional">Optional</span><select v-model="form.beneficiarySBU" class="input" :disabled="loadingData"><option value="">Same as requesting SBU</option><option v-for="sbu in sbus" :key="sbu._id" :value="sbu._id">{{ sbu.name }} ({{ sbu.code }})</option></select></label>
+        <label>Workflow <span class="optional">Optional</span><select v-model="form.workflow" class="input"><option value="">Use service/default workflow</option><option v-for="workflow in workflows" :key="workflow._id" :value="workflow._id">{{ workflow.name }}</option></select></label>
+        <div class="form-actions sticky-actions"><button type="button" class="btn btn-secondary" @click="router.push('/memos')">Cancel</button><button type="submit" class="btn btn-primary" :disabled="loading || loadingData">{{ loading ? "Creating…" : "Create Memo" }}</button></div>
+      </aside>
+    </form>
   </div>
 </template>

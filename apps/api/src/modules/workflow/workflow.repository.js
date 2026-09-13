@@ -241,7 +241,7 @@ async deactivateStep(
     return WorkflowInstance.findOne({
       company: companyId,
 
-      resourceType,
+      resourceType: String(resourceType).toLowerCase(),
 
       resourceId,
 

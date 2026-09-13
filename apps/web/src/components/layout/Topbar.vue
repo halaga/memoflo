@@ -4,64 +4,15 @@ import { useRoute } from "vue-router";
 import { getSavedEmployee } from "../../services/api";
 
 const route = useRoute();
-
-const employee = computed(() =>
-  getSavedEmployee()
-);
-
-const pageTitle = computed(() => {
-  const titles = {
-    modules: "Module Hub",
-    dashboard: "Dashboard",
-    memos: "My Memos",
-    "create-memo": "Create Memo",
-    "memo-detail": "Memo",
-    approvals: "Approvals",
-    completed: "Completed",
-    administration: "Administration",
-    "workflow-settings":
-      "Workflow Settings",
-    roles: "Roles & Permissions",
-  };
-
-  return titles[route.name] || "MemoFlo";
-});
-
-const initials = computed(() => {
-  const first =
-    employee.value?.firstName?.[0] || "";
-
-  const last =
-    employee.value?.lastName?.[0] || "";
-
-  return `${first}${last}`.toUpperCase() || "MF";
-});
+const employee = computed(() => getSavedEmployee());
+const titles = { modules: ["Workspace", "Module Hub"], dashboard: ["Workspace", "Dashboard"], memos: ["Memo Management", "My Memos"], "create-memo": ["Memo Management", "Create Memo"], "memo-detail": ["Memo Management", "Memo Details"], approvals: ["Memo Management", "Approvals"], completed: ["Memo Management", "Completed"], administration: ["Administration", "Overview"], "workflow-settings": ["Administration", "Workflow Settings"], roles: ["Administration", "Roles & Permissions"] };
+const title = computed(() => titles[route.name] || ["MemoFlo", "Workspace"]);
+const initials = computed(() => `${employee.value?.firstName?.[0] || ""}${employee.value?.lastName?.[0] || ""}`.toUpperCase() || "MF");
 </script>
 
 <template>
-  <header class="app-topbar">
-
-    <div>
-      <h1>{{ pageTitle }}</h1>
-    </div>
-
-    <div class="topbar-user">
-
-      <div class="topbar-avatar">
-        {{ initials }}
-      </div>
-
-      <div>
-        <strong>
-          {{ employee?.firstName }}
-        </strong>
-
-        <span>
-          {{ employee?.role?.name || "Employee" }}
-        </span>
-      </div>
-
-    </div>
-
+  <header class="topbar">
+    <div><p class="topbar-eyebrow">{{ title[0] }}</p><h2>{{ title[1] }}</h2></div>
+    <div class="topbar-user"><div class="top-avatar">{{ initials }}</div><div><strong>{{ employee?.firstName || "User" }}</strong><span>{{ employee?.role?.name || "Employee" }}</span></div></div>
   </header>
 </template>

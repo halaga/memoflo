@@ -4,30 +4,18 @@ import { generateToken } from "./jwt.js";
 
 class AuthService {
   async login(email, password) {
-    console.log("========== LOGIN ==========");
-    console.log("Email:", email);
-    console.log("Password Received:", password);
+    if (!email || !password) {
+      throw new Error("Email and password are required");
+    }
 
     const employee = await AuthRepository.findByEmail(email);
 
-    console.log("Employee Found:", !!employee);
-
-    if (!employee) {
+    if (!employee || !employee.active || employee.employmentStatus !== "Active") {
       throw new Error("Invalid credentials");
     }
 
-    console.log("Stored Hash:", employee.password);
-
-    const valid = await comparePassword(
-      password,
-      employee.password
-    );
-
-    console.log("Password Match:", valid);
-
-    if (!valid) {
-      throw new Error("Invalid credentials");
-    }
+    const valid = await comparePassword(password, employee.password);
+    if (!valid) throw new Error("Invalid credentials");
 
     await AuthRepository.updateLastLogin(employee._id);
 
@@ -37,15 +25,10 @@ class AuthService {
       role: employee.role?._id,
     });
 
-    // Remove password before returning
     const employeeObject = employee.toObject();
     delete employeeObject.password;
 
-    return {
-      success: true,
-      token,
-      employee: employeeObject,
-    };
+    return { success: true, token, employee: employeeObject };
   }
 
   async me(id) {

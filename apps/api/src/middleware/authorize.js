@@ -19,9 +19,11 @@ export function authorize(...requiredPermissions) {
           req.user.id
         );
 
-      const allowed = requiredPermissions.every(
-        (permission) => permissions.includes(permission)
-      );
+      const allowed =
+        permissions.includes("*") ||
+        requiredPermissions.every((permission) =>
+          permissions.includes(permission)
+        );
 
       if (!allowed) {
         return res.status(403).json({
@@ -55,9 +57,11 @@ export function authorizeAny(...requiredPermissions) {
           req.user.id
         );
 
-      const allowed = requiredPermissions.some(
-        (permission) => permissions.includes(permission)
-      );
+      const allowed =
+        permissions.includes("*") ||
+        requiredPermissions.some((permission) =>
+          permissions.includes(permission)
+        );
 
       if (!allowed) {
         return res.status(403).json({

@@ -145,6 +145,14 @@ const permissions = [
 
 const systemRoles = [
   {
+    name: "System Administrator",
+    code: "SYSTEM_ADMIN",
+    level: 100,
+    description: "Full administrative access to the MemoFlo tenant.",
+    permissions: permissions.map((permission) => permission.name),
+  },
+
+  {
     name: "Company Administrator",
     code: "COMPANY_ADMIN",
     level: 100,

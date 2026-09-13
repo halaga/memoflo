@@ -1,384 +1,49 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-
-import {
-  api,
-  getSavedEmployee,
-  normalizeList,
-} from "../../services/api";
-
+import { api, getSavedEmployee, normalizeList } from "../../services/api";
 import MemoStatusBadge from "../../components/memos/MemoStatusBadge.vue";
 import WorkflowInstancePanel from "../../components/workflow/WorkflowInstancePanel.vue";
 
-const route = useRoute();
-const router = useRouter();
-
-const memo = ref(null);
-const workflow = ref(null);
-const instance = ref(null);
-const workflows = ref([]);
-
-const loading = ref(true);
-const workflowLoading = ref(false);
-const error = ref("");
-const actionError = ref("");
-
-const employee = getSavedEmployee();
-
-const memoId = computed(() => route.params.id);
-
-const currentApproverId = computed(() =>
-  memo.value?.currentApprover?._id ||
-  memo.value?.currentApprover
-);
-
-const employeePositionIds = computed(() =>
-  employee?.positions?.map((position) =>
-    String(position?._id || position)
-  ) || []
-);
-
-const canAct = computed(() => {
-  if (!memo.value || !instance.value) return false;
-
-  if (
-    !["pending", "running"].includes(
-      String(instance.value.status || "").toLowerCase()
-    )
-  ) {
-    return false;
-  }
-
-  const occupantId =
-    instance.value.currentEmployee?._id ||
-    instance.value.currentEmployee;
-
-  if (
-    occupantId &&
-    employee?._id &&
-    String(occupantId) === String(employee._id)
-  ) {
-    return true;
-  }
-
-  if (
-    currentApproverId.value &&
-    employeePositionIds.value.includes(
-      String(currentApproverId.value)
-    )
-  ) {
-    return true;
-  }
-
-  return false;
+const route=useRoute(), router=useRouter();
+const memo=ref(null), workflow=ref(null), instance=ref(null), workflows=ref([]);
+const loading=ref(true), workflowLoading=ref(false), error=ref(""), actionError=ref("");
+const employee=getSavedEmployee();
+const memoId=computed(()=>route.params.id);
+const canAct=computed(()=>{
+  if(!memo.value||!instance.value||!['pending','running'].includes(String(instance.value.status||'').toLowerCase())) return false;
+  const current=instance.value.currentEmployee?._id||instance.value.currentEmployee;
+  return current && employee?._id && String(current)===String(employee._id);
 });
 
-async function load() {
-  loading.value = true;
-  error.value = "";
-
-  try {
-    const result = await api.getMemo(memoId.value);
-
-    memo.value =
-      result?.memo ||
-      result?.data ||
-      result;
-
-    const workflowResult = await api.listWorkflows();
-
-    workflows.value = normalizeList(
-      workflowResult,
-      ["workflows"]
-    );
-
-    const selectedWorkflowId =
-      memo.value?.workflow?._id ||
-      memo.value?.workflow;
-
-    if (selectedWorkflowId) {
-      await loadWorkflow(selectedWorkflowId);
-    }
-  } catch (err) {
-    error.value = err.message;
-  } finally {
-    loading.value = false;
-  }
+async function load(){ loading.value=true; error.value=""; actionError.value="";
+  try{
+    const mr=await api.getMemo(memoId.value); memo.value=mr?.data||mr?.memo||mr;
+    const wr=await api.listWorkflows(); workflows.value=normalizeList(wr,["workflows"]);
+    const workflowId=memo.value?.workflow?._id||memo.value?.workflow;
+    if(workflowId) await loadWorkflow(workflowId);
+    else workflow.value=null;
+    const instanceId=memo.value?.workflowInstance?._id||memo.value?.workflowInstance;
+    if(instanceId) await loadInstance(instanceId); else instance.value=null;
+  }catch(err){error.value=err.message||"Unable to load memo.";}finally{loading.value=false;}
 }
-
-async function loadWorkflow(workflowId) {
-  if (!workflowId) return;
-
-  try {
-    const result = await api.getWorkflow(workflowId);
-
-    workflow.value =
-      result?.workflow ||
-      result?.data ||
-      result;
-
-    if (memo.value?.workflowInstance) {
-      await loadInstance(memo.value.workflowInstance);
-    }
-  } catch (err) {
-    actionError.value = err.message;
-  }
-}
-
-async function loadInstance(instanceId) {
-  if (!instanceId) return;
-
-  try {
-    const result = await api.getWorkflowInstance(instanceId);
-
-    instance.value =
-      result?.instance ||
-      result?.data ||
-      result;
-  } catch (err) {
-    actionError.value = err.message;
-  }
-}
-
-async function startWorkflow() {
-  actionError.value = "";
-
-  if (!memo.value) return;
-
-  const workflowId =
-    memo.value.workflow?._id ||
-    memo.value.workflow ||
-    workflows.value.find(
-      (item) =>
-        item.name === "Procurement Approval"
-    )?._id;
-
-  if (!workflowId) {
-    actionError.value =
-      "No workflow is configured for this memo.";
-    return;
-  }
-
-  workflowLoading.value = true;
-
-  try {
-    const result = await api.startWorkflow(
-      workflowId,
-      "Memo",
-      memo.value._id
-    );
-
-    instance.value =
-      result?.instance ||
-      result?.workflowInstance ||
-      result?.data ||
-      result;
-
-    await load();
-  } catch (err) {
-    actionError.value = err.message;
-  } finally {
-    workflowLoading.value = false;
-  }
-}
-
-async function approve() {
-  if (!instance.value?._id) return;
-
-  workflowLoading.value = true;
-  actionError.value = "";
-
-  try {
-    await api.advanceWorkflow(instance.value._id);
-    await load();
-  } catch (err) {
-    actionError.value = err.message;
-  } finally {
-    workflowLoading.value = false;
-  }
-}
-
-async function reject() {
-  if (!instance.value?._id) return;
-
-  if (!window.confirm("Reject this memo?")) return;
-
-  workflowLoading.value = true;
-  actionError.value = "";
-
-  try {
-    await api.rejectWorkflow(instance.value._id);
-    await load();
-  } catch (err) {
-    actionError.value = err.message;
-  } finally {
-    workflowLoading.value = false;
-  }
-}
-
-async function cancel() {
-  if (!instance.value?._id) return;
-
-  if (!window.confirm("Cancel this workflow?")) return;
-
-  workflowLoading.value = true;
-  actionError.value = "";
-
-  try {
-    await api.cancelWorkflow(instance.value._id);
-    await load();
-  } catch (err) {
-    actionError.value = err.message;
-  } finally {
-    workflowLoading.value = false;
-  }
-}
-
-async function resubmit() {
-  if (!instance.value?._id) return;
-
-  workflowLoading.value = true;
-  actionError.value = "";
-
-  try {
-    await api.resubmitWorkflow(instance.value._id);
-    await load();
-  } catch (err) {
-    actionError.value = err.message;
-  } finally {
-    workflowLoading.value = false;
-  }
-}
-
+async function loadWorkflow(id){const r=await api.getWorkflow(id); const w=r?.workflow||r?.data?.workflow||r?.data||r; workflow.value={...w,steps:r?.steps||r?.data?.steps||w?.steps||[]};}
+async function loadInstance(id){const r=await api.getWorkflowInstance(id); instance.value=r?.data||r?.instance||r;}
+async function startWorkflow(){ if(!memo.value)return; workflowLoading.value=true; actionError.value=""; try{const id=memo.value.workflow?._id||memo.value.workflow||workflows.value.find(w=>w.code==='PROCUREMENT')?._id; if(!id)throw new Error("No workflow is configured for this memo."); const r=await api.startWorkflow(id,"memo",memo.value._id); instance.value=r?.data||r?.instance||r; await load();}catch(err){actionError.value=err.message||"Unable to start workflow.";}finally{workflowLoading.value=false;} }
+async function action(fn){if(!instance.value?._id)return;workflowLoading.value=true;actionError.value="";try{await fn(instance.value._id);await load();}catch(err){actionError.value=err.message||"Workflow action failed.";}finally{workflowLoading.value=false;}}
+function approve(){return action(api.advanceWorkflow)} function reject(){if(confirm("Reject this memo?"))return action(api.rejectWorkflow)} function cancel(){if(confirm("Cancel this workflow?"))return action(api.cancelWorkflow)} function resubmit(){return action(api.resubmitWorkflow)}
 onMounted(load);
 </script>
 
 <template>
   <div class="page">
-    <div class="page-header">
-      <div>
-        <button
-          class="btn btn-secondary"
-          @click="router.back()"
-        >
-          ← Back
-        </button>
-
-        <h1>Memo Details</h1>
-      </div>
-
-      <div
-        v-if="memo"
-        class="page-header-actions"
-      >
-        <MemoStatusBadge :status="memo.status" />
-      </div>
-    </div>
-
-    <div
-      v-if="loading"
-      class="card"
-    >
-      Loading memo...
-    </div>
-
-    <div
-      v-else-if="error"
-      class="alert alert-error"
-    >
-      {{ error }}
-    </div>
-
+    <div class="page-header"><div><button type="button" class="btn btn-ghost back-button" @click="router.back()">← Back</button><span class="page-kicker">MEMO</span><h1>{{ memo?.title || "Memo details" }}</h1><p>{{ memo?.referenceNo || "" }}</p></div><MemoStatusBadge v-if="memo" :status="memo.status" /></div>
+    <div v-if="loading" class="card empty-state">Loading memo…</div><div v-else-if="error" class="alert alert-error">{{ error }}</div>
     <template v-else-if="memo">
-      <div class="detail-grid">
-        <section class="card">
-          <div class="card-header">
-            <h3>{{ memo.title }}</h3>
-            <span>{{ memo.referenceNo || "No reference" }}</span>
-          </div>
-
-          <div class="detail-list">
-            <div>
-              <span>Category</span>
-              <strong>{{ memo.category || "—" }}</strong>
-            </div>
-
-            <div>
-              <span>Priority</span>
-              <strong>{{ memo.priority || "—" }}</strong>
-            </div>
-
-            <div>
-              <span>Business service</span>
-              <strong>
-                {{ memo.businessService?.name || "—" }}
-              </strong>
-            </div>
-
-            <div>
-              <span>Created by</span>
-              <strong>
-                {{
-                  memo.createdBy?.firstName
-                    ? `${memo.createdBy.firstName} ${memo.createdBy.lastName || ""}`
-                    : "—"
-                }}
-              </strong>
-            </div>
-          </div>
-
-          <div class="memo-body">
-            <h4>Memo</h4>
-            <p>{{ memo.body }}</p>
-          </div>
-        </section>
-
-        <section class="card">
-          <div class="card-header">
-            <h3>Workflow Control</h3>
-          </div>
-
-          <div
-            v-if="actionError"
-            class="alert alert-error"
-          >
-            {{ actionError }}
-          </div>
-
-          <div
-            v-if="!instance && !memo.workflowInstance"
-            class="workflow-start"
-          >
-            <p>
-              This memo has not started its approval workflow.
-            </p>
-
-            <button
-              class="btn btn-primary"
-              :disabled="workflowLoading"
-              @click="startWorkflow"
-            >
-              {{
-                workflowLoading
-                  ? "Starting..."
-                  : "Start Approval Workflow"
-              }}
-            </button>
-          </div>
-
-          <WorkflowInstancePanel
-            v-else
-            :workflow="workflow"
-            :instance="instance"
-            :loading="workflowLoading"
-            :can-act="canAct"
-            @approve="approve"
-            @reject="reject"
-            @cancel="cancel"
-            @resubmit="resubmit"
-          />
-        </section>
+      <div v-if="actionError" class="alert alert-error">{{ actionError }}</div>
+      <div class="detail-grid-new">
+        <section class="card detail-card-new"><div class="card-header"><div><span class="page-kicker">REQUEST</span><h2>{{ memo.title }}</h2></div></div><div class="detail-meta-new"><div><span>Service</span><strong>{{ memo.businessService?.name || "—" }}</strong></div><div><span>Category</span><strong>{{ memo.category || "—" }}</strong></div><div><span>Priority</span><strong>{{ memo.priority || "Normal" }}</strong></div><div><span>Requesting SBU</span><strong>{{ memo.requestingSbu?.name || "—" }}</strong></div><div><span>Created by</span><strong>{{ [memo.createdBy?.firstName,memo.createdBy?.lastName].filter(Boolean).join(" ") || "—" }}</strong></div></div><div class="memo-body-new"><span class="page-kicker">DESCRIPTION</span><p>{{ memo.body }}</p></div></section>
+        <section class="card action-card-new"><div class="card-header"><div><span class="page-kicker">WORKFLOW</span><h2>{{ workflow?.name || "Approval workflow" }}</h2></div></div><div v-if="!instance" class="workflow-start-new"><p>This memo is ready to enter its approval workflow.</p><button type="button" class="btn btn-primary full" :disabled="workflowLoading" @click="startWorkflow">{{ workflowLoading ? "Starting…" : "Start workflow" }}</button></div><WorkflowInstancePanel v-else :workflow="workflow" :instance="instance" :loading="workflowLoading" :can-act="canAct" @approve="approve" @reject="reject" @cancel="cancel" @resubmit="resubmit" /></section>
       </div>
     </template>
   </div>

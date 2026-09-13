@@ -1,67 +1,36 @@
 import Employee from "../employee/employee.model.js";
 
 class PermissionService {
-  /**
-   * Get the permissions belonging to an employee's assigned role.
-   */
   async getEmployeePermissions(employeeId) {
-    const employee = await Employee.findById(employeeId)
-      .populate("role");
+    const employee = await Employee.findById(employeeId).populate("role");
+    if (!employee) throw new Error("Employee not found");
+    if (!employee.role) return [];
 
-    if (!employee) {
-      throw new Error("Employee not found");
-    }
-
-    if (!employee.role) {
-      return [];
+    // Preserve explicit wildcard permissions and treat the highest-level
+    // system roles as unrestricted tenant administrators.
+    if (employee.role.permissions?.includes("*") ||
+        (employee.role.isSystem && Number(employee.role.level || 0) >= 100)) {
+      return ["*"];
     }
 
     return employee.role.permissions || [];
   }
 
-  /**
-   * Check whether an employee has a specific permission.
-   *
-   * Example:
-   * employeeHasPermission(employeeId, "memo.create")
-   */
   async employeeHasPermission(employeeId, permission) {
-    const permissions =
-      await this.getEmployeePermissions(employeeId);
-
-    return permissions.includes(permission);
+    const permissions = await this.getEmployeePermissions(employeeId);
+    return permissions.includes("*") || permissions.includes(permission);
   }
 
-  /**
-   * Check whether employee has at least one permission.
-   */
   async hasAnyPermission(employeeId, permissions = []) {
-    if (!permissions.length) {
-      return false;
-    }
-
-    const employeePermissions =
-      await this.getEmployeePermissions(employeeId);
-
-    return permissions.some((permission) =>
-      employeePermissions.includes(permission)
-    );
+    if (!permissions.length) return false;
+    const employeePermissions = await this.getEmployeePermissions(employeeId);
+    return employeePermissions.includes("*") || permissions.some((permission) => employeePermissions.includes(permission));
   }
 
-  /**
-   * Check whether employee has every permission.
-   */
   async hasAllPermissions(employeeId, permissions = []) {
-    if (!permissions.length) {
-      return false;
-    }
-
-    const employeePermissions =
-      await this.getEmployeePermissions(employeeId);
-
-    return permissions.every((permission) =>
-      employeePermissions.includes(permission)
-    );
+    if (!permissions.length) return false;
+    const employeePermissions = await this.getEmployeePermissions(employeeId);
+    return employeePermissions.includes("*") || permissions.every((permission) => employeePermissions.includes(permission));
   }
 }
 
