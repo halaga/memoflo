@@ -129,3 +129,11 @@ label .optional { color:#94a3b8; font-weight:500; }
 
 @media (max-width:1100px) { .module-grid,.memo-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.detail-grid-new,.memo-form-new { grid-template-columns:1fr; }.form-side-new,.action-card-new { position:static; }.workflow-builder,.roles-layout { grid-template-columns:1fr; } }
 @media (max-width:760px) { .auth-screen { grid-template-columns:1fr; }.auth-visual { display:none; }.mobile-auth-brand { display:flex; }.auth-panel { min-height:100vh; padding:20px; }.auth-card { padding:28px 22px; }.sidebar { position:static; width:100%; min-height:auto; }.app-shell { display:block; }.main { margin-left:0; width:100%; }.sidebar-bottom { margin-top:18px; }.content { padding:25px 18px 45px; }.topbar { padding:0 18px; }.module-grid,.memo-grid,.stats-grid { grid-template-columns:1fr; }.hub-hero { flex-direction:column; }.hub-hero-meta { width:100%; }.page-header { flex-direction:column; }.form-row,.filters,.detail-meta-new { grid-template-columns:1fr; }.assign-row { flex-direction:column; } }
+
+
+/* Account controls */
+.topbar-actions { display:flex; align-items:center; gap:18px; }
+.topbar-signout { border:1px solid var(--border, #d9e0ea); background:#fff; color:#152238; border-radius:10px; padding:10px 14px; font-weight:700; cursor:pointer; }
+.topbar-signout:hover { background:#f4f7fb; }
+.alert-info { background:#eef5ff; color:#1e4f91; border:1px solid #cfe0ff; }
+@media (max-width: 760px) { .topbar-user > div:last-child { display:none; } .topbar-actions { gap:8px; } }

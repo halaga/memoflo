@@ -13,6 +13,7 @@ import designationRoutes from "./modules/organization/designation/designation.ro
 import sbuRoutes from "./modules/organization/sbu/sbu.routes.js";
 import roleRoutes from "./modules/auth/role.routes.js";
 import businessServiceRoutes from "./modules/business-service/businessService.routes.js";
+import companyRoutes from "./modules/company/company.routes.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
 
@@ -46,6 +47,7 @@ app.use("/api/sbus", sbuRoutes);
 app.use("/api/workflow", workflowRoutes);
 app.use("/api/business-services", businessServiceRoutes);
 app.use("/api/roles", roleRoutes);
+app.use("/api/company", companyRoutes);
 
 // Error Handlers (ALWAYS LAST)
 app.use(notFound);

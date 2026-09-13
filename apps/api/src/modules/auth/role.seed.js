@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Role from "./role.model.js";
 import Permission from "./permission.model.js";
 import Company from "../company/company.model.js";
+import Employee from "../employee/employee.model.js";
 
 const permissions = [
   {
@@ -28,6 +29,13 @@ const permissions = [
     module: "roles",
     action: "delete",
     description: "Delete roles",
+  },
+
+  {
+    name: "company.modules.update",
+    module: "company",
+    action: "modules.update",
+    description: "Manage enabled MemoFlo modules for the company",
   },
 
   {
@@ -247,6 +255,22 @@ async function seedRoles() {
         {
           upsert: true,
         }
+      );
+    }
+
+    // Development fixtures: keep the two test accounts predictable.
+    const itRole = await Role.findOne({ company: company._id, code: "IT_STAFF" });
+    const adminRole = await Role.findOne({ company: company._id, code: "SYSTEM_ADMIN" });
+    if (itRole) {
+      await Employee.updateOne(
+        { company: company._id, email: "melvin@memoflo.com" },
+        { $set: { role: itRole._id } }
+      );
+    }
+    if (adminRole) {
+      await Employee.updateOne(
+        { company: company._id, email: "admin@memoflo.com" },
+        { $set: { role: adminRole._id } }
       );
     }
   }

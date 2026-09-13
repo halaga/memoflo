@@ -28,8 +28,9 @@ const router = createRouter({ history: createWebHistory(), routes });
 
 router.beforeEach((to) => {
   const token = localStorage.getItem("memoflo_token");
-  if (to.name === "login" && token) return { name: "modules" };
-  if (to.matched.some((record) => record.meta.requiresAuth) && !token) return { name: "login" };
+  if (to.path === "/") return token ? { name: "modules", replace: true } : { name: "login", replace: true };
+  // Keep /login reachable even with an existing session so another employee can switch accounts.
+  if (to.matched.some((record) => record.meta.requiresAuth) && !token) return { name: "login", replace: true };
   return true;
 });
 

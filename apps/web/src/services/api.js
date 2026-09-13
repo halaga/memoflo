@@ -34,6 +34,8 @@ export const api = {
     return request("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
   },
   me() { return request("/auth/me"); },
+  getCompanyWorkspace() { return request("/company/workspace"); },
+  updateCompanyModules(modules) { return request("/company/modules", { method: "PATCH", body: JSON.stringify({ modules }) }); },
 
   listRoles() { return request("/roles"); },
   listPermissions() { return request("/roles/permissions"); },
@@ -75,6 +77,7 @@ export const api = {
 };
 
 export { normalizeList };
+export function savedEmployee() { return getSavedEmployee(); }
 
 export function saveSession(result) {
   if (result?.token) localStorage.setItem("memoflo_token", result.token);

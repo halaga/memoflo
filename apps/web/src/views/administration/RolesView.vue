@@ -4,6 +4,8 @@ import { api, normalizeList } from "../../services/api";
 
 const roles=ref([]), permissions=ref([]), employees=ref([]); const loading=ref(true), error=ref(""), success=ref(""); const selectedRole=ref(null), selectedEmployee=ref(""), showCreate=ref(false);
 const form=ref({name:"",code:"",level:10,description:"",permissions:[]});
+const employee = computed(() => { try { return JSON.parse(localStorage.getItem("memoflo_employee") || "null"); } catch { return null; } });
+const canCreate = computed(() => employee.value?.role?.permissions?.includes("*") || employee.value?.role?.permissions?.includes("roles.create"));
 const permissionGroups=computed(()=>permissions.value.reduce((g,p)=>{(g[p.module] ||= []).push(p);return g;},{}));
 async function load(){loading.value=true;error.value="";try{const [r,p,e]=await Promise.all([api.listRoles(),api.listPermissions(),api.listEmployees()]);roles.value=normalizeList(r);permissions.value=normalizeList(p);employees.value=normalizeList(e);}catch(err){error.value=err.message||"Unable to load roles.";}finally{loading.value=false;}}
 function selectRole(role){selectedRole.value=role;selectedEmployee.value="";success.value="";}
@@ -14,8 +16,8 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="page"><div class="page-header"><div><span class="page-kicker">ADMINISTRATION</span><h1>Roles & permissions</h1><p>Define employee authority without changing the company structure.</p></div><button type="button" class="btn btn-primary" @click="showCreate=!showCreate">{{showCreate?'Close':'Create role'}}</button></div>
-    <div v-if="error" class="alert alert-error">{{error}}</div><div v-if="success" class="alert alert-success">{{success}}</div>
+  <div class="page"><div class="page-header"><div><span class="page-kicker">ADMINISTRATION</span><h1>Roles & permissions</h1><p>Define employee authority without changing the company structure.</p></div><button v-if="canCreate" type="button" class="btn btn-primary" @click="showCreate=!showCreate">{{showCreate?'Close':'Create role'}}</button></div>
+    <div v-if="error" class="alert alert-error">{{error}}</div><div v-if="!canCreate" class="alert alert-info">Role creation is restricted to tenant administrators. Sign out above and sign in with an administrator account to create roles.</div><div v-if="success" class="alert alert-success">{{success}}</div>
     <section v-if="showCreate" class="card create-role-card"><div class="card-header"><div><h2>Create role</h2><p>Use only permissions that this role actually needs.</p></div></div><div class="form-row"><label>Name<input v-model="form.name" class="input" placeholder="Finance Officer" /></label><label>Code<input v-model="form.code" class="input" placeholder="FINANCE_OFFICER" /></label></div><label>Description<input v-model="form.description" class="input" placeholder="Role description" /></label><div class="permission-picker"><div v-for="(group,module) in permissionGroups" :key="module" class="permission-group"><strong>{{module}}</strong><label v-for="permission in group" :key="permission._id" class="check-label"><input v-model="form.permissions" type="checkbox" :value="permission.name" />{{permission.name}}</label></div></div><div class="form-actions"><button type="button" class="btn btn-primary" @click="createRole">Save role</button></div></section>
     <div v-if="loading" class="card empty-state">Loading roles…</div>
     <div v-else class="roles-layout"><section class="card"><div class="builder-title"><div><h2>Company roles</h2><p>Roles currently available to this tenant.</p></div><span class="count-pill">{{roles.length}}</span></div><div class="role-list"><button v-for="role in roles" :key="role._id" type="button" class="role-item" :class="{selected:selectedRole?._id===role._id}" @click="selectRole(role)"><div><strong>{{role.name}}</strong><span>{{role.code}}</span></div><small>{{role.permissions?.length||0}} permissions</small></button></div></section>
