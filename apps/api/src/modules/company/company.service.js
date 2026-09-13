@@ -3,7 +3,10 @@ import { ALL_MODULE_IDS, MODULE_CATALOGUE } from "./module.catalogue.js";
 
 class CompanyService {
   async getWorkspace(companyId) {
-    const company = await CompanyRepository.findById(companyId).lean();
+    const companyDoc = await CompanyRepository.findById(companyId);
+    const company = companyDoc?.toObject
+      ? companyDoc.toObject()
+      : companyDoc;
     if (!company) throw new Error("Company not found");
 
     const enabled = Array.isArray(company.settings?.modules)
