@@ -1,100 +1,153 @@
 <script setup>
 import { onMounted, ref } from "vue";
-import { RouterLink } from "vue-router";
-import { api } from "../../services/api";
+import { api, normalizeList } from "../../services/api";
 
 const data = ref({
   employees: [],
   positions: [],
   departments: [],
-  designations: [],
-  services: [],
   workflows: [],
 });
 
 const loading = ref(true);
 const error = ref("");
 
-onMounted(async () => {
+const cards = [
+  {
+    title: "Module Access",
+    text: "Enable or disable the MemoFlo modules available to this company.",
+    to: "/administration/modules",
+    icon: "◈",
+  },
+  {
+    title: "Workflow Definitions",
+    text: "Create reusable workflows and add, edit or remove their steps.",
+    to: "/administration/workflows",
+    icon: "◇",
+  },
+  {
+    title: "Roles & Permissions",
+    text: "Define employee authority and control what people can do.",
+    to: "/administration/roles",
+    icon: "♙",
+  },
+  {
+    title: "Company Branding",
+    text: "Customize your logo, wallpaper and company colours.",
+    to: "/administration/branding",
+    icon: "✦",
+  },
+  {
+    title: "Notifications",
+    text: "Review workflow activity and platform notifications.",
+    to: "/notifications",
+    icon: "◔",
+  },
+];
+
+async function load() {
+  loading.value = true;
+  error.value = "";
+
   try {
-    const [
-      employees,
-      positions,
-      departments,
-      designations,
-      services,
-      workflows,
-    ] = await Promise.all([
-      api.listEmployees(),
-      api.listPositions(),
-      api.listDepartments(),
-      api.listDesignations(),
-      api.listBusinessServices(),
-      api.listWorkflows(),
-    ]);
+    const [employees, positions, departments, workflows] =
+      await Promise.all([
+        api.listEmployees(),
+        api.listPositions(),
+        api.listDepartments(),
+        api.listWorkflows(),
+      ]);
 
     data.value = {
-      employees: employees?.employees || employees?.data || employees || [],
-      positions: positions?.positions || positions?.data || positions || [],
-      departments:
-        departments?.departments || departments?.data || departments || [],
-      designations:
-        designations?.designations ||
-        designations?.data ||
-        designations ||
-        [],
-      services: services?.services || services?.data || services || [],
-      workflows: workflows?.workflows || workflows?.data || workflows || [],
+      employees: normalizeList(employees),
+      positions: normalizeList(positions),
+      departments: normalizeList(departments),
+      workflows: normalizeList(workflows),
     };
   } catch (err) {
-    error.value = err.message || "Failed to load administration data.";
+    error.value = err.message || "Unable to load administration.";
   } finally {
     loading.value = false;
   }
-});
+}
+
+onMounted(load);
 </script>
 
 <template>
-  <div class="page">
+  <div class="page administration-page">
     <div class="page-header">
       <div>
-        <h1>Administration</h1>
-        <p>Manage your organization's platform configuration.</p>
+        <span class="page-kicker">ADMINISTRATION</span>
+        <h1>Company control centre</h1>
+        <p>
+          Configure how this company uses MemoFlo without changing the
+          platform's core experience.
+        </p>
       </div>
 
-      <RouterLink to="/administration/workflows" class="btn btn-primary">
-        Workflow Settings
+      <RouterLink
+        to="/modules"
+        class="btn btn-secondary"
+      >
+        ← Module Hub
       </RouterLink>
     </div>
 
-    <div v-if="error" class="alert alert-error">
+    <div
+      v-if="error"
+      class="alert alert-error"
+    >
       {{ error }}
     </div>
 
-    <div v-if="loading" class="empty-state">
-      Loading administration...
-    </div>
-
-    <div v-else class="stats-grid">
-      <div class="stat-card">
+    <div class="stats-grid">
+      <div class="stat-card card">
         <span class="stat-label">Employees</span>
         <strong class="stat-value">{{ data.employees.length }}</strong>
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card card">
         <span class="stat-label">Positions</span>
         <strong class="stat-value">{{ data.positions.length }}</strong>
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card card">
         <span class="stat-label">Departments</span>
         <strong class="stat-value">{{ data.departments.length }}</strong>
       </div>
 
-      <div class="stat-card">
+      <div class="stat-card card">
         <span class="stat-label">Workflows</span>
         <strong class="stat-value">{{ data.workflows.length }}</strong>
       </div>
     </div>
+
+    <section class="admin-control-grid">
+      <RouterLink
+        v-for="card in cards"
+        :key="card.to"
+        :to="card.to"
+        class="card admin-control-card"
+      >
+        <div class="module-tile-icon">
+          {{ card.icon }}
+        </div>
+
+        <div>
+          <h2>{{ card.title }}</h2>
+          <p>{{ card.text }}</p>
+          <span>Open →</span>
+        </div>
+      </RouterLink>
+    </section>
+
+    <section class="card admin-note">
+      <strong>MemoFlo tenant principle</strong>
+      <p>
+        Company configuration controls what the tenant has. Roles and
+        permissions control what each employee can do inside those modules.
+      </p>
+    </section>
   </div>
 </template>

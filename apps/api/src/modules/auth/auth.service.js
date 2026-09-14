@@ -3,19 +3,31 @@ import { comparePassword } from "./password.js";
 import { generateToken } from "./jwt.js";
 
 class AuthService {
-  async login(email, password) {
-    if (!email || !password) {
-      throw new Error("Email and password are required");
-    }
+  async login(email, password, companySlug = null) {
+    const employee = await AuthRepository.findByEmail(
+      email,
+      companySlug
+    );
 
-    const employee = await AuthRepository.findByEmail(email);
-
-    if (!employee || !employee.active || employee.employmentStatus !== "Active") {
+    if (!employee) {
       throw new Error("Invalid credentials");
     }
 
-    const valid = await comparePassword(password, employee.password);
-    if (!valid) throw new Error("Invalid credentials");
+    const valid = await comparePassword(
+      password,
+      employee.password
+    );
+
+    if (!valid) {
+      throw new Error("Invalid credentials");
+    }
+
+    if (
+      !employee.active ||
+      employee.employmentStatus !== "Active"
+    ) {
+      throw new Error("This employee account is inactive");
+    }
 
     await AuthRepository.updateLastLogin(employee._id);
 
@@ -28,11 +40,28 @@ class AuthService {
     const employeeObject = employee.toObject();
     delete employeeObject.password;
 
-    return { success: true, token, employee: employeeObject };
+    return {
+      success: true,
+      token,
+      employee: employeeObject,
+    };
   }
 
   async me(id) {
-    return await AuthRepository.findById(id);
+    const employee = await AuthRepository.findById(id);
+
+    if (!employee) {
+      throw new Error("Employee not found");
+    }
+
+    if (
+      !employee.active ||
+      employee.employmentStatus !== "Active"
+    ) {
+      throw new Error("This employee account is inactive");
+    }
+
+    return employee;
   }
 }
 

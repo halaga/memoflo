@@ -1,19 +1,14 @@
 export function validateCreateMemo(data) {
-  const requestingSbu = data.requestingSbu || data.requestingSBU;
-
   const required = [
-    ["title", data.title],
-    ["body", data.body],
-    ["businessService", data.businessService],
-    ["requestingSbu", requestingSbu],
+    "title",
+    "body",
+    "businessService",
+    "requestingSbu",
   ];
 
-  for (const [field, value] of required) {
-    if (value === undefined || value === null || String(value).trim() === "") {
+  for (const field of required) {
+    if (!data[field]) {
       throw new Error(`${field} is required`);
     }
   }
-
-  data.requestingSbu = requestingSbu;
-  delete data.requestingSBU;
 }

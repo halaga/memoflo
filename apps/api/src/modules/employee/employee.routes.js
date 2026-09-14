@@ -1,24 +1,40 @@
 import express from "express";
 import authenticate from "../auth/auth.middleware.js";
+import authorize from "../../middleware/authorize.js";
 import EmployeeController from "./employee.controller.js";
 
 const router = express.Router();
 
 router.use(authenticate);
 
-// Create Employee
-router.post("/", EmployeeController.create);
+router.post(
+  "/",
+  authorize("employees.create"),
+  EmployeeController.create
+);
 
-// List Employees
-router.get("/", EmployeeController.list);
+router.get(
+  "/",
+  authorize("employees.view"),
+  EmployeeController.list
+);
 
-// Employee Details
-router.get("/:id", EmployeeController.show);
+router.get(
+  "/:id",
+  authorize("employees.view"),
+  EmployeeController.show
+);
 
-// Update Employee
-router.patch("/:id", EmployeeController.update);
+router.patch(
+  "/:id",
+  authorize("employees.update"),
+  EmployeeController.update
+);
 
-// Soft Delete Employee
-router.delete("/:id", EmployeeController.remove);
+router.delete(
+  "/:id",
+  authorize("employees.delete"),
+  EmployeeController.remove
+);
 
 export default router;

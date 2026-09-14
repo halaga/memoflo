@@ -7,6 +7,21 @@ import Employee from "../employee/employee.model.js";
 
 const permissions = [
   {
+    name: "administration.view",
+    module: "administration",
+    action: "view",
+    description: "Open the company administration control centre",
+  },
+  {
+    name: "company.modules.update",
+    module: "company",
+    action: "modules.update",
+    description: "Enable or disable company modules",
+  },
+  { name: "company.branding.update", module: "company", action: "branding.update", description: "Customize company tenant branding" },
+  { name: "notifications.view", module: "notifications", action: "view", description: "View notifications" },
+  { name: "notifications.update", module: "notifications", action: "update", description: "Mark notifications as read" },
+  {
     name: "roles.view",
     module: "roles",
     action: "view",
@@ -29,13 +44,6 @@ const permissions = [
     module: "roles",
     action: "delete",
     description: "Delete roles",
-  },
-
-  {
-    name: "company.modules.update",
-    module: "company",
-    action: "modules.update",
-    description: "Manage enabled MemoFlo modules for the company",
   },
 
   {
@@ -178,8 +186,6 @@ const systemRoles = [
     description:
       "IT employee access to MemoFlo operational modules.",
     permissions: [
-      "roles.view",
-
       "employees.view",
 
       "memos.view",
@@ -190,6 +196,8 @@ const systemRoles = [
       "workflow.execute",
 
       "business-services.view",
+      "notifications.view",
+      "notifications.update",
     ],
   },
 
@@ -205,12 +213,14 @@ const systemRoles = [
       "memos.update",
       "workflow.view",
       "business-services.view",
+      "notifications.view",
+      "notifications.update",
     ],
   },
 ];
 
 async function seedRoles() {
-  
+
 
   await mongoose.connect(process.env.MONGO_URI);
 

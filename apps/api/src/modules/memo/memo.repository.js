@@ -5,44 +5,29 @@ class MemoRepository {
     return Memo.create(data);
   }
 
-  async findAll(companyId) {
-    return Memo.find({ company: companyId, isActive: true, deletedAt: null })
-      .populate("createdBy", "_id firstName lastName email")
+  async findAll(company) {
+    return Memo.find({
+      company,
+      deletedAt: null,
+    })
+      .populate("createdBy")
       .populate("businessService")
-      .populate("requestingSbu", "_id name code")
-      .populate("beneficiarySBU", "_id name code")
-      .populate("currentApprover")
-      .populate("workflow")
-      .sort({ createdAt: -1 });
+      .populate("currentApprover");
   }
 
-  async findById(id, companyId = null) {
-    const filter = { _id: id, isActive: true, deletedAt: null };
-    if (companyId) filter.company = companyId;
-
-    return Memo.findOne(filter)
-      .populate("createdBy", "_id firstName lastName email")
+  async findById(id) {
+    return Memo.findById(id)
+      .populate("createdBy")
       .populate("businessService")
-      .populate("requestingSbu", "_id name code")
-      .populate("beneficiarySBU", "_id name code")
-      .populate("currentApprover")
-      .populate("workflow")
-      .populate("workflowInstance");
+      .populate("workflow");
   }
 
-  async update(id, companyId, data) {
-    return Memo.findOneAndUpdate(
-      { _id: id, company: companyId, isActive: true, deletedAt: null },
+  async update(id, data) {
+    return Memo.findByIdAndUpdate(
+      id,
       data,
-      { new: true, runValidators: true }
-    )
-      .populate("createdBy", "_id firstName lastName email")
-      .populate("businessService")
-      .populate("requestingSbu", "_id name code")
-      .populate("beneficiarySBU", "_id name code")
-      .populate("currentApprover")
-      .populate("workflow")
-      .populate("workflowInstance");
+      { new: true }
+    );
   }
 }
 

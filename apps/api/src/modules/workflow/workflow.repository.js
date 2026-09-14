@@ -78,6 +78,13 @@ class WorkflowRepository {
     return WorkflowStep.create(data);
   }
 
+  async shiftStepsFromOrder(workflowId, order) {
+    return WorkflowStep.updateMany(
+      { workflow: workflowId, order: { $gte: order }, isActive: true },
+      { $inc: { order: 1 } }
+    );
+  }
+
 async updateStep(
   workflowId,
   stepId,
@@ -241,7 +248,7 @@ async deactivateStep(
     return WorkflowInstance.findOne({
       company: companyId,
 
-      resourceType: String(resourceType).toLowerCase(),
+      resourceType,
 
       resourceId,
 
