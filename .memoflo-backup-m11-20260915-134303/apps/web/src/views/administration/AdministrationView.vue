@@ -38,12 +38,6 @@ const cards = [
     icon: "♙",
   },
   {
-    title: "Organization Structure",
-    text: "Configure SBUs, departments, designations and positions used by people and workflows.",
-    to: "/administration/organization",
-    icon: "⌘",
-  },
-  {
     title: "Company Branding",
     text: "Customize your logo, wallpaper and company colours.",
     to: "/administration/branding",
