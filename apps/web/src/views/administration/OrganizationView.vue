@@ -23,10 +23,7 @@ const tabs = [
   { key: "sbus", label: "SBUs", icon: "⌂" },
 ];
 
-const title = computed(() => {
-  const item = tabs.find((tab) => tab.key === activeTab.value);
-  return item?.label || "Organization";
-});
+const title = computed(() => tabs.find((tab) => tab.key === activeTab.value)?.label || "Organization");
 
 const currentItems = computed(() => {
   if (activeTab.value === "positions") return positions.value;
@@ -34,6 +31,10 @@ const currentItems = computed(() => {
   if (activeTab.value === "designations") return designations.value;
   return sbus.value;
 });
+
+function idOf(value) {
+  return typeof value === "object" && value ? value._id : value;
+}
 
 function labelEmployee(value) {
   if (!value) return "Vacant";
@@ -55,31 +56,37 @@ function labelDesignation(id) {
 
 function openCreate(type) {
   modal.value = { type, editing: false };
-  form.value = type === "sbu"
-    ? { name: "", code: "", description: "" }
-    : type === "department"
-      ? { name: "", code: "", sbu: sbus.value[0]?._id || "", description: "" }
-      : type === "designation"
-        ? { title: "", sbu: sbus.value[0]?._id || "", department: departments.value[0]?._id || "", level: 1, description: "" }
-        : {
-            title: "",
-            code: "",
-            sbu: sbus.value[0]?._id || "",
-            department: departments.value[0]?._id || "",
-            designation: designations.value[0]?._id || "",
-            reportsTo: "",
-            isWorkflowNode: true,
-          };
+  form.value =
+    type === "sbu"
+      ? { name: "", code: "", description: "" }
+      : type === "department"
+        ? { name: "", code: "", sbu: sbus.value[0]?._id || "", description: "" }
+        : type === "designation"
+          ? { title: "", sbu: sbus.value[0]?._id || "", department: departments.value[0]?._id || "", level: 1, description: "" }
+          : {
+              title: "",
+              code: "",
+              sbu: sbus.value[0]?._id || "",
+              department: departments.value[0]?._id || "",
+              designation: designations.value[0]?._id || "",
+              reportsTo: "",
+              isWorkflowNode: true,
+            };
 }
 
 function openEdit(type, item) {
   modal.value = { type, editing: true, id: item._id };
   form.value = JSON.parse(JSON.stringify(item));
+
+  if (type === "department" || type === "designation" || type === "position") {
+    form.value.sbu = idOf(item.sbu) || "";
+  }
+  if (type === "designation" || type === "position") {
+    form.value.department = idOf(item.department) || "";
+  }
   if (type === "position") {
-    form.value.sbu = item.sbu?._id || item.sbu || "";
-    form.value.department = item.department?._id || item.department || "";
-    form.value.designation = item.designation?._id || item.designation || "";
-    form.value.reportsTo = item.reportsTo?._id || item.reportsTo || "";
+    form.value.designation = idOf(item.designation) || "";
+    form.value.reportsTo = idOf(item.reportsTo) || "";
   }
 }
 
@@ -108,19 +115,56 @@ async function load() {
   }
 }
 
+function requiredRelation(field, label) {
+  const value = form.value[field];
+  if (!value) {
+    error.value = `${label} is required.`;
+    return false;
+  }
+  return true;
+}
+
 async function save() {
   if (!modal.value) return;
-  saving.value = true;
+
   error.value = "";
   notice.value = "";
+  const type = modal.value.type;
+
+  if (type === "department" && !requiredRelation("sbu", "SBU")) return;
+  if (type === "designation" && (!requiredRelation("sbu", "SBU") || !requiredRelation("department", "Department"))) return;
+  if (type === "position" &&
+      (!requiredRelation("sbu", "SBU") ||
+       !requiredRelation("department", "Department") ||
+       !requiredRelation("designation", "Designation"))) return;
+
+  if ((type === "sbu" || type === "department") && !form.value.name?.trim()) {
+    error.value = "Name is required.";
+    return;
+  }
+  if ((type === "designation" || type === "position") && !form.value.title?.trim()) {
+    error.value = "Title is required.";
+    return;
+  }
+
+  saving.value = true;
+
   try {
-    const type = modal.value.type;
     const payload = { ...form.value };
     delete payload._id;
     delete payload.createdAt;
     delete payload.updatedAt;
     delete payload.company;
     delete payload.occupant;
+    delete payload.isActive;
+    delete payload.deletedAt;
+
+    for (const field of ["sbu", "department", "designation", "reportsTo"]) {
+      if (payload[field] === "") {
+        if (field === "reportsTo") payload[field] = null;
+        else delete payload[field];
+      }
+    }
 
     if (type === "sbu") {
       await (modal.value.editing ? api.updateSBU(modal.value.id, payload) : api.createSBU(payload));
@@ -144,6 +188,7 @@ async function save() {
 
 async function remove(type, item) {
   if (!window.confirm(`Deactivate ${item.name || item.title || item.code || "this record"}?`)) return;
+  error.value = "";
   try {
     if (type === "department") await api.deleteDepartment(item._id);
     if (type === "designation") await api.deleteDesignation(item._id);

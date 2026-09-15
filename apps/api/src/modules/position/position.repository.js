@@ -1,98 +1,91 @@
 import Position from "./position.model.js";
 import Employee from "../employee/employee.model.js";
 
+const populate = [
+  { path: "sbu" },
+  { path: "department" },
+  { path: "designation" },
+  { path: "occupant" },
+  { path: "reportsTo" },
+];
+
 class PositionRepository {
   async create(payload) {
-    return await Position.create(payload);
+    return Position.create(payload);
   }
 
   async findAll(companyId) {
-    return await Position.find({
+    return Position.find({
       company: companyId,
       active: true,
     })
-      .populate("sbu")
-      .populate("department")
-      .populate("designation")
-      .populate("occupant")
-      .populate("reportsTo")
+      .populate(populate)
       .sort("title");
   }
 
-  async findById(id) {
-    return await Position.findById(id)
-      .populate("sbu")
-      .populate("department")
-      .populate("designation")
-      .populate("occupant")
-      .populate("reportsTo");
+  async findById(id, companyId) {
+    return Position.findOne({
+      _id: id,
+      company: companyId,
+      active: true,
+    }).populate(populate);
   }
 
-  async update(id, payload) {
-    return await Position.findByIdAndUpdate(
-      id,
+  async update(id, companyId, payload) {
+    return Position.findOneAndUpdate(
+      { _id: id, company: companyId, active: true },
       payload,
-      { new: true }
-    );
+      { new: true, runValidators: true }
+    ).populate(populate);
   }
 
-  async deactivate(id) {
-    return await Position.findByIdAndUpdate(
-      id,
+  async deactivate(id, companyId) {
+    return Position.findOneAndUpdate(
+      { _id: id, company: companyId, active: true },
       { active: false },
       { new: true }
     );
   }
 
- async assignEmployee(positionId, employeeId) {
-  const position = await Position.findByIdAndUpdate(
-    positionId,
-    {
-      occupant: employeeId,
-    },
-    {
-      new: true,
-    }
-  );
-
-  if (!position) {
-    throw new Error("Position not found");
-  }
-
-  await Employee.findByIdAndUpdate(
-    employeeId,
-    {
-      position: positionId,
-    }
-  );
-
-  return position;
-}
-
-async vacate(positionId) {
-  const position = await Position.findById(positionId);
-
-  if (!position) {
-    throw new Error("Position not found");
-  }
-
-  const employeeId = position.occupant;
-
-  position.occupant = null;
-  await position.save();
-
-  if (employeeId) {
-    await Employee.findByIdAndUpdate(
-      employeeId,
-      {
-        position: null,
-      }
+  async assignEmployee(positionId, companyId, employeeId) {
+    const position = await Position.findOneAndUpdate(
+      { _id: positionId, company: companyId, active: true },
+      { occupant: employeeId },
+      { new: true }
     );
+
+    if (!position) throw new Error("Position not found");
+
+    await Employee.findOneAndUpdate(
+      { _id: employeeId, company: companyId },
+      { position: positionId }
+    );
+
+    return position;
   }
 
-  return position;
-}
+  async vacate(positionId, companyId) {
+    const position = await Position.findOne({
+      _id: positionId,
+      company: companyId,
+      active: true,
+    });
 
+    if (!position) throw new Error("Position not found");
+
+    const employeeId = position.occupant;
+    position.occupant = null;
+    await position.save();
+
+    if (employeeId) {
+      await Employee.findOneAndUpdate(
+        { _id: employeeId, company: companyId },
+        { position: null }
+      );
+    }
+
+    return position;
+  }
 }
 
 export default new PositionRepository();
