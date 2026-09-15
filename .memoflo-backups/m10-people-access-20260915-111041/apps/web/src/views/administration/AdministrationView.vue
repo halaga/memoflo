@@ -32,12 +32,6 @@ const cards = [
     icon: "♙",
   },
   {
-    title: "Employees",
-    text: "Set up employees, assign roles and positions, and create their login accounts.",
-    to: "/administration/employees",
-    icon: "♙",
-  },
-  {
     title: "Company Branding",
     text: "Customize your logo, wallpaper and company colours.",
     to: "/administration/branding",

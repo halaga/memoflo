@@ -5,7 +5,6 @@ class AuthRepository {
     const employee = await Employee.findOne({
       email: email.toLowerCase(),
       active: true,
-      loginEnabled: { $ne: false },
       employmentStatus: "Active",
       deletedAt: null,
     })

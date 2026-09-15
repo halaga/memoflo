@@ -180,16 +180,6 @@ const routes = [
       },
 
       {
-        path: "administration/employees",
-        name: "employees",
-        component: () =>
-          import("../views/administration/EmployeesView.vue"),
-        meta: {
-          permission: "employees.view",
-        },
-      },
-
-      {
         path: "administration/modules",
         name: "module-access",
         component: () =>

@@ -1,82 +1,79 @@
 import Employee from "./employee.model.js";
 
+const populateEmployee = (query) =>
+  query.populate("company").populate("position").populate("role");
+
 class EmployeeRepository {
   async create(data) {
     return Employee.create(data);
   }
 
-  async findById(id) {
-    return Employee.findById(id)
-      .populate("company")
-      .populate("position")
-      .populate("role");
+  async findById(id, companyId = null) {
+    const filter = { _id: id, active: true, deletedAt: null };
+    if (companyId) filter.company = companyId;
+    return populateEmployee(Employee.findOne(filter));
   }
 
-  async findByEmail(email) {
-    return Employee.findOne({
-      email: email.toLowerCase(),
-      active: true,
-    })
-      .select("+password")
-      .populate("company")
-      .populate("role")
-      .populate("position");
+  async findByEmail(email, companyId = null, includePassword = false) {
+    const filter = { email: email.toLowerCase(), active: true, deletedAt: null };
+    if (companyId) filter.company = companyId;
+    let query = Employee.findOne(filter);
+    if (includePassword) query = query.select("+password");
+    return populateEmployee(query);
   }
 
-  async findByEmployeeNo(employeeNo) {
-    return Employee.findOne({
-      employeeNo,
-      active: true,
-    });
+  async findByEmployeeNo(employeeNo, companyId = null) {
+    const filter = { employeeNo, active: true, deletedAt: null };
+    if (companyId) filter.company = companyId;
+    return Employee.findOne(filter);
   }
 
   async findAll(companyId) {
-    return Employee.find({
-      company: companyId,
-      active: true,
-      deletedAt: null,
-    })
-      .populate("position")
-      .populate("role")
-      .sort({ createdAt: -1 });
-  }
-
-  async update(id, payload) {
-    return Employee.findOneAndUpdate(
-      {
-        _id: id,
-        deletedAt: null,
-      },
-      payload,
-      {
-        new: true,
-        runValidators: true,
-      }
-    )
-      .populate("company")
-      .populate("position")
-      .populate("role");
-  }
-
-  async deactivate(id) {
-    return Employee.findOneAndUpdate(
-      {
-        _id: id,
-        deletedAt: null,
-      },
-      {
-        active: false,
-        employmentStatus: "Inactive",
-        deletedAt: new Date(),
-      },
-      {
-        new: true,
-      }
+    return populateEmployee(
+      Employee.find({ company: companyId, active: true, deletedAt: null }).sort({ createdAt: -1 })
     );
   }
 
-  async softDelete(id) {
-    return this.deactivate(id);
+  async update(id, companyId, payload) {
+    return populateEmployee(
+      Employee.findOneAndUpdate(
+        { _id: id, company: companyId, deletedAt: null },
+        payload,
+        { new: true, runValidators: true }
+      )
+    );
+  }
+
+  async deactivate(id, companyId) {
+    return populateEmployee(
+      Employee.findOneAndUpdate(
+        { _id: id, company: companyId, deletedAt: null },
+        { active: false, employmentStatus: "Inactive", deletedAt: new Date(), loginEnabled: false },
+        { new: true }
+      )
+    );
+  }
+
+  async updatePassword(id, companyId, passwordHash) {
+    return Employee.findOneAndUpdate(
+      { _id: id, company: companyId, deletedAt: null },
+      { password: passwordHash, loginEnabled: true, active: true, employmentStatus: "Active" },
+      { new: true }
+    );
+  }
+
+  async clearPositionOccupant(positionId, employeeId) {
+    const Position = (await import("../position/position.model.js")).default;
+    await Position.updateOne({ _id: positionId, occupant: employeeId }, { $set: { occupant: null } });
+  }
+
+  async setPositionOccupant(positionId, employeeId) {
+    const Position = (await import("../position/position.model.js")).default;
+    return Position.findOneAndUpdate(
+      { _id: positionId, active: true },
+      { $set: { occupant: employeeId } },
+      { new: true }
+    );
   }
 }
 

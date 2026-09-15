@@ -158,31 +158,6 @@ export const api = {
     return request("/employees");
   },
 
-  createEmployee(data) {
-    return request("/employees", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  },
-
-  updateEmployee(id, data) {
-    return request(`/employees/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-    });
-  },
-
-  resetEmployeePassword(id, password = null) {
-    return request(`/employees/${id}/reset-password`, {
-      method: "PATCH",
-      body: JSON.stringify(password ? { password } : {}),
-    });
-  },
-
-  deactivateEmployee(id) {
-    return request(`/employees/${id}`, { method: "DELETE" });
-  },
-
   listPositions() {
     return request("/positions");
   },

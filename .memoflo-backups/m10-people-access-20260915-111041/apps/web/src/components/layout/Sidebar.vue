@@ -135,12 +135,6 @@ const administrationItems = [
     permission: "roles.view",
   },
   {
-    label: "Employees",
-    route: "/administration/employees",
-    icon: "♙",
-    permission: "employees.view",
-  },
-  {
     label: "Module Access",
     route: "/administration/modules",
     icon: "◈",
