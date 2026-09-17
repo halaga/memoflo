@@ -10,7 +10,8 @@
     "start": "node src/server.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "seed": "node src/seed.js"
+    "seed": "node src/seed.js",
+    "reset:login": "node src/scripts/reset-login.js"
   },
   "keywords": [
     "memoflo",

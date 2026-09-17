@@ -4,28 +4,32 @@ class AuthController {
   async login(req, res, next) {
     try {
       const { email, password, companySlug } = req.body;
+
       const result = await AuthService.login(
         email,
         password,
         companySlug
       );
 
-      res.status(200).json(result);
+      return res.status(200).json(result);
     } catch (error) {
-      next(error);
+      return next(error);
     }
   }
 
   async me(req, res, next) {
     try {
-      const employee = await AuthService.me(req.user.id);
+      const employee = await AuthService.me(
+        req.user.id,
+        req.user.company
+      );
 
-      res.json({
+      return res.json({
         success: true,
         employee,
       });
     } catch (error) {
-      next(error);
+      return next(error);
     }
   }
 }

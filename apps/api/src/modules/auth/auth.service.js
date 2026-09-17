@@ -1,32 +1,47 @@
 import AuthRepository from "./auth.repository.js";
-import { comparePassword } from "./password.js";
 import { generateToken } from "./jwt.js";
+import { comparePassword } from "./password.js";
+
+function createError(message, status = 400) {
+  const error = new Error(message);
+  error.status = status;
+  return error;
+}
 
 class AuthService {
   async login(email, password, companySlug = null) {
+    const normalizedEmail = String(email || "")
+      .trim()
+      .toLowerCase();
+
+    if (!normalizedEmail || !password) {
+      throw createError("Email and password are required.", 400);
+    }
+
     const employee = await AuthRepository.findByEmail(
-      email,
+      normalizedEmail,
       companySlug
     );
 
     if (!employee) {
-      throw new Error("Invalid credentials");
+      throw createError("Invalid credentials", 401);
     }
 
-    const valid = await comparePassword(
+    const validPassword = await comparePassword(
       password,
       employee.password
     );
 
-    if (!valid) {
-      throw new Error("Invalid credentials");
+    if (!validPassword) {
+      throw createError("Invalid credentials", 401);
     }
 
     if (
       !employee.active ||
+      employee.loginEnabled === false ||
       employee.employmentStatus !== "Active"
     ) {
-      throw new Error("This employee account is inactive");
+      throw createError("This employee account is inactive", 403);
     }
 
     await AuthRepository.updateLastLogin(employee._id);
@@ -47,18 +62,26 @@ class AuthService {
     };
   }
 
-  async me(id) {
+  async me(id, companyId = null) {
     const employee = await AuthRepository.findById(id);
 
     if (!employee) {
-      throw new Error("Employee not found");
+      throw createError("Session is no longer valid", 401);
+    }
+
+    if (
+      companyId &&
+      employee.company?._id?.toString() !== companyId.toString()
+    ) {
+      throw createError("Session is no longer valid", 401);
     }
 
     if (
       !employee.active ||
+      employee.loginEnabled === false ||
       employee.employmentStatus !== "Active"
     ) {
-      throw new Error("This employee account is inactive");
+      throw createError("This employee account is inactive", 403);
     }
 
     return employee;
