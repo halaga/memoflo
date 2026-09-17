@@ -74,6 +74,15 @@ const routes = [
         component: () =>
           import("../views/modules/ModulesView.vue"),
       },
+      {
+        path: "email-signature",
+        name: "email-signature",
+        component: () =>
+          import("../views/signature/EmailSignatureView.vue"),
+        meta: {
+          module: "signature",
+        },
+      },
 
       {
         path: "dashboard",

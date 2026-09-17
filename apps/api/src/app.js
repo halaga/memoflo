@@ -1,24 +1,23 @@
-import express from "express";
+import cookieParser from "cookie-parser";
 import cors from "cors";
+import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
-import cookieParser from "cookie-parser";
 
-import positionRoutes from "./modules/position/position.routes.js";
+import errorHandler from "./middleware/errorHandler.js";
+import notFound from "./middleware/notFound.js";
 import authRoutes from "./modules/auth/auth.routes.js";
-import employeeRoutes from "./modules/employee/employee.routes.js";
-import workflowRoutes from "./modules/workflow/workflow.routes.js";
-import memoRoutes from "./modules/memo/memo.routes.js";
-import departmentRoutes from "./modules/organization/department/department.routes.js";
-import designationRoutes from "./modules/organization/designation/designation.routes.js";
-import sbuRoutes from "./modules/organization/sbu/sbu.routes.js";
 import roleRoutes from "./modules/auth/role.routes.js";
 import businessServiceRoutes from "./modules/business-service/businessService.routes.js";
 import companyRoutes from "./modules/company/company.routes.js";
+import employeeRoutes from "./modules/employee/employee.routes.js";
+import memoRoutes from "./modules/memo/memo.routes.js";
 import notificationRoutes from "./modules/notification/notification.routes.js";
-
-import notFound from "./middleware/notFound.js";
-import errorHandler from "./middleware/errorHandler.js";
+import positionRoutes from "./modules/position/position.routes.js";
+import departmentRoutes from "./modules/organization/department/department.routes.js";
+import designationRoutes from "./modules/organization/designation/designation.routes.js";
+import sbuRoutes from "./modules/organization/sbu/sbu.routes.js";
+import workflowRoutes from "./modules/workflow/workflow.routes.js";
 
 const app = express();
 

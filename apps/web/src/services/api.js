@@ -7,7 +7,6 @@ function getToken() {
 
 async function request(path, options = {}) {
   const token = getToken();
-
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers || {}),
@@ -57,21 +56,13 @@ export function normalizeList(result, keys = []) {
     }
   }
 
-  if (Array.isArray(result?.data)) {
-    return result.data;
-  }
-
-  return [];
+  return Array.isArray(result?.data) ? result.data : [];
 }
 
 export function tenantSlug() {
   const host = window.location.hostname.toLowerCase();
 
-  if (host.endsWith(".memoflo.com")) {
-    return host.split(".")[0];
-  }
-
-  if (host.endsWith(".localhost")) {
+  if (host.endsWith(".memoflo.com") || host.endsWith(".localhost")) {
     return host.split(".")[0];
   }
 
@@ -180,37 +171,106 @@ export const api = {
   },
 
   deactivateEmployee(id) {
-    return request(`/employees/${id}`, { method: "DELETE" });
+    return request(`/employees/${id}`, {
+      method: "DELETE",
+    });
   },
 
   listPositions() {
     return request("/positions");
   },
 
+  createPosition(data) {
+    return request("/positions", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  updatePosition(id, data) {
+    return request(`/positions/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  deletePosition(id) {
+    return request(`/positions/${id}`, {
+      method: "DELETE",
+    });
+  },
+
   listDepartments() {
     return request("/departments");
+  },
+
+  createDepartment(data) {
+    return request("/departments", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateDepartment(id, data) {
+    return request(`/departments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteDepartment(id) {
+    return request(`/departments/${id}`, {
+      method: "DELETE",
+    });
   },
 
   listDesignations() {
     return request("/designations");
   },
 
+  createDesignation(data) {
+    return request("/designations", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateDesignation(id, data) {
+    return request(`/designations/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteDesignation(id) {
+    return request(`/designations/${id}`, {
+      method: "DELETE",
+    });
+  },
+
   listSBUs() {
     return request("/sbus");
   },
 
-  createSBU(data) { return request("/sbus", { method: "POST", body: JSON.stringify(data) }); },
-  updateSBU(id, data) { return request(`/sbus/${id}`, { method: "PATCH", body: JSON.stringify(data) }); },
-  deleteSBU(id) { return request(`/sbus/${id}`, { method: "DELETE" }); },
-  createDepartment(data) { return request("/departments", { method: "POST", body: JSON.stringify(data) }); },
-  updateDepartment(id, data) { return request(`/departments/${id}`, { method: "PATCH", body: JSON.stringify(data) }); },
-  deleteDepartment(id) { return request(`/departments/${id}`, { method: "DELETE" }); },
-  createDesignation(data) { return request("/designations", { method: "POST", body: JSON.stringify(data) }); },
-  updateDesignation(id, data) { return request(`/designations/${id}`, { method: "PATCH", body: JSON.stringify(data) }); },
-  deleteDesignation(id) { return request(`/designations/${id}`, { method: "DELETE" }); },
-  createPosition(data) { return request("/positions", { method: "POST", body: JSON.stringify(data) }); },
-  updatePosition(id, data) { return request(`/positions/${id}`, { method: "PATCH", body: JSON.stringify(data) }); },
-  deletePosition(id) { return request(`/positions/${id}`, { method: "DELETE" }); },
+  createSBU(data) {
+    return request("/sbus", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateSBU(id, data) {
+    return request(`/sbus/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteSBU(id) {
+    return request(`/sbus/${id}`, {
+      method: "DELETE",
+    });
+  },
 
   listBusinessServices() {
     return request("/business-services");
@@ -303,10 +363,7 @@ export const api = {
   startWorkflow(workflowId, resourceType, resourceId) {
     return request(`/workflow/${workflowId}/start`, {
       method: "POST",
-      body: JSON.stringify({
-        resourceType,
-        resourceId,
-      }),
+      body: JSON.stringify({ resourceType, resourceId }),
     });
   },
 

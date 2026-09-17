@@ -3,28 +3,48 @@ import PositionService from "./position.service.js";
 class PositionController {
   async create(req, res, next) {
     try {
-      const position = await PositionService.createPosition(req.user.company, req.body);
-      res.status(201).json({ success: true, data: position });
-    } catch (err) {
-      next(err);
+      const position = await PositionService.createPosition(
+        req.user.company,
+        req.body
+      );
+
+      res.status(201).json({
+        success: true,
+        data: position,
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
   async list(req, res, next) {
     try {
-      const positions = await PositionService.listPositions(req.user.company);
-      res.json({ success: true, data: positions });
-    } catch (err) {
-      next(err);
+      const positions = await PositionService.listPositions(
+        req.user.company
+      );
+
+      res.json({
+        success: true,
+        data: positions,
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
   async show(req, res, next) {
     try {
-      const position = await PositionService.getPosition(req.params.id, req.user.company);
-      res.json({ success: true, data: position });
-    } catch (err) {
-      next(err);
+      const position = await PositionService.getPosition(
+        req.params.id,
+        req.user.company
+      );
+
+      res.json({
+        success: true,
+        data: position,
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -35,18 +55,29 @@ class PositionController {
         req.user.company,
         req.body
       );
-      res.json({ success: true, data: position });
-    } catch (err) {
-      next(err);
+
+      res.json({
+        success: true,
+        data: position,
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
   async remove(req, res, next) {
     try {
-      await PositionService.deletePosition(req.params.id, req.user.company);
-      res.json({ success: true, message: "Position deactivated successfully" });
-    } catch (err) {
-      next(err);
+      const position = await PositionService.deletePosition(
+        req.params.id,
+        req.user.company
+      );
+
+      res.json({
+        success: true,
+        data: position,
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -57,9 +88,13 @@ class PositionController {
         req.body.employeeId,
         req.user.company
       );
-      res.json({ success: true, data: position });
-    } catch (err) {
-      next(err);
+
+      res.json({
+        success: true,
+        data: position,
+      });
+    } catch (error) {
+      next(error);
     }
   }
 
@@ -69,9 +104,13 @@ class PositionController {
         req.params.id,
         req.user.company
       );
-      res.json({ success: true, data: position });
-    } catch (err) {
-      next(err);
+
+      res.json({
+        success: true,
+        data: position,
+      });
+    } catch (error) {
+      next(error);
     }
   }
 }

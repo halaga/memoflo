@@ -1,8 +1,8 @@
-node_modules
+node_modules/
 .env
-dist
-coverage
-logs
-*.log
-uploads
+.env.*
+!.env.example
 .DS_Store
+.vite/
+dist/
+coverage/

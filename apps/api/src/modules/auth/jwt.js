@@ -1,18 +1,13 @@
 import jwt from "jsonwebtoken";
 
+import env from "../../config/env.js";
+
 export function generateToken(payload) {
-  return jwt.sign(
-    payload,
-    process.env.JWT_SECRET,
-    {
-      expiresIn: process.env.JWT_EXPIRES_IN || "7d",
-    }
-  );
+  return jwt.sign(payload, env.jwtSecret, {
+    expiresIn: env.jwtExpiresIn,
+  });
 }
 
 export function verifyToken(token) {
-  return jwt.verify(
-    token,
-    process.env.JWT_SECRET
-  );
+  return jwt.verify(token, env.jwtSecret);
 }

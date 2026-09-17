@@ -1,32 +1,19 @@
-import "./database/registerModels.js";
-import app from "./app.js";
 import env from "./config/env.js";
-import connectDatabase from "./database/mongodb.js";
+import connectDB from "./database/mongodb.js";
+import app from "./app.js";
 
-const startServer = async () => {
-  await connectDatabase();
+async function startServer() {
+  try {
+    await connectDB();
 
-  app.listen(env.port, () => {
-    console.log("");
-
-    console.log(
-      "================================="
-    );
-
-    console.log(
-      `🚀 MemoFlo API running on port ${env.port}`
-    );
-
-    console.log(
-      `🌍 Environment: ${env.nodeEnv}`
-    );
-
-    console.log(
-      "================================="
-    );
-
-    console.log("");
-  });
-};
+    app.listen(env.port, () => {
+      console.log(`MemoFlo API running on port ${env.port}`);
+      console.log(`Environment: ${env.nodeEnv}`);
+    });
+  } catch (error) {
+    console.error("Unable to start MemoFlo API:", error);
+    process.exit(1);
+  }
+}
 
 startServer();

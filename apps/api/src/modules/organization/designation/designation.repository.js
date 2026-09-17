@@ -1,32 +1,62 @@
 import Designation from "./designation.model.js";
 
+const populateDesignation = (query) =>
+  query
+    .populate("sbu", "name code")
+    .populate("department", "name code");
+
 class DesignationRepository {
-  create(data) {
+  async create(data) {
     return Designation.create(data);
   }
 
-  findAll(company) {
-    return Designation.find({
-      company,
-      isActive: true,
-    }).sort({ title: 1 });
-  }
-
-  findById(id) {
-    return Designation.findById(id);
-  }
-
-  update(id, data) {
-    return Designation.findByIdAndUpdate(
-      id,
-      data,
-      { new: true }
+  async findAll(companyId) {
+    return populateDesignation(
+      Designation.find({
+        company: companyId,
+        isActive: true,
+        deletedAt: null,
+      }).sort({ title: 1 })
     );
   }
 
-  deactivate(id) {
-    return Designation.findByIdAndUpdate(
-      id,
+  async findById(id, companyId) {
+    return populateDesignation(
+      Designation.findOne({
+        _id: id,
+        company: companyId,
+        isActive: true,
+        deletedAt: null,
+      })
+    );
+  }
+
+  async update(id, companyId, data) {
+    return populateDesignation(
+      Designation.findOneAndUpdate(
+        {
+          _id: id,
+          company: companyId,
+          isActive: true,
+          deletedAt: null,
+        },
+        data,
+        {
+          new: true,
+          runValidators: true,
+        }
+      )
+    );
+  }
+
+  async deactivate(id, companyId) {
+    return Designation.findOneAndUpdate(
+      {
+        _id: id,
+        company: companyId,
+        isActive: true,
+        deletedAt: null,
+      },
       {
         isActive: false,
         deletedAt: new Date(),

@@ -1,19 +1,20 @@
-import Company from "../company/company.model.js";
-import Employee from "./employee.model.js";
 import bcrypt from "bcryptjs";
 
-export async function seedEmployees() {
-  const company = await Company.findOne();
+import Company from "../company/company.model.js";
+import Employee from "./employee.model.js";
 
-  if (!company) {
+export async function seedEmployees(company = null) {
+  const targetCompany =
+    company || (await Company.findOne());
+
+  if (!targetCompany) {
     console.log("⚠️ No company found. Skipping employee seed.");
     return;
   }
 
-  const passwordHash = await bcrypt.hash(
-    "password123",
-    10
-  );
+  const password =
+    process.env.SEED_ADMIN_PASSWORD || "password123";
+  const passwordHash = await bcrypt.hash(password, 10);
 
   const employees = [
     {
@@ -31,23 +32,26 @@ export async function seedEmployees() {
   ];
 
   for (const employee of employees) {
-    const exists = await Employee.findOne({
+    const existing = await Employee.findOne({
       email: employee.email,
     });
 
-    if (exists) {
+    if (existing) {
       console.log(`✔ ${employee.email} already exists`);
       continue;
     }
 
     await Employee.create({
-      company: company._id,
+      company: targetCompany._id,
       ...employee,
       password: passwordHash,
+      loginEnabled: true,
+      active: true,
+      employmentStatus: "Active",
     });
 
     console.log(`✔ ${employee.email} created`);
   }
 
-  console.log("✅ Employee Seed Complete");
+  console.log("✅ Employee seed complete");
 }

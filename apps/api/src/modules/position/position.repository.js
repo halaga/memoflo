@@ -1,7 +1,7 @@
-import Position from "./position.model.js";
 import Employee from "../employee/employee.model.js";
+import Position from "./position.model.js";
 
-const populate = [
+const positionPopulate = [
   { path: "sbu" },
   { path: "department" },
   { path: "designation" },
@@ -18,9 +18,10 @@ class PositionRepository {
     return Position.find({
       company: companyId,
       active: true,
+      deletedAt: null,
     })
-      .populate(populate)
-      .sort("title");
+      .populate(positionPopulate)
+      .sort({ title: 1 });
   }
 
   async findById(id, companyId) {
@@ -28,40 +29,67 @@ class PositionRepository {
       _id: id,
       company: companyId,
       active: true,
-    }).populate(populate);
+      deletedAt: null,
+    }).populate(positionPopulate);
   }
 
   async update(id, companyId, payload) {
     return Position.findOneAndUpdate(
-      { _id: id, company: companyId, active: true },
+      {
+        _id: id,
+        company: companyId,
+        active: true,
+        deletedAt: null,
+      },
       payload,
-      { new: true, runValidators: true }
-    ).populate(populate);
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).populate(positionPopulate);
   }
 
   async deactivate(id, companyId) {
     return Position.findOneAndUpdate(
-      { _id: id, company: companyId, active: true },
-      { active: false },
+      {
+        _id: id,
+        company: companyId,
+        active: true,
+        deletedAt: null,
+      },
+      {
+        active: false,
+        deletedAt: new Date(),
+      },
       { new: true }
     );
   }
 
   async assignEmployee(positionId, companyId, employeeId) {
     const position = await Position.findOneAndUpdate(
-      { _id: positionId, company: companyId, active: true },
+      {
+        _id: positionId,
+        company: companyId,
+        active: true,
+        occupant: null,
+      },
       { occupant: employeeId },
       { new: true }
     );
 
-    if (!position) throw new Error("Position not found");
+    if (!position) {
+      throw new Error("Position is unavailable or already occupied");
+    }
 
     await Employee.findOneAndUpdate(
-      { _id: employeeId, company: companyId },
+      {
+        _id: employeeId,
+        company: companyId,
+      },
       { position: positionId }
     );
 
-    return position;
+    return position.populate(positionPopulate);
   }
 
   async vacate(positionId, companyId) {
@@ -69,9 +97,12 @@ class PositionRepository {
       _id: positionId,
       company: companyId,
       active: true,
+      deletedAt: null,
     });
 
-    if (!position) throw new Error("Position not found");
+    if (!position) {
+      throw new Error("Position not found");
+    }
 
     const employeeId = position.occupant;
     position.occupant = null;
@@ -79,12 +110,15 @@ class PositionRepository {
 
     if (employeeId) {
       await Employee.findOneAndUpdate(
-        { _id: employeeId, company: companyId },
+        {
+          _id: employeeId,
+          company: companyId,
+        },
         { position: null }
       );
     }
 
-    return position;
+    return position.populate(positionPopulate);
   }
 }
 

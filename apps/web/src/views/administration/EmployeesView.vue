@@ -149,7 +149,16 @@ onMounted(load);
 
     <section v-if="showForm" class="card employee-form-card">
       <div class="builder-title">
-        <div><span class="page-kicker">{{ editingId ? "EDIT EMPLOYEE" : "NEW EMPLOYEE" }}</span><h2>{{ editingId ? "Update employee" : "Add employee" }}</h2><p>Position and role determine where this person sits in the company and what they can do.</p></div>
+        <div>
+          <span class="page-kicker">
+            {{ editingId ? "EDIT EMPLOYEE" : "NEW EMPLOYEE" }}
+          </span>
+          <h2>{{ editingId ? "Update employee" : "Add employee" }}</h2>
+          <p>
+            Position and role determine where this person sits in the
+            company and what they can do.
+          </p>
+        </div>
         <button class="btn btn-secondary" type="button" @click="showForm=false">Close</button>
       </div>
       <div class="form-row">
@@ -161,26 +170,133 @@ onMounted(load);
         <label>Phone<input v-model="form.phone" class="input" /></label>
       </div>
       <div class="form-row">
-        <label>Role<select v-model="form.role" class="input"><option value="">No role</option><option v-for="role in roles" :key="role._id" :value="role._id">{{ role.name }}</option></select></label>
-        <label>Position<select v-model="form.position" class="input"><option value="">Unassigned</option><option v-for="position in positions" :key="position._id" :value="position._id" :disabled="position.occupant && position.occupant._id !== editingId">{{ positionLabel(position) }}{{ position.occupant && position.occupant._id !== editingId ? " · occupied" : "" }}</option></select></label>
+        <label>
+          Role
+          <select v-model="form.role" class="input">
+            <option value="">No role</option>
+            <option
+              v-for="role in roles"
+              :key="role._id"
+              :value="role._id"
+            >
+              {{ role.name }}
+            </option>
+          </select>
+        </label>
+        <label>
+          Position
+          <select v-model="form.position" class="input">
+            <option value="">Unassigned</option>
+            <option
+              v-for="position in positions"
+              :key="position._id"
+              :value="position._id"
+              :disabled="
+                position.occupant &&
+                position.occupant._id !== editingId
+              "
+            >
+              {{ positionLabel(position) }}
+              {{
+                position.occupant &&
+                position.occupant._id !== editingId
+                  ? " · occupied"
+                  : ""
+              }}
+            </option>
+          </select>
+        </label>
       </div>
       <div v-if="!editingId" class="login-setup">
         <label class="check-label"><input v-model="form.createLogin" type="checkbox" /> Create login account</label>
         <label v-if="form.createLogin">Temporary password <input v-model="form.password" class="input" placeholder="Leave blank to generate securely" /></label>
       </div>
-      <div class="form-actions"><button class="btn btn-primary" type="button" :disabled="saving" @click="save">{{ saving ? "Saving…" : editingId ? "Save changes" : "Create employee" }}</button></div>
+      <div class="form-actions">
+        <button
+          class="btn btn-primary"
+          type="button"
+          :disabled="saving"
+          @click="save"
+        >
+          {{
+            saving
+              ? "Saving…"
+              : editingId
+                ? "Save changes"
+                : "Create employee"
+          }}
+        </button>
+      </div>
     </section>
 
     <section class="card">
-      <div class="builder-title"><div><h2>Company employees</h2><p>Active people in this MemoFlo tenant.</p></div><span class="count-pill">{{ employees.length }}</span></div>
+      <div class="builder-title">
+        <div>
+          <h2>Company employees</h2>
+          <p>Active people in this MemoFlo tenant.</p>
+        </div>
+        <span class="count-pill">{{ employees.length }}</span>
+      </div>
       <div v-if="loading" class="empty-state">Loading employees…</div>
-      <div v-else-if="!employees.length" class="empty-state"><div class="module-tile-icon">♙</div><h3>No employees yet</h3><p>Add your first employee, assign a role and position, then create their login.</p><button v-if="canCreate" class="btn btn-primary" type="button" @click="openCreate">+ Add employee</button></div>
+      <div v-else-if="!employees.length" class="empty-state">
+        <div class="module-tile-icon">♙</div>
+        <h3>No employees yet</h3>
+        <p>
+          Add your first employee, assign a role and position, then
+          create their login.
+        </p>
+        <button
+          v-if="canCreate"
+          class="btn btn-primary"
+          type="button"
+          @click="openCreate"
+        >
+          + Add employee
+        </button>
+      </div>
       <div v-else class="employee-list">
         <article v-for="employee in employees" :key="employee._id" class="employee-row">
           <div class="employee-avatar">{{ (employee.firstName?.[0] || "") + (employee.lastName?.[0] || "") }}</div>
-          <div class="employee-main"><strong>{{ employee.firstName }} {{ employee.lastName }}</strong><span>{{ employee.email }}</span><small>{{ employee.employeeNo }} · {{ positionLabel(employee.position) }}</small></div>
-          <div class="employee-role"><strong>{{ employee.role?.name || "No role" }}</strong><span>{{ employee.loginEnabled === false ? "Login disabled" : "Login enabled" }}</span></div>
-          <div class="employee-actions"><button class="btn btn-secondary" type="button" @click="openEdit(employee)">Edit</button><button class="btn btn-secondary" type="button" @click="resetPassword(employee)">Reset password</button><button class="btn btn-danger" type="button" @click="deactivate(employee)">Deactivate</button></div>
+          <div class="employee-main">
+            <strong>{{ employee.firstName }} {{ employee.lastName }}</strong>
+            <span>{{ employee.email }}</span>
+            <small>
+              {{ employee.employeeNo }} · {{ positionLabel(employee.position) }}
+            </small>
+          </div>
+          <div class="employee-role">
+            <strong>{{ employee.role?.name || "No role" }}</strong>
+            <span>
+              {{
+                employee.loginEnabled === false
+                  ? "Login disabled"
+                  : "Login enabled"
+              }}
+            </span>
+          </div>
+          <div class="employee-actions">
+            <button
+              class="btn btn-secondary"
+              type="button"
+              @click="openEdit(employee)"
+            >
+              Edit
+            </button>
+            <button
+              class="btn btn-secondary"
+              type="button"
+              @click="resetPassword(employee)"
+            >
+              Reset password
+            </button>
+            <button
+              class="btn btn-danger"
+              type="button"
+              @click="deactivate(employee)"
+            >
+              Deactivate
+            </button>
+          </div>
         </article>
       </div>
     </section>

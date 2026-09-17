@@ -12,66 +12,72 @@ class DepartmentController {
         success: true,
         data: department,
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 
   async list(req, res, next) {
     try {
-      const departments =
-        await DepartmentService.listDepartments(req.user.company);
+      const departments = await DepartmentService.listDepartments(
+        req.user.company
+      );
 
       res.json({
         success: true,
         data: departments,
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 
   async show(req, res, next) {
     try {
-      const department =
-        await DepartmentService.getDepartment(req.params.id);
+      const department = await DepartmentService.getDepartment(
+        req.params.id,
+        req.user.company
+      );
 
       res.json({
         success: true,
         data: department,
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 
   async update(req, res, next) {
     try {
-      const department =
-        await DepartmentService.updateDepartment(
-          req.params.id,
-          req.body
-        );
+      const department = await DepartmentService.updateDepartment(
+        req.params.id,
+        req.user.company,
+        req.body
+      );
 
       res.json({
         success: true,
         data: department,
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 
   async remove(req, res, next) {
     try {
-      await DepartmentService.deleteDepartment(req.params.id);
+      const department = await DepartmentService.deleteDepartment(
+        req.params.id,
+        req.user.company
+      );
 
       res.json({
         success: true,
-        message: "Department deleted successfully",
+        data: department,
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 }

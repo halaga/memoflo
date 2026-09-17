@@ -1,40 +1,62 @@
 import Department from "./department.model.js";
 
+const populateDepartment = (query) =>
+  query
+    .populate("sbu", "name code")
+    .populate("head", "firstName lastName email");
+
 class DepartmentRepository {
   async create(data) {
     return Department.create(data);
   }
 
   async findAll(companyId) {
-    return Department.find({
-      company: companyId,
-      isActive: true,
-    })
-      .populate("sbu", "name code")
-      .populate("head", "firstName lastName email")
-      .sort({ name: 1 });
-  }
-
-  async findById(id) {
-    return Department.findOne({
-      _id: id,
-      isActive: true,
-    })
-      .populate("sbu", "name code")
-      .populate("head", "firstName lastName email");
-  }
-
-  async update(id, data) {
-    return Department.findByIdAndUpdate(
-      id,
-      data,
-      { new: true, runValidators: true }
+    return populateDepartment(
+      Department.find({
+        company: companyId,
+        isActive: true,
+        deletedAt: null,
+      }).sort({ name: 1 })
     );
   }
 
-  async deactivate(id) {
-    return Department.findByIdAndUpdate(
-      id,
+  async findById(id, companyId) {
+    return populateDepartment(
+      Department.findOne({
+        _id: id,
+        company: companyId,
+        isActive: true,
+        deletedAt: null,
+      })
+    );
+  }
+
+  async update(id, companyId, data) {
+    return populateDepartment(
+      Department.findOneAndUpdate(
+        {
+          _id: id,
+          company: companyId,
+          isActive: true,
+          deletedAt: null,
+        },
+        data,
+        {
+          new: true,
+          runValidators: true,
+        }
+      )
+    );
+  }
+
+  async deactivate(id, companyId) {
+    return Department.findOneAndUpdate(
+      {
+        _id: id,
+        company: companyId,
+        isActive: true,
+        deletedAt: null,
+      },
       {
         isActive: false,
         active: false,

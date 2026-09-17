@@ -1,24 +1,19 @@
 import express from "express";
-import RoleService from "./role.service.js";
-import authMiddleware from "./auth.middleware.js";
+
 import authorize from "../../middleware/authorize.js";
+import authMiddleware from "./auth.middleware.js";
+import RoleService from "./role.service.js";
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
-/**
- * GET /api/roles
- */
 router.get(
   "/",
   authorize("roles.view"),
   async (req, res, next) => {
     try {
-      const roles =
-        await RoleService.listRoles(
-          req.user.company
-        );
+      const roles = await RoleService.listRoles(req.user.company);
 
       res.json({
         success: true,
@@ -30,16 +25,12 @@ router.get(
   }
 );
 
-/**
- * GET /api/roles/permissions
- */
 router.get(
   "/permissions",
   authorize("roles.view"),
   async (req, res, next) => {
     try {
-      const permissions =
-        await RoleService.listPermissions();
+      const permissions = await RoleService.listPermissions();
 
       res.json({
         success: true,
@@ -56,12 +47,11 @@ router.patch(
   authorize("roles.update"),
   async (req, res, next) => {
     try {
-      const employee =
-        await RoleService.assignRole(
-          req.params.id,
-          req.params.employeeId,
-          req.user.company
-        );
+      const employee = await RoleService.assignRole(
+        req.params.id,
+        req.params.employeeId,
+        req.user.company
+      );
 
       res.json({
         success: true,
@@ -73,21 +63,15 @@ router.patch(
   }
 );
 
-
-
-/**
- * GET /api/roles/:id
- */
 router.get(
   "/:id",
   authorize("roles.view"),
   async (req, res, next) => {
     try {
-      const role =
-        await RoleService.getRole(
-          req.params.id,
-          req.user.company
-        );
+      const role = await RoleService.getRole(
+        req.params.id,
+        req.user.company
+      );
 
       res.json({
         success: true,
@@ -99,19 +83,15 @@ router.get(
   }
 );
 
-/**
- * POST /api/roles
- */
 router.post(
   "/",
   authorize("roles.create"),
   async (req, res, next) => {
     try {
-      const role =
-        await RoleService.createRole(
-          req.user.company,
-          req.body
-        );
+      const role = await RoleService.createRole(
+        req.user.company,
+        req.body
+      );
 
       res.status(201).json({
         success: true,
@@ -123,20 +103,16 @@ router.post(
   }
 );
 
-/**
- * PATCH /api/roles/:id
- */
 router.patch(
   "/:id",
   authorize("roles.update"),
   async (req, res, next) => {
     try {
-      const role =
-        await RoleService.updateRole(
-          req.params.id,
-          req.user.company,
-          req.body
-        );
+      const role = await RoleService.updateRole(
+        req.params.id,
+        req.user.company,
+        req.body
+      );
 
       res.json({
         success: true,
@@ -148,28 +124,21 @@ router.patch(
   }
 );
 
-/**
- * DELETE /api/roles/:id
- */
 router.delete(
   "/:id",
   authorize("roles.delete"),
   async (req, res, next) => {
     try {
-      const result =
-        await RoleService.deleteRole(
-          req.params.id,
-          req.user.company
-        );
+      const result = await RoleService.deleteRole(
+        req.params.id,
+        req.user.company
+      );
 
       res.json(result);
     } catch (error) {
       next(error);
     }
   }
-  
 );
-
-
 
 export default router;

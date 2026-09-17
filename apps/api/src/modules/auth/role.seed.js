@@ -1,8 +1,5 @@
-import "../../config/env.js";
-import mongoose from "mongoose";
 import Role from "./role.model.js";
 import Permission from "./permission.model.js";
-import Company from "../company/company.model.js";
 import Employee from "../employee/employee.model.js";
 
 const permissions = [
@@ -219,91 +216,62 @@ const systemRoles = [
   },
 ];
 
-async function seedRoles() {
-
-
-  await mongoose.connect(process.env.MONGO_URI);
-
-  console.log("MongoDB connected");
-
+export async function seedRoles(company) {
   await Promise.all(
     permissions.map((permission) =>
       Permission.updateOne(
-        {
-          name: permission.name,
-        },
-        {
-          $set: permission,
-        },
-        {
-          upsert: true,
-        }
+        { name: permission.name },
+        { $set: permission },
+        { upsert: true }
       )
     )
   );
 
-  const companies = await Company.find({});
-
-  for (const company of companies) {
-    for (const role of systemRoles) {
-      await Role.updateOne(
-        {
+  for (const role of systemRoles) {
+    await Role.updateOne(
+      {
+        company: company._id,
+        code: role.code,
+      },
+      {
+        $set: {
           company: company._id,
+          name: role.name,
           code: role.code,
+          level: role.level,
+          description: role.description,
+          permissions: role.permissions,
+          isSystem: true,
         },
-        {
-          $set: {
-            company: company._id,
-            name: role.name,
-            code: role.code,
-            level: role.level,
-            description: role.description,
-            permissions: role.permissions,
-            isSystem: true,
-          },
-        },
-        {
-          upsert: true,
-        }
-      );
-    }
-
-    // Development fixtures: keep the two test accounts predictable.
-    const itRole = await Role.findOne({ company: company._id, code: "IT_STAFF" });
-    const adminRole = await Role.findOne({ company: company._id, code: "SYSTEM_ADMIN" });
-    if (itRole) {
-      await Employee.updateOne(
-        { company: company._id, email: "melvin@memoflo.com" },
-        { $set: { role: itRole._id } }
-      );
-    }
-    if (adminRole) {
-      await Employee.updateOne(
-        { company: company._id, email: "admin@memoflo.com" },
-        { $set: { role: adminRole._id } }
-      );
-    }
+      },
+      { upsert: true }
+    );
   }
 
-  console.log(
-    `Seeded ${permissions.length} permissions`
-  );
+  const itRole = await Role.findOne({
+    company: company._id,
+    code: "IT_STAFF",
+  });
 
-  console.log(
-    `Seeded ${companies.length} company role sets`
-  );
+  const adminRole = await Role.findOne({
+    company: company._id,
+    code: "SYSTEM_ADMIN",
+  });
 
-  await mongoose.disconnect();
+  if (itRole) {
+    await Employee.updateOne(
+      { company: company._id, email: "melvin@memoflo.com" },
+      { $set: { role: itRole._id } }
+    );
+  }
 
-  console.log("Role seed complete");
+  if (adminRole) {
+    await Employee.updateOne(
+      { company: company._id, email: "admin@memoflo.com" },
+      { $set: { role: adminRole._id } }
+    );
+  }
+
+  console.log(`Seeded ${permissions.length} permissions`);
+  console.log(`Seeded ${systemRoles.length} company role sets`);
 }
-
-seedRoles().catch(async (error) => {
-  console.error(error);
-
-  try {
-    await mongoose.disconnect();
-  } catch {}
-
-  process.exit(1);
-});

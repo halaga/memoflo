@@ -1,23 +1,28 @@
 import SBU from "./sbu.model.js";
 
+const populateHead = (query) =>
+  query.populate("head", "_id firstName lastName email");
+
 class SBURepository {
   async findAll(companyId) {
-    return SBU.find({
-      company: companyId,
-      isActive: true,
-      deletedAt: null,
-    })
-      .populate("head", "_id firstName lastName email")
-      .sort({ name: 1 });
+    return populateHead(
+      SBU.find({
+        company: companyId,
+        isActive: true,
+        deletedAt: null,
+      }).sort({ name: 1 })
+    );
   }
 
   async findById(id, companyId) {
-    return SBU.findOne({
-      _id: id,
-      company: companyId,
-      isActive: true,
-      deletedAt: null,
-    }).populate("head", "_id firstName lastName email");
+    return populateHead(
+      SBU.findOne({
+        _id: id,
+        company: companyId,
+        isActive: true,
+        deletedAt: null,
+      })
+    );
   }
 
   async create(payload) {
@@ -25,17 +30,35 @@ class SBURepository {
   }
 
   async update(id, companyId, payload) {
-    return SBU.findOneAndUpdate(
-      { _id: id, company: companyId, isActive: true, deletedAt: null },
-      payload,
-      { new: true, runValidators: true }
-    ).populate("head", "_id firstName lastName email");
+    return populateHead(
+      SBU.findOneAndUpdate(
+        {
+          _id: id,
+          company: companyId,
+          isActive: true,
+          deletedAt: null,
+        },
+        payload,
+        {
+          new: true,
+          runValidators: true,
+        }
+      )
+    );
   }
 
   async deactivate(id, companyId) {
     return SBU.findOneAndUpdate(
-      { _id: id, company: companyId, isActive: true, deletedAt: null },
-      { isActive: false, deletedAt: new Date() },
+      {
+        _id: id,
+        company: companyId,
+        isActive: true,
+        deletedAt: null,
+      },
+      {
+        isActive: false,
+        deletedAt: new Date(),
+      },
       { new: true }
     );
   }

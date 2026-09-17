@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
+
 import { api, getSavedEmployee } from "../../services/api";
 
 const employee = computed(() => getSavedEmployee());
@@ -12,26 +13,28 @@ const company = computed(
 );
 
 const modules = computed(() => workspace.value?.modules || []);
+
 const enabledModules = computed(() =>
   modules.value.filter((module) => module.enabled)
 );
 
-async function load() {
+async function loadWorkspace() {
   loading.value = true;
   error.value = "";
 
   try {
     const result = await api.getCompanyWorkspace();
     workspace.value = result?.data || result;
-  } catch (err) {
+  } catch (requestError) {
     error.value =
-      err.message || "Unable to load the company workspace.";
+      requestError.message ||
+      "Unable to load the company workspace.";
   } finally {
     loading.value = false;
   }
 }
 
-onMounted(load);
+onMounted(loadWorkspace);
 </script>
 
 <template>
@@ -58,17 +61,11 @@ onMounted(load);
       </div>
     </section>
 
-    <div
-      v-if="error"
-      class="alert alert-error"
-    >
+    <div v-if="error" class="alert alert-error">
       {{ error }}
     </div>
 
-    <div
-      v-if="loading"
-      class="card empty-state"
-    >
+    <div v-if="loading" class="card empty-state">
       Loading company workspace…
     </div>
 
@@ -95,7 +92,9 @@ onMounted(load);
               : 'div'
           "
           :to="
-            module.enabled && module.status === 'live'
+            module.enabled &&
+            module.status === 'live' &&
+            module.route
               ? module.route
               : undefined
           "

@@ -3,82 +3,81 @@ import DesignationService from "./designation.service.js";
 class DesignationController {
   async create(req, res, next) {
     try {
-      const designation =
-        await DesignationService.createDesignation(
-          req.user.company,
-          req.body
-        );
+      const designation = await DesignationService.createDesignation(
+        req.user.company,
+        req.body
+      );
 
       res.status(201).json({
         success: true,
         data: designation,
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 
   async list(req, res, next) {
     try {
-      const designations =
-        await DesignationService.listDesignations(
-          req.user.company
-        );
+      const designations = await DesignationService.listDesignations(
+        req.user.company
+      );
 
       res.json({
         success: true,
         data: designations,
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 
   async show(req, res, next) {
     try {
-      const designation =
-        await DesignationService.getDesignation(
-          req.params.id
-        );
+      const designation = await DesignationService.getDesignation(
+        req.params.id,
+        req.user.company
+      );
 
       res.json({
         success: true,
         data: designation,
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 
   async update(req, res, next) {
     try {
-      const designation =
-        await DesignationService.updateDesignation(
-          req.params.id,
-          req.body
-        );
+      const designation = await DesignationService.updateDesignation(
+        req.params.id,
+        req.user.company,
+        req.body
+      );
 
       res.json({
         success: true,
         data: designation,
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 
   async remove(req, res, next) {
     try {
-      await DesignationService.deleteDesignation(
-        req.params.id
+      const designation = await DesignationService.deleteDesignation(
+        req.params.id,
+        req.user.company
       );
 
       res.json({
         success: true,
-        message: "Designation deleted successfully",
+        data: designation,
       });
-    } catch (err) {
-      next(err);
+    } catch (error) {
+      next(error);
     }
   }
 }

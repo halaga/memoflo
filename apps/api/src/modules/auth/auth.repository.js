@@ -5,7 +5,7 @@ class AuthRepository {
     const employee = await Employee.findOne({
       email: email.toLowerCase(),
       active: true,
-      loginEnabled: { $ne: false },
+      loginEnabled: true,
       employmentStatus: "Active",
       deletedAt: null,
     })
@@ -20,8 +20,7 @@ class AuthRepository {
 
     if (
       companySlug &&
-      employee.company?.slug !==
-        String(companySlug).toLowerCase()
+      employee.company?.slug !== String(companySlug).toLowerCase()
     ) {
       return null;
     }
@@ -41,6 +40,7 @@ class AuthRepository {
     return Employee.findOne({
       _id: id,
       active: true,
+      loginEnabled: true,
       employmentStatus: "Active",
       deletedAt: null,
     })

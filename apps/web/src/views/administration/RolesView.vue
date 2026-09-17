@@ -1,27 +1,341 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
+
 import { api, normalizeList } from "../../services/api";
 
-const roles=ref([]), permissions=ref([]), employees=ref([]); const loading=ref(true), error=ref(""), success=ref(""); const selectedRole=ref(null), selectedEmployee=ref(""), showCreate=ref(false);
-const form=ref({name:"",code:"",level:10,description:"",permissions:[]});
-const employee = computed(() => { try { return JSON.parse(localStorage.getItem("memoflo_employee") || "null"); } catch { return null; } });
-const canCreate = computed(() => employee.value?.role?.permissions?.includes("*") || employee.value?.role?.permissions?.includes("roles.create"));
-const permissionGroups=computed(()=>permissions.value.reduce((g,p)=>{(g[p.module] ||= []).push(p);return g;},{}));
-async function load(){loading.value=true;error.value="";try{const [r,p,e]=await Promise.all([api.listRoles(),api.listPermissions(),api.listEmployees()]);roles.value=normalizeList(r);permissions.value=normalizeList(p);employees.value=normalizeList(e);}catch(err){error.value=err.message||"Unable to load roles.";}finally{loading.value=false;}}
-function selectRole(role){selectedRole.value=role;selectedEmployee.value="";success.value="";}
-async function assignRole(){if(!selectedRole.value||!selectedEmployee.value)return;error.value="";success.value="";try{await api.assignEmployeeRole(selectedRole.value._id,selectedEmployee.value);success.value="Role assigned successfully.";await load();selectedRole.value=roles.value.find(r=>r._id===selectedRole.value?._id)||selectedRole.value;}catch(err){error.value=err.message||"Unable to assign role.";}}
-async function createRole(){if(!form.value.name.trim())return(error.value="Role name is required.");error.value="";try{await api.createRole(form.value);success.value="Role created successfully.";showCreate.value=false;form.value={name:"",code:"",level:10,description:"",permissions:[]};await load();}catch(err){error.value=err.message||"Unable to create role.";}}
-function employeeRole(e){return e.role?.name||"No role";}
+const roles = ref([]);
+const permissions = ref([]);
+const employees = ref([]);
+const loading = ref(true);
+const error = ref("");
+const success = ref("");
+const selectedRole = ref(null);
+const selectedEmployee = ref("");
+const showCreate = ref(false);
+
+const form = ref({
+  name: "",
+  code: "",
+  level: 10,
+  description: "",
+  permissions: [],
+});
+
+const employee = computed(() => {
+  try {
+    return JSON.parse(
+      localStorage.getItem("memoflo_employee") || "null"
+    );
+  } catch {
+    return null;
+  }
+});
+
+const canCreate = computed(() => {
+  const rolePermissions = employee.value?.role?.permissions || [];
+  return (
+    rolePermissions.includes("*") ||
+    rolePermissions.includes("roles.create")
+  );
+});
+
+const permissionGroups = computed(() =>
+  permissions.value.reduce((groups, permission) => {
+    (groups[permission.module] ||= []).push(permission);
+    return groups;
+  }, {})
+);
+
+async function load() {
+  loading.value = true;
+  error.value = "";
+
+  try {
+    const [rolesResult, permissionsResult, employeesResult] =
+      await Promise.all([
+        api.listRoles(),
+        api.listPermissions(),
+        api.listEmployees(),
+      ]);
+
+    roles.value = normalizeList(rolesResult);
+    permissions.value = normalizeList(permissionsResult);
+    employees.value = normalizeList(employeesResult);
+  } catch (requestError) {
+    error.value = requestError.message || "Unable to load roles.";
+  } finally {
+    loading.value = false;
+  }
+}
+
+function selectRole(role) {
+  selectedRole.value = role;
+  selectedEmployee.value = "";
+  success.value = "";
+}
+
+async function assignRole() {
+  if (!selectedRole.value || !selectedEmployee.value) {
+    return;
+  }
+
+  error.value = "";
+  success.value = "";
+
+  try {
+    await api.assignEmployeeRole(
+      selectedRole.value._id,
+      selectedEmployee.value
+    );
+
+    success.value = "Role assigned successfully.";
+    await load();
+
+    selectedRole.value =
+      roles.value.find(
+        (role) => role._id === selectedRole.value?._id
+      ) || selectedRole.value;
+  } catch (requestError) {
+    error.value = requestError.message || "Unable to assign role.";
+  }
+}
+
+async function createRole() {
+  if (!form.value.name.trim()) {
+    error.value = "Role name is required.";
+    return;
+  }
+
+  error.value = "";
+
+  try {
+    await api.createRole(form.value);
+    success.value = "Role created successfully.";
+    showCreate.value = false;
+    form.value = {
+      name: "",
+      code: "",
+      level: 10,
+      description: "",
+      permissions: [],
+    };
+    await load();
+  } catch (requestError) {
+    error.value = requestError.message || "Unable to create role.";
+  }
+}
+
+function employeeRole(item) {
+  return item.role?.name || "No role";
+}
+
 onMounted(load);
 </script>
 
 <template>
-  <div class="page"><div class="page-header"><div><span class="page-kicker">ADMINISTRATION</span><h1>Roles & permissions</h1><p>Define employee authority without changing the company structure.</p></div><button v-if="canCreate" type="button" class="btn btn-primary" @click="showCreate=!showCreate">{{showCreate?'Close':'Create role'}}</button></div>
-    <div v-if="error" class="alert alert-error">{{error}}</div><div v-if="!canCreate" class="alert alert-info">Role creation is restricted to tenant administrators. Sign out above and sign in with an administrator account to create roles.</div><div v-if="success" class="alert alert-success">{{success}}</div>
-    <section v-if="showCreate" class="card create-role-card"><div class="card-header"><div><h2>Create role</h2><p>Use only permissions that this role actually needs.</p></div></div><div class="form-row"><label>Name<input v-model="form.name" class="input" placeholder="Finance Officer" /></label><label>Code<input v-model="form.code" class="input" placeholder="FINANCE_OFFICER" /></label></div><label>Description<input v-model="form.description" class="input" placeholder="Role description" /></label><div class="permission-picker"><div v-for="(group,module) in permissionGroups" :key="module" class="permission-group"><strong>{{module}}</strong><label v-for="permission in group" :key="permission._id" class="check-label"><input v-model="form.permissions" type="checkbox" :value="permission.name" />{{permission.name}}</label></div></div><div class="form-actions"><button type="button" class="btn btn-primary" @click="createRole">Save role</button></div></section>
-    <div v-if="loading" class="card empty-state">Loading roles…</div>
-    <div v-else class="roles-layout"><section class="card"><div class="builder-title"><div><h2>Company roles</h2><p>Roles currently available to this tenant.</p></div><span class="count-pill">{{roles.length}}</span></div><div class="role-list"><button v-for="role in roles" :key="role._id" type="button" class="role-item" :class="{selected:selectedRole?._id===role._id}" @click="selectRole(role)"><div><strong>{{role.name}}</strong><span>{{role.code}}</span></div><small>{{role.permissions?.length||0}} permissions</small></button></div></section>
-      <section class="card role-detail"><template v-if="selectedRole"><div class="builder-title"><div><span class="page-kicker">ROLE</span><h2>{{selectedRole.name}}</h2><p>{{selectedRole.description}}</p></div><span v-if="selectedRole.isSystem" class="count-pill">System</span></div><div><h3>Permissions</h3><div class="permission-tags"><span v-for="p in selectedRole.permissions" :key="p" class="permission-tag">{{p}}</span><span v-if="!selectedRole.permissions?.length" class="muted">No permissions.</span></div></div><div class="assign-section"><h3>Assign to employee</h3><p>Select an active employee in this company.</p><div class="assign-row"><select v-model="selectedEmployee" class="input"><option value="">Select employee</option><option v-for="employee in employees" :key="employee._id" :value="employee._id">{{employee.firstName}} {{employee.lastName}} — {{employeeRole(employee)}}</option></select><button type="button" class="btn btn-primary" :disabled="!selectedEmployee" @click="assignRole">Assign</button></div></div></template><div v-else class="empty-role-detail"><div class="module-tile-icon">♙</div><h2>Select a role</h2><p>View permissions and assign the role to an employee.</p></div></section>
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <span class="page-kicker">ADMINISTRATION</span>
+        <h1>Roles & permissions</h1>
+        <p>
+          Define employee authority without changing the company
+          structure.
+        </p>
+      </div>
+
+      <button
+        v-if="canCreate"
+        type="button"
+        class="btn btn-primary"
+        @click="showCreate = !showCreate"
+      >
+        {{ showCreate ? "Close" : "Create role" }}
+      </button>
+    </div>
+
+    <div v-if="error" class="alert alert-error">
+      {{ error }}
+    </div>
+
+    <div v-if="!canCreate" class="alert alert-info">
+      Role creation is restricted to tenant administrators.
+    </div>
+
+    <div v-if="success" class="alert alert-success">
+      {{ success }}
+    </div>
+
+    <section v-if="showCreate" class="card create-role-card">
+      <div class="card-header">
+        <div>
+          <h2>Create role</h2>
+          <p>Use only permissions that this role actually needs.</p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>
+          Name
+          <input
+            v-model="form.name"
+            class="input"
+            placeholder="Finance Officer"
+          />
+        </label>
+
+        <label>
+          Code
+          <input
+            v-model="form.code"
+            class="input"
+            placeholder="FINANCE_OFFICER"
+          />
+        </label>
+      </div>
+
+      <label>
+        Description
+        <input
+          v-model="form.description"
+          class="input"
+          placeholder="Role description"
+        />
+      </label>
+
+      <div class="permission-picker">
+        <div
+          v-for="(group, module) in permissionGroups"
+          :key="module"
+          class="permission-group"
+        >
+          <strong>{{ module }}</strong>
+
+          <label
+            v-for="permission in group"
+            :key="permission._id"
+            class="check-label"
+          >
+            <input
+              v-model="form.permissions"
+              type="checkbox"
+              :value="permission.name"
+            />
+            {{ permission.name }}
+          </label>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-primary"
+          @click="createRole"
+        >
+          Save role
+        </button>
+      </div>
+    </section>
+
+    <div v-if="loading" class="card empty-state">
+      Loading roles…
+    </div>
+
+    <div v-else class="roles-layout">
+      <section class="card">
+        <div class="builder-title">
+          <div>
+            <h2>Company roles</h2>
+            <p>Roles currently available to this tenant.</p>
+          </div>
+          <span class="count-pill">{{ roles.length }}</span>
+        </div>
+
+        <div class="role-list">
+          <button
+            v-for="role in roles"
+            :key="role._id"
+            type="button"
+            class="role-item"
+            :class="{ selected: selectedRole?._id === role._id }"
+            @click="selectRole(role)"
+          >
+            <div>
+              <strong>{{ role.name }}</strong>
+              <span>{{ role.code }}</span>
+            </div>
+            <small>{{ role.permissions?.length || 0 }} permissions</small>
+          </button>
+        </div>
+      </section>
+
+      <section class="card role-detail">
+        <template v-if="selectedRole">
+          <div class="builder-title">
+            <div>
+              <span class="page-kicker">ROLE</span>
+              <h2>{{ selectedRole.name }}</h2>
+              <p>{{ selectedRole.description }}</p>
+            </div>
+            <span v-if="selectedRole.isSystem" class="count-pill">
+              System
+            </span>
+          </div>
+
+          <div>
+            <h3>Permissions</h3>
+            <div class="permission-tags">
+              <span
+                v-for="permission in selectedRole.permissions"
+                :key="permission"
+                class="permission-tag"
+              >
+                {{ permission }}
+              </span>
+              <span
+                v-if="!selectedRole.permissions?.length"
+                class="muted"
+              >
+                No permissions.
+              </span>
+            </div>
+          </div>
+
+          <div class="assign-section">
+            <h3>Assign to employee</h3>
+            <p>Select an active employee in this company.</p>
+
+            <div class="assign-row">
+              <select v-model="selectedEmployee" class="input">
+                <option value="">Select employee</option>
+                <option
+                  v-for="item in employees"
+                  :key="item._id"
+                  :value="item._id"
+                >
+                  {{ item.firstName }} {{ item.lastName }} —
+                  {{ employeeRole(item) }}
+                </option>
+              </select>
+
+              <button
+                type="button"
+                class="btn btn-primary"
+                :disabled="!selectedEmployee"
+                @click="assignRole"
+              >
+                Assign
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <div v-else class="empty-role-detail">
+          <div class="module-tile-icon">♙</div>
+          <h2>Select a role</h2>
+          <p>View permissions and assign the role to an employee.</p>
+        </div>
+      </section>
     </div>
   </div>
 </template>

@@ -229,7 +229,18 @@ onMounted(load);
           <span class="page-kicker">{{ title }}</span>
           <h2>Manage {{ title.toLowerCase() }}</h2>
         </div>
-        <button class="btn btn-primary" @click="openCreate(activeTab === 'sbus' ? 'sbu' : activeTab === 'departments' ? 'department' : activeTab === 'designations' ? 'designation' : 'position')">
+        <button
+          class="btn btn-primary"
+          @click="openCreate(
+            activeTab === 'sbus'
+              ? 'sbu'
+              : activeTab === 'departments'
+                ? 'department'
+                : activeTab === 'designations'
+                  ? 'designation'
+                  : 'position'
+          )"
+        >
           + Add {{ title.slice(0, -1) }}
         </button>
       </div>
@@ -263,8 +274,40 @@ onMounted(load);
               <td v-if="activeTab === 'positions'">{{ labelDesignation(item.designation?._id || item.designation) }}</td>
               <td v-if="activeTab === 'positions'">{{ labelEmployee(item.occupant) }}</td>
               <td class="table-actions">
-                <button class="btn btn-small btn-secondary" @click="openEdit(activeTab === 'sbus' ? 'sbu' : activeTab === 'departments' ? 'department' : activeTab === 'designations' ? 'designation' : 'position', item)">Edit</button>
-                <button class="btn btn-small btn-ghost-danger" @click="remove(activeTab === 'sbus' ? 'sbu' : activeTab === 'departments' ? 'department' : activeTab === 'designations' ? 'designation' : 'position', item)">Deactivate</button>
+                <button
+                  class="btn btn-small btn-secondary"
+                  @click="
+                    openEdit(
+                      activeTab === 'sbus'
+                        ? 'sbu'
+                        : activeTab === 'departments'
+                          ? 'department'
+                          : activeTab === 'designations'
+                            ? 'designation'
+                            : 'position',
+                      item
+                    )
+                  "
+                >
+                  Edit
+                </button>
+                <button
+                  class="btn btn-small btn-ghost-danger"
+                  @click="
+                    remove(
+                      activeTab === 'sbus'
+                        ? 'sbu'
+                        : activeTab === 'departments'
+                          ? 'department'
+                          : activeTab === 'designations'
+                            ? 'designation'
+                            : 'position',
+                      item
+                    )
+                  "
+                >
+                  Deactivate
+                </button>
               </td>
             </tr>
           </tbody>
@@ -283,16 +326,97 @@ onMounted(load);
         </div>
 
         <div class="form-grid">
-          <label v-if="modal.type === 'sbu' || modal.type === 'department'">Name<input v-model="form.name" /></label>
-          <label v-if="modal.type === 'designation' || modal.type === 'position'">Title<input v-model="form.title" /></label>
-          <label v-if="modal.type !== 'designation'">Code<input v-model="form.code" /></label>
-          <label v-if="modal.type !== 'sbu'">SBU<select v-model="form.sbu"><option value="">Select SBU</option><option v-for="item in sbus" :key="item._id" :value="item._id">{{ item.name }}</option></select></label>
-          <label v-if="modal.type === 'designation' || modal.type === 'position'">Department<select v-model="form.department"><option value="">Select department</option><option v-for="item in departments" :key="item._id" :value="item._id">{{ item.name }}</option></select></label>
-          <label v-if="modal.type === 'position'">Designation<select v-model="form.designation"><option value="">Select designation</option><option v-for="item in designations" :key="item._id" :value="item._id">{{ item.title }}</option></select></label>
-          <label v-if="modal.type === 'designation'">Level<input v-model.number="form.level" type="number" min="1" /></label>
-          <label v-if="modal.type === 'position'">Reports to<select v-model="form.reportsTo"><option value="">No parent position</option><option v-for="item in positions.filter(p => p._id !== modal.id)" :key="item._id" :value="item._id">{{ item.title }}</option></select></label>
-          <label class="form-span-2">Description<textarea v-model="form.description" rows="3"></textarea></label>
-          <label v-if="modal.type === 'position'" class="checkbox-row"><input v-model="form.isWorkflowNode" type="checkbox" /> Available as a workflow responsibility position</label>
+          <label v-if="modal.type === 'sbu' || modal.type === 'department'">
+            Name
+            <input v-model="form.name" />
+          </label>
+          <label v-if="modal.type === 'designation' || modal.type === 'position'">
+            Title
+            <input v-model="form.title" />
+          </label>
+          <label v-if="modal.type !== 'designation'">
+            Code
+            <input v-model="form.code" />
+          </label>
+          <label v-if="modal.type !== 'sbu'">
+            SBU
+            <select v-model="form.sbu">
+              <option value="">Select SBU</option>
+              <option
+                v-for="item in sbus"
+                :key="item._id"
+                :value="item._id"
+              >
+                {{ item.name }}
+              </option>
+            </select>
+          </label>
+          <label v-if="modal.type === 'designation' || modal.type === 'position'">
+            Department
+            <select v-model="form.department">
+              <option value="">Select department</option>
+              <option
+                v-for="item in departments"
+                :key="item._id"
+                :value="item._id"
+              >
+                {{ item.name }}
+              </option>
+            </select>
+          </label>
+          <label v-if="modal.type === 'position'">
+            Designation
+            <select v-model="form.designation">
+              <option value="">Select designation</option>
+              <option
+                v-for="item in designations"
+                :key="item._id"
+                :value="item._id"
+              >
+                {{ item.title }}
+              </option>
+            </select>
+          </label>
+          <label v-if="modal.type === 'designation'">
+            Level
+            <input
+              v-model.number="form.level"
+              type="number"
+              min="1"
+            />
+          </label>
+          <label v-if="modal.type === 'position'">
+            Reports to
+            <select v-model="form.reportsTo">
+              <option value="">No parent position</option>
+              <option
+                v-for="item in positions.filter(
+                  (position) => position._id !== modal.id
+                )"
+                :key="item._id"
+                :value="item._id"
+              >
+                {{ item.title }}
+              </option>
+            </select>
+          </label>
+          <label class="form-span-2">
+            Description
+            <textarea
+              v-model="form.description"
+              rows="3"
+            ></textarea>
+          </label>
+          <label
+            v-if="modal.type === 'position'"
+            class="checkbox-row"
+          >
+            <input
+              v-model="form.isWorkflowNode"
+              type="checkbox"
+            />
+            Available as a workflow responsibility position
+          </label>
         </div>
 
         <div class="modal-actions">

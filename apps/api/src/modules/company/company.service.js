@@ -4,6 +4,11 @@ import {
   MODULE_CATALOGUE,
 } from "./module.catalogue.js";
 
+const DEFAULT_BRANDING = {
+  primaryColor: "#2563EB",
+  secondaryColor: "#1E293B",
+};
+
 class CompanyService {
   async getWorkspace(companyId) {
     const companyDoc = await CompanyRepository.findById(companyId);
@@ -16,29 +21,23 @@ class CompanyService {
       ? companyDoc.toObject()
       : companyDoc;
 
-    const enabled = Array.isArray(company.settings?.modules)
+    const enabledModules = Array.isArray(company.settings?.modules)
       ? company.settings.modules
       : [];
 
-    const configuredBranding =
-      company.settings?.branding || {};
+    const configuredBranding = company.settings?.branding || {};
 
     const branding = {
-      logo:
-        configuredBranding.logo ||
-        company.logo ||
-        "",
-      wallpaper:
-        configuredBranding.wallpaper ||
-        "",
+      logo: configuredBranding.logo || company.logo || "",
+      wallpaper: configuredBranding.wallpaper || "",
       primaryColor:
         configuredBranding.primaryColor ||
         company.primaryColor ||
-        "#2563EB",
+        DEFAULT_BRANDING.primaryColor,
       secondaryColor:
         configuredBranding.secondaryColor ||
         company.secondaryColor ||
-        "#1E293B",
+        DEFAULT_BRANDING.secondaryColor,
     };
 
     return {
@@ -48,7 +47,7 @@ class CompanyService {
       },
       modules: MODULE_CATALOGUE.map((module) => ({
         ...module,
-        enabled: enabled.includes(module.id),
+        enabled: enabledModules.includes(module.id),
       })),
     };
   }
@@ -60,32 +59,23 @@ class CompanyService {
       throw new Error("Company tenant not found");
     }
 
-    const object = company.toObject
-      ? company.toObject()
-      : company;
-
-    const configuredBranding =
-      object.settings?.branding || {};
+    const object = company.toObject ? company.toObject() : company;
+    const configuredBranding = object.settings?.branding || {};
 
     return {
       name: object.name,
       code: object.code,
       slug: object.slug,
-      logo:
-        configuredBranding.logo ||
-        object.logo ||
-        "",
-      wallpaper:
-        configuredBranding.wallpaper ||
-        "",
+      logo: configuredBranding.logo || object.logo || "",
+      wallpaper: configuredBranding.wallpaper || "",
       primaryColor:
         configuredBranding.primaryColor ||
         object.primaryColor ||
-        "#2563EB",
+        DEFAULT_BRANDING.primaryColor,
       secondaryColor:
         configuredBranding.secondaryColor ||
         object.secondaryColor ||
-        "#1E293B",
+        DEFAULT_BRANDING.secondaryColor,
     };
   }
 
@@ -94,13 +84,13 @@ class CompanyService {
       throw new Error("Modules must be an array");
     }
 
-    const invalid = requestedModules.filter(
+    const invalidModules = requestedModules.filter(
       (id) => !ALL_MODULE_IDS.includes(id)
     );
 
-    if (invalid.length) {
+    if (invalidModules.length) {
       throw new Error(
-        `Unknown modules: ${invalid.join(", ")}`
+        `Unknown modules: ${invalidModules.join(", ")}`
       );
     }
 
@@ -113,24 +103,24 @@ class CompanyService {
   }
 
   async updateBranding(companyId, branding = {}) {
-    const allowed = {};
-
-    for (const key of [
+    const allowedKeys = [
       "logo",
       "wallpaper",
       "primaryColor",
       "secondaryColor",
-    ]) {
+    ];
+
+    const cleanedBranding = {};
+
+    for (const key of allowedKeys) {
       if (branding[key] !== undefined) {
-        allowed[key] = String(
-          branding[key] || ""
-        ).trim();
+        cleanedBranding[key] = String(branding[key] || "").trim();
       }
     }
 
     await CompanyRepository.updateBranding(
       companyId,
-      allowed
+      cleanedBranding
     );
 
     return this.getWorkspace(companyId);

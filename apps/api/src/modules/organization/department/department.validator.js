@@ -1,13 +1,11 @@
 export function validateCreateDepartment(data) {
-  const required = [
-    "sbu",
-    "name",
-    "code",
-  ];
+  const requiredFields = ["sbu", "name", "code"];
 
-  for (const field of required) {
-    if (!data[field]) {
-      throw new Error(`${field} is required`);
+  for (const field of requiredFields) {
+    if (!String(data[field] || "").trim()) {
+      const error = new Error(`${field} is required`);
+      error.status = 400;
+      throw error;
     }
   }
 }

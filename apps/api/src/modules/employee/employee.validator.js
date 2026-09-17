@@ -1,14 +1,25 @@
+const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+
 export function validateCreateEmployee(data) {
-  const required = ["firstName", "lastName", "email"];
-  for (const field of required) {
-    if (!data[field]) throw new Error(`${field} is required`);
+  const requiredFields = ["firstName", "lastName", "email"];
+
+  for (const field of requiredFields) {
+    if (!String(data[field] || "").trim()) {
+      const error = new Error(`${field} is required`);
+      error.status = 400;
+      throw error;
+    }
   }
 
-  if (!/^\S+@\S+\.\S+$/.test(data.email)) {
-    throw new Error("Invalid email address");
+  if (!EMAIL_PATTERN.test(String(data.email).trim())) {
+    const error = new Error("Invalid email address");
+    error.status = 400;
+    throw error;
   }
 
   if (data.password && data.password.length < 6) {
-    throw new Error("Password must be at least 6 characters");
+    const error = new Error("Password must be at least 6 characters");
+    error.status = 400;
+    throw error;
   }
 }
