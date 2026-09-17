@@ -2,50 +2,44 @@
 import { computed, ref, watch } from "vue";
 
 const assetBase = "/signatures/";
+const bannerWidth = 320;
 
 const companies = {
   ringo: {
     name: "Ringo Telecommunications Limited",
     website: "https://ringo.ng",
     address: "75, Allen Avenue, Ikeja, Lagos, Nigeria",
-    banner:
-      "https://ringo.ng/assets/ringo-banner.png?v=1.1",
+    banner: "https://ringo.ng/assets/ringo-banner.png?v=1.1",
     bannerPreview: `${assetBase}ringo-banner.gif`,
-    logoPreview: `${assetBase}ringologo.png`,
     socials: {
       facebook: "https://www.facebook.com/share/1HourvExG4/",
       x: "https://x.com/ringotelcomLtd",
-      instagram:
-        "https://www.instagram.com/ringotelecommunicationsltd",
+      instagram: "https://www.instagram.com/ringotelecommunicationsltd",
     },
   },
   approot: {
     name: "Approot Technologies",
     website: "https://approot.ng",
     address: "Lekki Phase 1, Lagos",
-    banner:
-      "https://ringo.ng/assets/approot-banner.gif?v=1.1",
+    banner: "https://ringo.ng/assets/approot-banner.gif?v=1.1",
     bannerPreview: `${assetBase}approot-banner.gif`,
-    logoPreview: `${assetBase}ringologo.png`,
     socials: {},
   },
 };
 
-const savedCompany =
-  localStorage.getItem("memoflo_signature_company") || "ringo";
-
-const companyKey = ref(
-  companies[savedCompany] ? savedCompany : "ringo"
-);
+const savedCompany = localStorage.getItem("memoflo_signature_company") || "ringo";
+const companyKey = ref(companies[savedCompany] ? savedCompany : "ringo");
 const company = ref(cloneCompany(companies[companyKey.value]));
-const form = ref({
-  name: "",
-  title: "",
-  phone: "",
-  email: "",
-});
+const form = ref({ name: "", title: "", phone: "", email: "" });
 const html = ref("");
 const copied = ref("");
+
+const socialIcons = {
+  website: "https://img.icons8.com/ios-filled/20/1E90FF/domain.png",
+  facebook: "https://img.icons8.com/ios-filled/20/1877F2/facebook-new.png",
+  x: "https://img.icons8.com/ios-filled/20/000000/twitterx.png",
+  instagram: "https://img.icons8.com/ios-filled/20/E4405F/instagram-new.png",
+};
 
 function cloneCompany(value) {
   return {
@@ -69,29 +63,19 @@ function cleanPhone(value) {
     .replace(/[^0-9+]/g, "");
 }
 
-function socialLink(url, label) {
-  if (!url) {
-    return "";
-  }
+function socialLink(url, icon, alt) {
+  if (!url) return "";
 
   return `
-    <a
-      href="${escapeHtml(url)}"
-      target="_blank"
-      rel="noopener noreferrer"
-      style="margin-right:8px;text-decoration:none;color:#142b4d;"
-    >
-      ${escapeHtml(label)}
+    <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-right:8px;text-decoration:none;">
+      <img src="${escapeHtml(icon)}" width="20" height="20" alt="${escapeHtml(alt)}" style="display:block;width:20px;height:20px;border:0;" />
     </a>
   `;
 }
 
 function loadCompany() {
   company.value = cloneCompany(companies[companyKey.value]);
-  localStorage.setItem(
-    "memoflo_signature_company",
-    companyKey.value
-  );
+  localStorage.setItem("memoflo_signature_company", companyKey.value);
   generate();
 }
 
@@ -99,49 +83,49 @@ function generate() {
   const currentCompany = company.value;
   const phone = cleanPhone(form.value.phone);
   const email = form.value.email.trim();
+  const name = form.value.name.trim();
+  const title = form.value.title.trim();
 
   html.value = `
-<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;font-size:14px;max-width:700px;color:#111827;">
+<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;font-size:14px;line-height:1.5;color:#111827;width:100%;max-width:700px;">
   <tr>
-    <td style="vertical-align:top;padding-right:20px;width:50%;">
-      <img
-        src="${escapeHtml(currentCompany.logoPreview)}"
-        width="120"
-        alt="${escapeHtml(currentCompany.name)} logo"
-        style="display:block;max-width:120px;margin-bottom:12px;"
-      />
-      <strong>${escapeHtml(form.value.name)}</strong><br>
-      ${escapeHtml(form.value.title)}<br>
-      ${escapeHtml(currentCompany.name)}<br>
-      📞 <a href="https://wa.me/${escapeHtml(phone)}" style="color:#111827;">${escapeHtml(phone)}</a><br>
-      ✉️ <a href="mailto:${escapeHtml(email)}" style="color:#111827;">${escapeHtml(email)}</a><br><br>
-      <div>📍 <span style="color:#0f766e;">${escapeHtml(currentCompany.address)}</span></div>
+    <td style="vertical-align:top;padding:0 22px 0 0;width:55%;">
+      <p style="margin:0 0 10px 0;">
+        Kind regards,<br />
+        <strong>${escapeHtml(name)}</strong><br />
+        ${escapeHtml(title)}<br />
+        ${escapeHtml(currentCompany.name)}<br />
+        📞 <a href="https://wa.me/${escapeHtml(phone)}" target="_blank" style="text-decoration:none;color:#0f766e;">${escapeHtml(phone)}</a><br />
+        ✉️ <a href="mailto:${escapeHtml(email)}" style="text-decoration:none;color:#0f766e;">${escapeHtml(email)}</a>
+      </p>
+
       <div style="margin-top:10px;">
-        ${socialLink(currentCompany.website, "Website")}
-        ${socialLink(currentCompany.socials.facebook, "Facebook")}
-        ${socialLink(currentCompany.socials.x, "X")}
-        ${socialLink(currentCompany.socials.instagram, "Instagram")}
+        <span style="color:#0f766e;">📍 ${escapeHtml(currentCompany.address)}</span>
+      </div>
+
+      <div style="margin-top:12px;">
+        ${socialLink(currentCompany.website, socialIcons.website, "Website")}
+        ${socialLink(currentCompany.socials.facebook, socialIcons.facebook, "Facebook")}
+        ${socialLink(currentCompany.socials.x, socialIcons.x, "X")}
+        ${socialLink(currentCompany.socials.instagram, socialIcons.instagram, "Instagram")}
       </div>
     </td>
-    <td style="width:50%;vertical-align:top;">
-      <img
-        src="${escapeHtml(currentCompany.banner)}"
-        width="450"
-        alt="${escapeHtml(currentCompany.name)}"
-        style="width:450px;max-width:100%;height:150px;display:block;border-radius:8px;"
-      />
+
+    <td style="vertical-align:middle;width:45%;padding:0;">
+      <a href="${escapeHtml(currentCompany.website)}" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none;">
+        <img
+          src="${escapeHtml(currentCompany.banner)}"
+          width="${bannerWidth}"
+          alt="${escapeHtml(currentCompany.name)}"
+          style="display:block;width:${bannerWidth}px;max-width:100%;height:auto;border:0;"
+        />
+      </a>
     </td>
   </tr>
 </table>`.trim();
 
-  localStorage.setItem(
-    "memoflo_signature_form",
-    JSON.stringify(form.value)
-  );
-  localStorage.setItem(
-    "memoflo_signature_company",
-    companyKey.value
-  );
+  localStorage.setItem("memoflo_signature_form", JSON.stringify(form.value));
+  localStorage.setItem("memoflo_signature_company", companyKey.value);
   copied.value = "";
 }
 
@@ -150,18 +134,15 @@ const previewHtml = computed(() => {
 
   return `
     <div style="font-family:Arial,sans-serif;padding:18px;border:1px solid #e5e7eb;border-radius:12px;">
-      <img
-        src="${escapeHtml(currentCompany.logoPreview)}"
-        style="width:120px;max-height:70px;object-fit:contain;object-position:left;margin-bottom:12px;"
-        alt="Company logo"
-      />
-      <br>
-      <strong>${escapeHtml(form.value.name || "Your Name")}</strong><br>
-      ${escapeHtml(form.value.title || "Your Job Title")}<br>
-      ${escapeHtml(currentCompany.name)}<br>
-      📞 ${escapeHtml(form.value.phone || "+234...")}<br>
-      ✉️ ${escapeHtml(form.value.email || "you@company.com")}<br><br>
-      📍 <span style="color:#0f766e">${escapeHtml(currentCompany.address)}</span>
+      <div style="font-size:14px;line-height:1.5;color:#111827;">
+        Kind regards,<br>
+        <strong>${escapeHtml(form.value.name || "Your Name")}</strong><br>
+        ${escapeHtml(form.value.title || "Your Job Title")}<br>
+        ${escapeHtml(currentCompany.name)}<br>
+        📞 ${escapeHtml(form.value.phone || "+234...")}<br>
+        ✉️ ${escapeHtml(form.value.email || "you@company.com")}<br><br>
+        <span style="color:#0f766e;">📍 ${escapeHtml(currentCompany.address)}</span>
+      </div>
     </div>
   `;
 });
@@ -186,38 +167,30 @@ async function copyRendered() {
   try {
     await navigator.clipboard.write([
       new ClipboardItem({
-        "text/html": new Blob([html.value], {
-          type: "text/html",
-        }),
-        "text/plain": new Blob([box.innerText], {
-          type: "text/plain",
-        }),
+        "text/html": new Blob([html.value], { type: "text/html" }),
+        "text/plain": new Blob([box.innerText], { type: "text/plain" }),
       }),
     ]);
-    copied.value =
-      "Signature copied — paste it directly into your mail client.";
+    copied.value = "Signature copied — paste it directly into your mail client.";
   } catch {
     copyHtml();
   }
 }
 
 function useFallbackBanner(event) {
-  event.target.src = `${assetBase}ringo-banner.gif`;
+  event.target.src = companyKey.value === "approot"
+    ? `${assetBase}approot-banner.gif`
+    : `${assetBase}ringo-banner.gif`;
 }
 
 try {
-  const saved = JSON.parse(
-    localStorage.getItem("memoflo_signature_form") || "null"
-  );
+  const saved = JSON.parse(localStorage.getItem("memoflo_signature_form") || "null");
 
   if (saved) {
-    form.value = {
-      ...form.value,
-      ...saved,
-    };
+    form.value = { ...form.value, ...saved };
   }
 } catch {
-  // Ignore invalid local signature data and use the defaults.
+  // Ignore invalid saved signature data.
 }
 
 watch(form, generate, { deep: true });
@@ -249,7 +222,8 @@ generate();
           </div>
         </div>
 
-        <div class="company-banner">
+        <div class="company-banner" aria-label="Company signature banner">
+          <div class="company-banner-label">Company banner</div>
           <img
             :src="company.bannerPreview"
             :alt="`${company.name} banner`"
@@ -428,15 +402,27 @@ generate();
 
 .company-banner {
   background: #f5f7fa;
+  border: 1px solid #e4e9f0;
   border-radius: 14px;
-  padding: 8px;
+  padding: 12px;
   margin-bottom: 20px;
+}
+
+.company-banner-label {
+  margin-bottom: 9px;
+  color: #71819a;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .company-banner img {
   width: 100%;
-  height: 130px;
-  object-fit: cover;
+  height: auto;
+  max-height: 220px;
+  object-fit: contain;
+  object-position: center;
   border-radius: 9px;
   display: block;
 }

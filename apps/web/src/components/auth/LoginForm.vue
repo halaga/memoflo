@@ -16,6 +16,15 @@ const error = ref("");
 const tenant = ref(null);
 const tenantLoading = ref(true);
 const slug = tenantSlug();
+const ringoLogo = "/signatures/ringologo.png";
+
+const tenantLogo = () => {
+  if (tenant.value?.logo) return tenant.value.logo;
+  if (tenant.value?.slug === "ringo" || slug === "ringo") {
+    return ringoLogo;
+  }
+  return "";
+};
 
 onMounted(async () => {
   if (!slug) {
@@ -72,10 +81,10 @@ async function login() {
     }"
   >
     <div class="login-brand">
-      <div v-if="!tenant?.logo" class="brand-mark">M</div>
+      <div v-if="!tenantLogo()" class="brand-mark">M</div>
       <img
         v-else
-        :src="tenant.logo"
+        :src="tenantLogo()"
         class="tenant-logo"
         alt="Company logo"
       />
