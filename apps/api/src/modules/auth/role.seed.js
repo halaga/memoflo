@@ -10,6 +10,12 @@ const permissions = [
     description: "Open the company administration control centre",
   },
   {
+    name: "audit.view",
+    module: "audit",
+    action: "view",
+    description: "View the company audit trail",
+  },
+  {
     name: "company.modules.update",
     module: "company",
     action: "modules.update",

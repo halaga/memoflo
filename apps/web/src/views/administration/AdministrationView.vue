@@ -55,6 +55,12 @@ const cards = [
     to: "/notifications",
     icon: "◔",
   },
+  {
+    title: "Audit Log",
+    text: "Review company activity, administrative changes and security events.",
+    to: "/administration/audit",
+    icon: "◌",
+  },
 ];
 
 async function load() {

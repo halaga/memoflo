@@ -159,6 +159,12 @@ const administrationItems = [
     permission: "company.branding.update",
   },
   {
+    label: "Audit Log",
+    route: "/administration/audit",
+    icon: "◌",
+    permission: "audit.view",
+  },
+  {
     label: "Notifications",
     route: "/notifications",
     icon: "◔",

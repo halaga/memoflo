@@ -4,9 +4,11 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 
+import auditLogger from "./middleware/auditLogger.js";
 import errorHandler from "./middleware/errorHandler.js";
 import notFound from "./middleware/notFound.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import auditRoutes from "./modules/audit/audit.routes.js";
 import roleRoutes from "./modules/auth/role.routes.js";
 import businessServiceRoutes from "./modules/business-service/businessService.routes.js";
 import companyRoutes from "./modules/company/company.routes.js";
@@ -27,6 +29,7 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(auditLogger);
 
 app.get("/", (req, res) => {
   res.json({
@@ -38,6 +41,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/audit", auditRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/memos", memoRoutes);
 app.use("/api/positions", positionRoutes);

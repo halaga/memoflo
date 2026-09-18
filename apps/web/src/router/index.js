@@ -219,6 +219,16 @@ const routes = [
       },
 
       {
+        path: "administration/audit",
+        name: "audit-log",
+        component: () =>
+          import("../views/administration/AuditLogView.vue"),
+        meta: {
+          permission: "audit.view",
+        },
+      },
+
+      {
         path: "administration/branding",
         name: "company-branding",
         component: () =>
