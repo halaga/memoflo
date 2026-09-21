@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { api, normalizeList } from "../../services/api";
 
 const employees = ref([]);
@@ -12,6 +12,7 @@ const success = ref("");
 const showForm = ref(false);
 const credentials = ref(null);
 const editingId = ref(null);
+const formSection = ref(null);
 
 const form = ref({
   firstName: "",
@@ -47,8 +48,8 @@ async function load() {
   finally { loading.value = false; }
 }
 
-function openCreate() { resetForm(); credentials.value = null; success.value = ""; showForm.value = true; }
-function openEdit(employee) {
+async function openCreate() { resetForm(); credentials.value = null; success.value = ""; showForm.value = true; await nextTick(); formSection.value?.scrollIntoView({ behavior: "smooth", block: "start" }); }
+async function openEdit(employee) {
   editingId.value = employee._id;
   credentials.value = null;
   success.value = "";
@@ -63,6 +64,8 @@ function openEdit(employee) {
     password: "",
   };
   showForm.value = true;
+  await nextTick();
+  formSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function save() {
@@ -147,7 +150,7 @@ onMounted(load);
       <button class="btn btn-secondary" type="button" @click="credentials=null">Dismiss</button>
     </section>
 
-    <section v-if="showForm" class="card employee-form-card">
+    <section v-if="showForm" ref="formSection" class="card employee-form-card">
       <div class="builder-title">
         <div>
           <span class="page-kicker">

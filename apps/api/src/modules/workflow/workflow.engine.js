@@ -4,6 +4,7 @@ import Memo from "../memo/memo.model.js";
 import WorkflowInstance from "./workflowInstance.model.js";
 import WorkflowStep from "./workflowStep.model.js";
 import NotificationService from "../notification/notification.service.js";
+import MemoEventService from "../memo-event/memoEvent.service.js";
 
 class WorkflowEngine {
   async notify({
@@ -138,6 +139,26 @@ class WorkflowEngine {
       }
     );
 
+    if (normalizedResourceType === "memo") {
+      await MemoEventService.record({
+        company: companyId,
+        memo: resourceId,
+        actor: userId,
+        type: "workflow.started",
+        title: "Approval workflow started",
+        description: `${workflow.name} started at ${firstStep.name}.`,
+        toStatus: "Pending",
+        workflowStep: firstStep._id,
+        metadata: {
+          workflow: workflowId,
+          workflowInstance: instance._id,
+          stepOrder: firstStep.order,
+          stepName: firstStep.name,
+          action: firstStep.action,
+        },
+      });
+    }
+
     if (currentEmployee) {
       await this.notify({
         company: companyId,
@@ -180,7 +201,7 @@ class WorkflowEngine {
     }
   }
 
-  async advance(companyId, instanceId, userId = null) {
+  async advance(companyId, instanceId, userId = null, comment = "") {
     const instance = await WorkflowRepository.findInstance(
       instanceId,
       companyId
@@ -241,6 +262,26 @@ class WorkflowEngine {
       );
 
       if (instance.resourceType === "memo") {
+        await MemoEventService.record({
+          company: companyId,
+          memo: instance.resourceId,
+          actor: userId,
+          type: "workflow.completed",
+          title: "Workflow completed",
+          description: `Approval workflow completed after ${currentStep.name}.`,
+          fromStatus: "Pending",
+          toStatus: finalStatus,
+          workflowStep: currentStep._id,
+          comment: comment || null,
+          metadata: {
+            workflow: instance.workflow._id,
+            workflowInstance: instance._id,
+            stepOrder: currentStep.order,
+            stepName: currentStep.name,
+            action: currentStep.action,
+          },
+        });
+
         await this.notifyMemoOwner(
           companyId,
           instance.resourceId,
@@ -287,6 +328,28 @@ class WorkflowEngine {
       }
     );
 
+    if (instance.resourceType === "memo") {
+      await MemoEventService.record({
+        company: companyId,
+        memo: instance.resourceId,
+        actor: userId,
+        type: "workflow.step.completed",
+        title: `${currentStep.name} completed`,
+        description: `${currentStep.name} was completed and the memo moved to ${nextStep.name}.`,
+        fromStatus: "Pending",
+        toStatus: "Pending",
+        workflowStep: currentStep._id,
+        comment: comment || null,
+        metadata: {
+          workflow: instance.workflow._id,
+          workflowInstance: instance._id,
+          stepOrder: currentStep.order,
+          stepName: currentStep.name,
+          action: currentStep.action,
+        },
+      });
+    }
+
     if (currentEmployee) {
       await this.notify({
         company: companyId,
@@ -304,7 +367,7 @@ class WorkflowEngine {
     return updatedInstance;
   }
 
-  async reject(companyId, instanceId, userId = null) {
+  async reject(companyId, instanceId, userId = null, comment = "") {
     const instance = await WorkflowRepository.findInstance(
       instanceId,
       companyId
@@ -349,6 +412,20 @@ class WorkflowEngine {
     );
 
     if (instance.resourceType === "memo") {
+      await MemoEventService.record({
+        company: companyId,
+        memo: instance.resourceId,
+        actor: userId,
+        type: "workflow.rejected",
+        title: "Memo rejected",
+        description: `${instance.currentStep?.name || "Current workflow step"} rejected the memo.`,
+        fromStatus: "Pending",
+        toStatus: "Rejected",
+        workflowStep: instance.currentStep?._id || null,
+        comment: comment || null,
+        metadata: { workflow: instance.workflow._id, workflowInstance: instance._id },
+      });
+
       await this.notifyMemoOwner(
         companyId,
         instance.resourceId,
@@ -361,7 +438,7 @@ class WorkflowEngine {
     return updatedInstance;
   }
 
-  async cancel(companyId, instanceId, userId = null) {
+  async cancel(companyId, instanceId, userId = null, comment = "") {
     const instance = await WorkflowRepository.findInstance(
       instanceId,
       companyId
@@ -406,6 +483,20 @@ class WorkflowEngine {
     );
 
     if (instance.resourceType === "memo") {
+      await MemoEventService.record({
+        company: companyId,
+        memo: instance.resourceId,
+        actor: userId,
+        type: "workflow.cancelled",
+        title: "Workflow cancelled",
+        description: "The memo approval workflow was cancelled.",
+        fromStatus: "Pending",
+        toStatus: "Cancelled",
+        workflowStep: instance.currentStep?._id || null,
+        comment: comment || null,
+        metadata: { workflow: instance.workflow._id, workflowInstance: instance._id },
+      });
+
       await this.notifyMemoOwner(
         companyId,
         instance.resourceId,
@@ -418,7 +509,7 @@ class WorkflowEngine {
     return updatedInstance;
   }
 
-  async resubmit({ instanceId, employeeId }) {
+  async resubmit({ instanceId, employeeId, comment = "" }) {
     const oldInstance = await WorkflowInstance.findById(instanceId);
 
     if (!oldInstance) {
@@ -485,6 +576,25 @@ class WorkflowEngine {
         status: "Pending",
       }
     );
+
+    await MemoEventService.record({
+      company: oldInstance.company,
+      memo: oldInstance.resourceId,
+      actor: employeeId,
+      type: "workflow.resubmitted",
+      title: "Workflow resubmitted",
+      description: `The memo was resubmitted to ${firstStep.name}.`,
+      fromStatus: "Rejected",
+      toStatus: "Pending",
+      workflowStep: firstStep._id,
+      comment: comment || null,
+      metadata: {
+        workflow: oldInstance.workflow,
+        workflowInstance: newInstance._id,
+        stepOrder: firstStep.order,
+        stepName: firstStep.name,
+      },
+    });
 
     if (currentEmployee) {
       await this.notify({

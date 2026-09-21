@@ -225,7 +225,8 @@ class WorkflowController {
         await WorkflowEngine.advance(
           req.user.company,
           req.params.instanceId,
-          req.user.id
+          req.user.id,
+          req.body?.comment || ""
         );
 
       res.json({
@@ -243,7 +244,8 @@ class WorkflowController {
         await WorkflowEngine.reject(
           req.user.company,
           req.params.instanceId,
-          req.user.id
+          req.user.id,
+          req.body?.comment || ""
         );
 
       res.json({
@@ -261,7 +263,8 @@ class WorkflowController {
         await WorkflowEngine.cancel(
           req.user.company,
           req.params.instanceId,
-          req.user.id
+          req.user.id,
+          req.body?.comment || ""
         );
 
       res.json({
@@ -297,7 +300,8 @@ async resubmitInstance(req, res, next) {
       await WorkflowService.resubmitInstance(
         req.user.company,
         req.params.instanceId,
-        req.user.id
+        req.user.id,
+        req.body?.comment || ""
       );
 
        res.status(200).json({

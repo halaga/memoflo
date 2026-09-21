@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { api, normalizeList } from "../../services/api";
 
 const workflows = ref([]);
@@ -160,7 +160,7 @@ async function createWorkflow() {
   }
 }
 
-function openNewStep() {
+async function openNewStep() {
   editingStep.value = null;
   stepForm.value = {
     name: "",
@@ -172,9 +172,11 @@ function openNewStep() {
 
   showStep.value = true;
   error.value = "";
+  await nextTick();
+  document.querySelector(".workflow-step-editor")?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
-function editStep(step) {
+async function editStep(step) {
   editingStep.value = step;
 
   stepForm.value = {
@@ -514,7 +516,7 @@ onMounted(load);
 
         <section
           v-if="showStep"
-          class="card"
+          class="card workflow-step-editor"
         >
           <div class="card-header">
             <div>

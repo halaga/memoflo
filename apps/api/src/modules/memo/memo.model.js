@@ -99,14 +99,6 @@ const memoSchema = new mongoose.Schema(
       default: null,
     },
 
-    attachments: [
-      {
-        fileName: String,
-        fileUrl: String,
-        uploadedAt: Date,
-      },
-    ],
-
     ...BaseSchema,
   },
   {

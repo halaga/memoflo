@@ -1,5 +1,6 @@
-import MemoRepository from "./memo.repository.js";
 import BusinessService from "../business-service/businessService.model.js";
+import MemoEventService from "../memo-event/memoEvent.service.js";
+import MemoRepository from "./memo.repository.js";
 import { validateCreateMemo } from "./memo.validator.js";
 
 class MemoService {
@@ -21,16 +22,31 @@ class MemoService {
     }).lean();
 
     if (!businessService) {
-      throw new Error("Business service not found");
+      const error = new Error("Business service not found");
+      error.status = 404;
+      throw error;
     }
 
-    return MemoRepository.create({
+    const memo = await MemoRepository.create({
       ...payload,
       referenceNo: await this.generateReferenceNo(),
       workflow: payload.workflow || businessService.workflow || null,
       status: "Draft",
       currentStep: 0,
     });
+
+    await MemoEventService.record({
+      company: payload.company,
+      memo: memo._id,
+      actor: payload.createdBy,
+      type: "memo.created",
+      title: "Memo created",
+      description: `Memo ${memo.referenceNo} was created.`,
+      toStatus: "Draft",
+      metadata: { referenceNo: memo.referenceNo },
+    });
+
+    return memo;
   }
 
   async listMemos(companyId) {
@@ -41,17 +57,44 @@ class MemoService {
     const memo = await MemoRepository.findById(id, companyId);
 
     if (!memo) {
-      throw new Error("Memo not found");
+      const error = new Error("Memo not found");
+      error.status = 404;
+      throw error;
     }
 
     return memo;
   }
 
-  async updateMemo(id, companyId, payload) {
-    const memo = await MemoRepository.update(id, companyId, payload);
+  async updateMemo(id, companyId, payload, actorId) {
+    const existing = await MemoRepository.findById(id, companyId);
 
-    if (!memo) {
-      throw new Error("Memo not found");
+    if (!existing) {
+      const error = new Error("Memo not found");
+      error.status = 404;
+      throw error;
+    }
+
+    const allowed = ["title", "body", "category", "priority", "beneficiarySBU"];
+    const updates = Object.fromEntries(
+      Object.entries(payload).filter(([key]) => allowed.includes(key))
+    );
+
+    const memo = await MemoRepository.update(id, companyId, updates);
+
+    const changedFields = Object.keys(updates).filter(
+      (field) => String(existing[field] ?? "") !== String(memo[field] ?? "")
+    );
+
+    if (changedFields.length) {
+      await MemoEventService.record({
+        company: companyId,
+        memo: memo._id,
+        actor: actorId,
+        type: "memo.updated",
+        title: "Memo updated",
+        description: `Memo ${memo.referenceNo} was updated.`,
+        metadata: { referenceNo: memo.referenceNo, changedFields },
+      });
     }
 
     return memo;

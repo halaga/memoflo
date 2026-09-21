@@ -304,7 +304,7 @@ class WorkflowService {
     };
   }
 
-  async resubmitInstance(companyId, instanceId, employeeId) {
+  async resubmitInstance(companyId, instanceId, employeeId, comment = "") {
     const instance = await WorkflowRepository.findInstance(
       instanceId,
       companyId
@@ -323,6 +323,7 @@ class WorkflowService {
     return WorkflowEngine.resubmit({
       instanceId,
       employeeId,
+      comment,
     });
   }
 }

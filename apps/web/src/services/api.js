@@ -7,8 +7,9 @@ function getToken() {
 
 async function request(path, options = {}) {
   const token = getToken();
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   const headers = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers || {}),
   };
 
@@ -388,27 +389,62 @@ export const api = {
     return request(`/workflow/instances/${instanceId}/current-step`);
   },
 
-  advanceWorkflow(instanceId) {
+  advanceWorkflow(instanceId, comment = "") {
     return request(`/workflow/instances/${instanceId}/advance`, {
       method: "POST",
+      body: JSON.stringify({ comment }),
     });
   },
 
-  rejectWorkflow(instanceId) {
+  rejectWorkflow(instanceId, comment = "") {
     return request(`/workflow/instances/${instanceId}/reject`, {
       method: "POST",
+      body: JSON.stringify({ comment }),
     });
   },
 
-  cancelWorkflow(instanceId) {
+  cancelWorkflow(instanceId, comment = "") {
     return request(`/workflow/instances/${instanceId}/cancel`, {
       method: "POST",
+      body: JSON.stringify({ comment }),
     });
   },
 
-  resubmitWorkflow(instanceId) {
+  resubmitWorkflow(instanceId, comment = "") {
     return request(`/workflow/instances/${instanceId}/resubmit`, {
       method: "POST",
+      body: JSON.stringify({ comment }),
+    });
+  },
+
+
+  listMemoEvents(memoId) {
+    return request(`/memo-events/memo/${memoId}`);
+  },
+
+  listMemoAttachments(memoId) {
+    return request(`/memo-attachments/${memoId}`);
+  },
+
+  uploadMemoAttachment(memoId, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request(`/memo-attachments/${memoId}`, {
+      method: "POST",
+      body: formData,
+    });
+  },
+
+  downloadMemoAttachment(memoId, attachmentId) {
+    const token = getToken();
+    return fetch(`${API_URL}/memo-attachments/${memoId}/${attachmentId}/download`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
+  removeMemoAttachment(memoId, attachmentId) {
+    return request(`/memo-attachments/${memoId}/${attachmentId}`, {
+      method: "DELETE",
     });
   },
 

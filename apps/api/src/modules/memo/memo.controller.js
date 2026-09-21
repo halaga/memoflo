@@ -61,7 +61,8 @@ class MemoController {
       const memo = await MemoService.updateMemo(
         req.params.id,
         req.user.company,
-        req.body
+        req.body,
+        req.user.id
       );
 
       res.json({

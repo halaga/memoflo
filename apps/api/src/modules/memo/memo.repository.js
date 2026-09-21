@@ -5,28 +5,40 @@ class MemoRepository {
     return Memo.create(data);
   }
 
-  async findAll(company) {
+  async findAll(companyId) {
     return Memo.find({
-      company,
+      company: companyId,
+      isActive: true,
       deletedAt: null,
     })
-      .populate("createdBy")
-      .populate("businessService")
-      .populate("currentApprover");
+      .populate("createdBy", "_id firstName lastName email")
+      .populate("businessService", "_id name category")
+      .populate("currentApprover", "_id title code")
+      .populate("workflow", "_id name");
   }
 
-  async findById(id) {
-    return Memo.findById(id)
-      .populate("createdBy")
-      .populate("businessService")
-      .populate("workflow");
+  async findById(id, companyId) {
+    return Memo.findOne({
+      _id: id,
+      company: companyId,
+      isActive: true,
+      deletedAt: null,
+    })
+      .populate("createdBy", "_id firstName lastName email")
+      .populate("businessService", "_id name category")
+      .populate("workflow", "_id name");
   }
 
-  async update(id, data) {
-    return Memo.findByIdAndUpdate(
-      id,
+  async update(id, companyId, data) {
+    return Memo.findOneAndUpdate(
+      {
+        _id: id,
+        company: companyId,
+        isActive: true,
+        deletedAt: null,
+      },
       data,
-      { new: true }
+      { new: true, runValidators: true }
     );
   }
 }
