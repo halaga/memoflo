@@ -62,33 +62,59 @@ export async function seedOrganization(company) {
     }
   }
 
+  // Designations are scoped to both an SBU and a department.
+  // Keep the seed data aligned with that schema instead of creating
+  // orphaned/global designations.
   const designations = [
-    { title: "Chief Executive Officer", level: 100 },
-    { title: "Executive Director", level: 95 },
-    { title: "General Manager", level: 90 },
-    { title: "Head of Department", level: 80 },
-    { title: "Manager", level: 70 },
-    { title: "Assistant Manager", level: 60 },
-    { title: "Supervisor", level: 50 },
-    { title: "Senior Officer", level: 40 },
-    { title: "Officer", level: 30 },
-    { title: "Assistant", level: 20 },
-    { title: "Intern", level: 10 },
+    { title: "Chief Executive Officer", level: 100, departmentCode: "ADMIN" },
+    { title: "Executive Director", level: 95, departmentCode: "ADMIN" },
+    { title: "General Manager", level: 90, departmentCode: "ADMIN" },
+    { title: "Head of Department", level: 80, departmentCode: "HR" },
+    { title: "Manager", level: 70, departmentCode: "ADMIN" },
+    { title: "Assistant Manager", level: 60, departmentCode: "ADMIN" },
+    { title: "Supervisor", level: 50, departmentCode: "ADMIN" },
+    { title: "Senior Officer", level: 40, departmentCode: "IT" },
+    { title: "Officer", level: 30, departmentCode: "IT" },
+    { title: "Assistant", level: 20, departmentCode: "IT" },
+    { title: "Intern", level: 10, departmentCode: "IT" },
   ];
 
+  const departmentMap = {};
+  for (const item of departments) {
+    const department = await Department.findOne({
+      company: company._id,
+      code: item.code,
+    });
+
+    if (department) {
+      departmentMap[item.code] = department;
+    }
+  }
+
   for (const item of designations) {
+    const department = departmentMap[item.departmentCode];
+
+    if (!department) {
+      console.log(`⚠️ Skipping designation ${item.title}: department ${item.departmentCode} not found`);
+      continue;
+    }
+
     const exists = await Designation.findOne({
       company: company._id,
+      department: department._id,
       title: item.title,
     });
 
     if (!exists) {
       await Designation.create({
         company: company._id,
-        ...item,
+        sbu: department.sbu,
+        department: department._id,
+        title: item.title,
+        level: item.level,
       });
 
-      console.log(`✔ Designation: ${item.title}`);
+      console.log(`✔ Designation: ${item.title} (${department.name})`);
     }
   }
 

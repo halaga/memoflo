@@ -13,3 +13,8 @@ import "../modules/workflow/workflowInstance.model.js";
 import "../modules/business-service/businessService.model.js";
 import "../modules/memo/memo.model.js";
 import "../modules/notification/notification.model.js";
+
+import "../modules/leave/leaveType.model.js";
+import "../modules/leave/leaveBalance.model.js";
+import "../modules/leave/leaveRequest.model.js";
+import "../modules/leave/leaveEvent.model.js";

@@ -136,6 +136,11 @@ const permissions = [
     description: "Execute workflow actions",
   },
 
+  { name: "leave.view", module: "leave", action: "view", description: "View leave requests and balances" },
+  { name: "leave.create", module: "leave", action: "create", description: "Submit leave requests" },
+  { name: "leave.approve", module: "leave", action: "approve", description: "Approve or reject leave requests" },
+  { name: "leave.manage", module: "leave", action: "manage", description: "Manage leave types and balances" },
+
   {
     name: "business-services.view",
     module: "business-services",
@@ -199,6 +204,8 @@ const systemRoles = [
       "workflow.execute",
 
       "business-services.view",
+      "leave.view",
+      "leave.create",
       "notifications.view",
       "notifications.update",
     ],
@@ -216,6 +223,8 @@ const systemRoles = [
       "memos.update",
       "workflow.view",
       "business-services.view",
+      "leave.view",
+      "leave.create",
       "notifications.view",
       "notifications.update",
     ],

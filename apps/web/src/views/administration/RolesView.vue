@@ -12,6 +12,7 @@ const success = ref("");
 const selectedRole = ref(null);
 const selectedEmployee = ref("");
 const showCreate = ref(false);
+const showEdit = ref(false);
 
 const form = ref({
   name: "",
@@ -31,11 +32,12 @@ const employee = computed(() => {
   }
 });
 
-const canCreate = computed(() => {
+const canManageRoles = computed(() => {
   const rolePermissions = employee.value?.role?.permissions || [];
   return (
     rolePermissions.includes("*") ||
-    rolePermissions.includes("roles.create")
+    rolePermissions.includes("roles.create") ||
+    rolePermissions.includes("roles.update")
   );
 });
 
@@ -71,7 +73,66 @@ async function load() {
 function selectRole(role) {
   selectedRole.value = role;
   selectedEmployee.value = "";
+  showEdit.value = false;
   success.value = "";
+}
+
+function beginEditRole() {
+  if (!selectedRole.value) return;
+
+  form.value = {
+    name: selectedRole.value.name || "",
+    code: selectedRole.value.code || "",
+    level: selectedRole.value.level ?? 10,
+    description: selectedRole.value.description || "",
+    permissions: [...(selectedRole.value.permissions || [])],
+  };
+
+  showCreate.value = false;
+  showEdit.value = true;
+  success.value = "";
+
+  requestAnimationFrame(() => {
+    document
+      .querySelector(".role-editor")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function resetRoleForm() {
+  form.value = {
+    name: "",
+    code: "",
+    level: 10,
+    description: "",
+    permissions: [],
+  };
+}
+
+async function updateRole() {
+  if (!selectedRole.value || !form.value.name.trim()) {
+    error.value = "Role name is required.";
+    return;
+  }
+
+  error.value = "";
+  success.value = "";
+
+  try {
+    const result = await api.updateRole(selectedRole.value._id, form.value);
+    const updatedRole = result?.data || result;
+
+    selectedRole.value = updatedRole;
+    showEdit.value = false;
+    success.value = "Role updated successfully.";
+    await load();
+
+    selectedRole.value =
+      roles.value.find((role) => role._id === updatedRole?._id) ||
+      updatedRole;
+  } catch (requestError) {
+    error.value = requestError.message || "Unable to update role.";
+  }
 }
 
 async function assignRole() {
@@ -112,6 +173,7 @@ async function createRole() {
     await api.createRole(form.value);
     success.value = "Role created successfully.";
     showCreate.value = false;
+    showEdit.value = false;
     form.value = {
       name: "",
       code: "",
@@ -145,7 +207,7 @@ onMounted(load);
       </div>
 
       <button
-        v-if="canCreate"
+        v-if="canManageRoles"
         type="button"
         class="btn btn-primary"
         @click="showCreate = !showCreate"
@@ -158,7 +220,7 @@ onMounted(load);
       {{ error }}
     </div>
 
-    <div v-if="!canCreate" class="alert alert-info">
+    <div v-if="!canManageRoles" class="alert alert-info">
       Role creation is restricted to tenant administrators.
     </div>
 
@@ -269,18 +331,110 @@ onMounted(load);
         </div>
       </section>
 
-      <section class="card role-detail">
+      <section class="card role-detail" id="role-detail">
         <template v-if="selectedRole">
-          <div class="builder-title">
+          <div class="builder-title role-header">
             <div>
               <span class="page-kicker">ROLE</span>
               <h2>{{ selectedRole.name }}</h2>
-              <p>{{ selectedRole.description }}</p>
+              <p>{{ selectedRole.description || "No description provided." }}</p>
+              <div class="role-meta">
+                <span v-if="selectedRole.code" class="meta-pill">
+                  {{ selectedRole.code }}
+                </span>
+                <span class="meta-pill">
+                  Level {{ selectedRole.level ?? 1 }}
+                </span>
+              </div>
             </div>
-            <span v-if="selectedRole.isSystem" class="count-pill">
-              System
-            </span>
+
+            <div class="role-header-actions">
+              <button
+                v-if="canManageRoles"
+                type="button"
+                class="btn btn-secondary"
+                @click="beginEditRole"
+              >
+                Edit role
+              </button>
+              <span v-if="selectedRole.isSystem" class="count-pill">
+                System
+              </span>
+            </div>
           </div>
+
+          <section v-if="showEdit" class="role-editor" tabindex="-1">
+            <div class="card-header">
+              <div>
+                <span class="page-kicker">EDIT ROLE</span>
+                <h3>Role settings</h3>
+                <p>Update the role and its permissions for this company.</p>
+              </div>
+              <button
+                type="button"
+                class="btn btn-ghost"
+                @click="showEdit = false"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div class="form-row">
+              <label>
+                Name
+                <input
+                  v-model="form.name"
+                  class="input"
+                  :disabled="selectedRole.isSystem"
+                />
+              </label>
+
+              <label>
+                Code
+                <input
+                  v-model="form.code"
+                  class="input"
+                  :disabled="selectedRole.isSystem"
+                />
+              </label>
+            </div>
+
+            <label>
+              Description
+              <input v-model="form.description" class="input" />
+            </label>
+
+            <div class="permission-picker">
+              <div
+                v-for="(group, module) in permissionGroups"
+                :key="module"
+                class="permission-group"
+              >
+                <strong>{{ module }}</strong>
+                <label
+                  v-for="permission in group"
+                  :key="permission._id"
+                  class="check-label"
+                >
+                  <input
+                    v-model="form.permissions"
+                    type="checkbox"
+                    :value="permission.name"
+                  />
+                  {{ permission.name }}
+                </label>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-primary" @click="updateRole">
+                Save changes
+              </button>
+              <button type="button" class="btn btn-ghost" @click="showEdit = false">
+                Cancel
+              </button>
+            </div>
+          </section>
 
           <div>
             <h3>Permissions</h3>

@@ -49,6 +49,10 @@ const workspace = computed(() => {
     return "memos";
   }
 
+  if (route.path.startsWith("/leave")) {
+    return "leave";
+  }
+
   if (route.path.startsWith("/administration")) {
     return "admin";
   }
@@ -85,6 +89,10 @@ const hubItems = computed(() => {
     return !item.permission || can(item.permission);
   });
 });
+
+const leaveItems = [
+  { label: "Leave Overview", route: "/leave", icon: "L", permission: "leave.view" },
+];
 
 const memoItems = [
   {
@@ -184,6 +192,10 @@ const items = computed(() => {
     list = memoItems;
   }
 
+  if (workspace.value === "leave") {
+    list = leaveItems;
+  }
+
   if (workspace.value === "admin") {
     list = administrationItems;
   }
@@ -241,6 +253,8 @@ function navigate(path) {
         {{
           workspace === "memos"
             ? "MEMO MANAGEMENT"
+            : workspace === "leave"
+              ? "LEAVE MANAGEMENT"
             : workspace === "admin"
               ? "ADMINISTRATION"
               : "WORKSPACE"

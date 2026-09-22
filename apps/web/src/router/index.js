@@ -85,6 +85,19 @@ const routes = [
       },
 
       {
+        path: "leave",
+        name: "leave",
+        component: () => import("../views/leave/LeaveView.vue"),
+        meta: { module: "leave", permission: "leave.view" },
+      },
+      {
+        path: "leave/requests/:id",
+        name: "leave-request",
+        component: () => import("../views/leave/LeaveRequestView.vue"),
+        meta: { module: "leave", permission: "leave.view" },
+      },
+
+      {
         path: "dashboard",
         name: "dashboard",
         component: () =>

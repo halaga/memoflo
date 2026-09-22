@@ -6,6 +6,7 @@ export async function seedCompany() {
   });
 
   if (company) {
+    await Company.updateOne({ _id: company._id }, { $addToSet: { "settings.modules": "leave" } });
     console.log("✔ Company already exists");
     return company;
   }

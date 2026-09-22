@@ -20,8 +20,8 @@ export const MODULE_CATALOGUE = [
     name: "Leave Management",
     description: "Employee leave requests, balances and approvals.",
     icon: "L",
-    status: "building",
-    route: null,
+    status: "live",
+    route: "/leave",
   },
   {
     id: "procurement",

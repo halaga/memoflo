@@ -2568,3 +2568,90 @@ improve hierarchy,    readability, tenant branding and responsive behaviour.    
 
 /* TABLE AND FORM HIERARCHY */
 .data-table td:first-child strong{display:block;line-height:1.35}.data-table td:first-child small{display:block;margin-top:5px;color:#94a3b8;font-size:9px;letter-spacing:.03em}.table-actions{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-width:145px}.table-actions .btn{margin:0}.form-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid #eef2f6}.workflow-comment-box+.workflow-panel{margin-top:17px}
+/* Roles & permissions editor */
+.role-header {
+  gap: 1rem;
+}
+
+.role-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.role-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 999px;
+  background: var(--surface-muted, #f8fafc);
+  color: var(--text-muted, #64748b);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.role-editor {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 1rem;
+  background: var(--surface-muted, #f8fafc);
+  scroll-margin-top: 1.5rem;
+}
+
+.role-editor .card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.role-editor .form-row {
+  margin-bottom: 1rem;
+}
+
+.role-editor > label {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.role-editor .permission-picker {
+  margin-top: 1rem;
+}
+
+.role-editor .form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 720px) {
+  .role-header,
+  .role-editor .card-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .role-header-actions {
+    justify-content: flex-start;
+  }
+
+  .role-editor {
+    padding: 1rem;
+  }
+}
