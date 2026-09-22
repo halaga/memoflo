@@ -293,6 +293,14 @@ export const api = {
     return request("/memos");
   },
 
+  listMemoEvents(memoId) {
+    return request(`/memo-events/memo/${memoId}`);
+  },
+
+  listMemoAttachments(memoId) {
+    return request(`/memo-attachments/${memoId}`);
+  },
+
   getMemo(id) {
     return request(`/memos/${id}`);
   },
