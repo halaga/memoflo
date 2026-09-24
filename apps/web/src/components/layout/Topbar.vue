@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import {
   api,
@@ -11,6 +11,8 @@ const route = useRoute();
 const router = useRouter();
 const employee = computed(() => getSavedEmployee());
 const unread = ref(0);
+const previousUnread = ref(0);
+let notificationTimer = null;
 
 const titles = {
   modules: ["Workspace", "Module Hub"],
@@ -41,10 +43,29 @@ const initials = computed(() => {
   return `${first}${last}`.toUpperCase() || "MF";
 });
 
-async function loadNotifications() {
+async function loadNotifications({ playSound = false } = {}) {
   try {
     const result = await api.listNotifications();
-    unread.value = result?.unreadCount || 0;
+    const nextUnread = result?.unreadCount || 0;
+
+    if (playSound && nextUnread > previousUnread.value) {
+      try {
+        const context = new window.AudioContext();
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.frequency.value = 880;
+        gain.gain.value = 0.045;
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start();
+        oscillator.stop(context.currentTime + 0.12);
+      } catch {
+        // Browsers can block audio until the user interacts with the page.
+      }
+    }
+
+    previousUnread.value = nextUnread;
+    unread.value = nextUnread;
   } catch {
     unread.value = 0;
   }
@@ -55,7 +76,13 @@ function logout() {
   router.replace("/login");
 }
 
-onMounted(loadNotifications);
+onMounted(async () => {
+  await loadNotifications();
+  notificationTimer = window.setInterval(() => loadNotifications({ playSound: true }), 15000);
+});
+onBeforeUnmount(() => {
+  if (notificationTimer) window.clearInterval(notificationTimer);
+});
 </script>
 
 <template>

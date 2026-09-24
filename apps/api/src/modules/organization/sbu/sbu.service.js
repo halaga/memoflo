@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 import SBURepository from "./sbu.repository.js";
+import Employee from "../../employee/employee.model.js";
 
 function createError(message, status = 400) {
   const error = new Error(message);
@@ -76,6 +77,8 @@ class SBUService {
       throw createError("SBU name is required");
     }
 
+    await this.validateHead(companyId, data.head);
+
     return SBURepository.create({
       ...data,
       company: companyId,
@@ -91,6 +94,8 @@ class SBUService {
       throw createError("SBU name is required");
     }
 
+    await this.validateHead(companyId, data.head);
+
     const sbu = await SBURepository.update(
       id,
       companyId,
@@ -102,6 +107,18 @@ class SBUService {
     }
 
     return sbu;
+  }
+
+  async validateHead(companyId, headId) {
+    if (!headId) return;
+    const employee = await Employee.findOne({
+      _id: headId,
+      company: companyId,
+      active: true,
+      employmentStatus: "Active",
+      deletedAt: null,
+    }).select("_id");
+    if (!employee) throw createError("SBU Head must be an active employee in this company.");
   }
 
   async deleteSBU(id, companyId) {

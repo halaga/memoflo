@@ -4,7 +4,8 @@ const populateEmployee = (query) =>
   query
     .populate("company")
     .populate("position")
-    .populate("role");
+    .populate("role")
+    .populate("reportsTo");
 
 class EmployeeRepository {
   async create(data) {

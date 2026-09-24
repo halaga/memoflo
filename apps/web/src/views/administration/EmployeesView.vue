@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { api, normalizeList } from "../../services/api";
 
 const employees = ref([]);
@@ -12,7 +12,6 @@ const success = ref("");
 const showForm = ref(false);
 const credentials = ref(null);
 const editingId = ref(null);
-const formSection = ref(null);
 
 const form = ref({
   firstName: "",
@@ -34,7 +33,7 @@ const canCreate = computed(() => {
 
 function resetForm() {
   editingId.value = null;
-  form.value = { firstName: "", lastName: "", email: "", phone: "", role: "", position: "", createLogin: true, password: "" };
+  form.value = { firstName: "", lastName: "", email: "", phone: "", role: "", position: "", reportsTo: "", createLogin: true, password: "" };
 }
 
 async function load() {
@@ -48,8 +47,8 @@ async function load() {
   finally { loading.value = false; }
 }
 
-async function openCreate() { resetForm(); credentials.value = null; success.value = ""; showForm.value = true; await nextTick(); formSection.value?.scrollIntoView({ behavior: "smooth", block: "start" }); }
-async function openEdit(employee) {
+function openCreate() { resetForm(); credentials.value = null; success.value = ""; showForm.value = true; }
+function openEdit(employee) {
   editingId.value = employee._id;
   credentials.value = null;
   success.value = "";
@@ -60,12 +59,11 @@ async function openEdit(employee) {
     phone: employee.phone || "",
     role: employee.role?._id || "",
     position: employee.position?._id || "",
+    reportsTo: employee.reportsTo?._id || "",
     createLogin: employee.loginEnabled !== false,
     password: "",
   };
   showForm.value = true;
-  await nextTick();
-  formSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function save() {
@@ -150,7 +148,7 @@ onMounted(load);
       <button class="btn btn-secondary" type="button" @click="credentials=null">Dismiss</button>
     </section>
 
-    <section v-if="showForm" ref="formSection" class="card employee-form-card">
+    <section v-if="showForm" class="card employee-form-card">
       <div class="builder-title">
         <div>
           <span class="page-kicker">
@@ -210,6 +208,26 @@ onMounted(load);
           </select>
         </label>
       </div>
+      <div class="form-row">
+        <label>
+          Reports To / Line manager
+          <select v-model="form.reportsTo" class="input">
+            <option value="">Not assigned</option>
+            <option
+              v-for="manager in employees"
+              :key="manager._id"
+              :value="manager._id"
+              :disabled="manager._id === editingId"
+            >
+              {{ manager.firstName }} {{ manager.lastName }} · {{ manager.role?.name || "Employee" }}
+            </option>
+          </select>
+        </label>
+        <div class="people-setup-hint">
+          <span>Leave workflow</span>
+          <strong>This person will receive the first leave approval.</strong>
+        </div>
+      </div>
       <div v-if="!editingId" class="login-setup">
         <label class="check-label"><input v-model="form.createLogin" type="checkbox" /> Create login account</label>
         <label v-if="form.createLogin">Temporary password <input v-model="form.password" class="input" placeholder="Leave blank to generate securely" /></label>
@@ -264,7 +282,7 @@ onMounted(load);
             <strong>{{ employee.firstName }} {{ employee.lastName }}</strong>
             <span>{{ employee.email }}</span>
             <small>
-              {{ employee.employeeNo }} · {{ positionLabel(employee.position) }}
+              {{ employee.employeeNo }} · {{ positionLabel(employee.position) }} · Reports to {{ employee.reportsTo ? `${employee.reportsTo.firstName} ${employee.reportsTo.lastName}` : "Not assigned" }}
             </small>
           </div>
           <div class="employee-role">

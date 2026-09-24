@@ -225,6 +225,10 @@ function actorName(actor) {
   return `${actor.firstName || ""} ${actor.lastName || ""}`.trim() || actor.email || "User";
 }
 
+function goToSection(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 onMounted(load);
 </script>
 
@@ -232,12 +236,18 @@ onMounted(load);
   <div class="page">
     <div class="page-header">
       <div class="page-heading-group">
-        <button class="btn btn-secondary" type="button" @click="router.back()">← Back</button>
+        <button class="btn btn-secondary" type="button" @click="router.push('/memos')">← Back</button>
         <div>
           <span class="page-kicker">MEMO MANAGEMENT</span>
           <h1>Memo Details</h1>
           <p>Review the memo, workflow state, supporting files and complete event history.</p>
         </div>
+      </div>
+      <div class="memo-detail-header-actions">
+        <button class="btn btn-secondary btn-small" type="button" @click="goToSection('memo-files')">Files</button>
+        <button class="btn btn-secondary btn-small" type="button" @click="goToSection('memo-history')">History</button>
+        <button class="btn btn-secondary btn-small" type="button" @click="goToSection('memo-workflow')">Workflow</button>
+        <button class="btn btn-secondary btn-small" type="button" @click="router.push('/modules')">Module Hub</button>
       </div>
       <MemoStatusBadge v-if="memo" :status="memo.status" />
     </div>
@@ -270,7 +280,7 @@ onMounted(load);
             </div>
           </section>
 
-          <section class="card detail-card-new attachments-panel">
+          <section id="memo-files" class="card detail-card-new attachments-panel">
             <div class="card-header">
               <div>
                 <span class="page-kicker">SUPPORTING FILES</span>
@@ -302,7 +312,7 @@ onMounted(load);
             <div v-else class="subtle-empty">No attachments have been added to this memo.</div>
           </section>
 
-          <section class="card detail-card-new event-panel">
+          <section id="memo-history" class="card detail-card-new event-panel">
             <div class="card-header">
               <div>
                 <span class="page-kicker">AUDIT TRAIL</span>
@@ -329,7 +339,7 @@ onMounted(load);
           </section>
         </div>
 
-        <aside class="action-card-new card">
+        <aside id="memo-workflow" class="action-card-new card">
           <div class="card-header">
             <div>
               <span class="page-kicker">ACTION CENTRE</span>
@@ -368,3 +378,7 @@ onMounted(load);
     </template>
   </div>
 </template>
+
+<style scoped>
+.memo-detail-header-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-left:auto}.detail-card-new,.action-card-new{scroll-margin-top:90px}@media(max-width:760px){.memo-detail-header-actions{width:100%;justify-content:flex-start;margin-left:0}}
+</style>

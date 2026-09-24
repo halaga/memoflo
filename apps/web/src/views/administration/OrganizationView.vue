@@ -12,6 +12,7 @@ const sbus = ref([]);
 const departments = ref([]);
 const designations = ref([]);
 const positions = ref([]);
+const employees = ref([]);
 
 const modal = ref(null);
 const form = ref({});
@@ -58,7 +59,7 @@ function openCreate(type) {
   modal.value = { type, editing: false };
   form.value =
     type === "sbu"
-      ? { name: "", code: "", description: "" }
+      ? { name: "", code: "", description: "", head: "" }
       : type === "department"
         ? { name: "", code: "", sbu: sbus.value[0]?._id || "", description: "" }
         : type === "designation"
@@ -84,6 +85,9 @@ function openEdit(type, item) {
   if (type === "designation" || type === "position") {
     form.value.department = idOf(item.department) || "";
   }
+  if (type === "sbu") {
+    form.value.head = idOf(item.head) || "";
+  }
   if (type === "position") {
     form.value.designation = idOf(item.designation) || "";
     form.value.reportsTo = idOf(item.reportsTo) || "";
@@ -98,16 +102,18 @@ async function load() {
   loading.value = true;
   error.value = "";
   try {
-    const [s, d, g, p] = await Promise.all([
+    const [s, d, g, p, e] = await Promise.all([
       api.listSBUs(),
       api.listDepartments(),
       api.listDesignations(),
       api.listPositions(),
+      api.listEmployees(),
     ]);
     sbus.value = normalizeList(s);
     departments.value = normalizeList(d);
     designations.value = normalizeList(g);
     positions.value = normalizeList(p);
+    employees.value = normalizeList(e);
   } catch (err) {
     error.value = err.message || "Unable to load organization structure.";
   } finally {
@@ -333,6 +339,15 @@ onMounted(load);
           <label v-if="modal.type === 'designation' || modal.type === 'position'">
             Title
             <input v-model="form.title" />
+          </label>
+          <label v-if="modal.type === 'sbu'">
+            SBU Head
+            <select v-model="form.head" class="input">
+              <option value="">Not assigned</option>
+              <option v-for="employee in employees" :key="employee._id" :value="employee._id">
+                {{ employee.firstName }} {{ employee.lastName }} · {{ employee.employeeNo }}
+              </option>
+            </select>
           </label>
           <label v-if="modal.type !== 'designation'">
             Code

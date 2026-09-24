@@ -28,6 +28,23 @@ function inferResourceType(path = "") {
     .replace(/[-_](.)/g, (_, char) => char.toUpperCase());
 }
 
+function inferModule(resourceType) {
+  const value = String(resourceType || "system");
+  if (value.startsWith("memo")) return "Memo Management";
+  if (value.startsWith("leave")) return "Leave Management";
+  if (value.startsWith("employee") || value.startsWith("position") || value.startsWith("department") || value.startsWith("designation") || value.startsWith("sbu")) return "People & Organization";
+  if (value.startsWith("workflow")) return "Workflow";
+  if (value.startsWith("notification")) return "Notifications";
+  if (value.startsWith("company")) return "Company Administration";
+  return "MemoFlo Platform";
+}
+
+function safeFields(body = {}) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return [];
+  const blocked = new Set(["password", "currentPassword", "newPassword", "token", "accessToken", "refreshToken", "authorization"]);
+  return Object.keys(body).filter((key) => !blocked.has(key)).slice(0, 30);
+}
+
 function inferAction(method, path) {
   const actionByMethod = {
     POST: "create",
@@ -65,6 +82,8 @@ class AuditService {
         actor: req.user.id || null,
         action: inferAction(req.method, req.originalUrl),
         resourceType: inferResourceType(req.originalUrl),
+        module: inferModule(inferResourceType(req.originalUrl)),
+        summary: `${req.method} ${req.originalUrl.split("?")[0]}`,
         resourceId: req.params?.id || null,
         method: req.method,
         path: req.route?.path || req.originalUrl.split("?")[0],
@@ -73,6 +92,10 @@ class AuditService {
         ipAddress: req.ip || null,
         userAgent: req.get("user-agent") || null,
         requestId: req.requestId || null,
+        metadata: {
+          fields: safeFields(req.body),
+          queryKeys: Object.keys(req.query || {}).slice(0, 20),
+        },
       });
     } catch (error) {
       console.error("Audit log write failed:", error.message);

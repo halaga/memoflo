@@ -14,6 +14,8 @@ import businessServiceRoutes from "./modules/business-service/businessService.ro
 import companyRoutes from "./modules/company/company.routes.js";
 import employeeRoutes from "./modules/employee/employee.routes.js";
 import memoRoutes from "./modules/memo/memo.routes.js";
+import memoEventRoutes from "./modules/memo-event/memoEvent.routes.js";
+import memoAttachmentRoutes from "./modules/memo-attachment/memoAttachment.routes.js";
 import leaveRoutes from "./modules/leave/leave.routes.js";
 import notificationRoutes from "./modules/notification/notification.routes.js";
 import positionRoutes from "./modules/position/position.routes.js";
@@ -45,6 +47,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/memos", memoRoutes);
+app.use("/api/memo-events", memoEventRoutes);
+app.use("/api/memo-attachments", memoAttachmentRoutes);
 app.use("/api/leave", leaveRoutes);
 app.use("/api/positions", positionRoutes);
 app.use("/api/departments", departmentRoutes);

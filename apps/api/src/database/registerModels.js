@@ -1,4 +1,5 @@
 import "../modules/company/company.model.js";
+import "../modules/audit/audit.model.js";
 import "../modules/organization/sbu/sbu.model.js";
 import "../modules/organization/department/department.model.js";
 import "../modules/organization/designation/designation.model.js";
@@ -12,6 +13,8 @@ import "../modules/workflow/workflowStep.model.js";
 import "../modules/workflow/workflowInstance.model.js";
 import "../modules/business-service/businessService.model.js";
 import "../modules/memo/memo.model.js";
+import "../modules/memo-event/memoEvent.model.js";
+import "../modules/memo-attachment/memoAttachment.model.js";
 import "../modules/notification/notification.model.js";
 
 import "../modules/leave/leaveType.model.js";

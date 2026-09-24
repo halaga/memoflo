@@ -14,6 +14,16 @@ const auditLogSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    module: {
+      type: String,
+      default: "platform",
+      index: true,
+    },
+    summary: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     action: {
       type: String,
       required: true,

@@ -91,7 +91,10 @@ const hubItems = computed(() => {
 });
 
 const leaveItems = [
-  { label: "Leave Overview", route: "/leave", icon: "L", permission: "leave.view" },
+  { label: "Overview", route: "/leave", icon: "⌂" },
+  { label: "Request Leave", route: "/leave?tab=request", icon: "+" },
+  { label: "Approvals", route: "/leave?tab=approvals", icon: "✓" },
+  { label: "Module Hub", route: "/modules", icon: "⌘" },
 ];
 
 const memoItems = [
@@ -206,6 +209,10 @@ const items = computed(() => {
 function isActive(path) {
   if (path === "/modules") {
     return route.path === "/modules";
+  }
+
+  if (path.startsWith("/leave?")) {
+    return route.path === "/leave" && route.query.tab === path.split("tab=")[1];
   }
 
   if (path === "/administration") {

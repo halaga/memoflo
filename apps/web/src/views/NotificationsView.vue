@@ -1,7 +1,9 @@
 <script setup>
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import { api } from "../services/api";
 
+const router = useRouter();
 const items = ref([]);
 const loading = ref(true);
 const error = ref("");
@@ -31,6 +33,13 @@ async function markRead(notification) {
   } catch (err) {
     error.value = err.message || "Unable to update notification.";
   }
+}
+
+
+async function openNotification(notification) {
+  await markRead(notification);
+  const link = notification.link || (notification.data?.resourceType === "leave" && notification.data?.resourceId ? `/leave/requests/${notification.data.resourceId}` : "");
+  if (link) router.push(link);
 }
 
 async function markAllRead() {
@@ -91,7 +100,7 @@ onMounted(load);
         :key="notification._id"
         class="card notification-item"
         :class="{ unread: !notification.readAt }"
-        @click="markRead(notification)"
+        @click="openNotification(notification)"
       >
         <div class="notification-dot"></div>
 

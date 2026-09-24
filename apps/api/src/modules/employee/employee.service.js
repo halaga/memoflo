@@ -134,6 +134,22 @@ class EmployeeService {
       data.position
     );
 
+    if (data.reportsTo) {
+      assertObjectId(data.reportsTo, "Reports To id");
+      const supervisor = await Employee.findOne({
+        _id: data.reportsTo,
+        company: companyId,
+        active: true,
+        employmentStatus: "Active",
+        deletedAt: null,
+      }).select("_id");
+      if (!supervisor) {
+        throw createError("Reports To employee does not belong to this company.");
+      }
+    } else {
+      data.reportsTo = null;
+    }
+
     const createLogin = data.createLogin !== false;
     const temporaryPassword = createLogin
       ? data.password || generateTemporaryPassword()
@@ -232,6 +248,27 @@ class EmployeeService {
         null,
         id
       );
+    }
+
+    if (data.reportsTo !== undefined) {
+      if (data.reportsTo === "" || data.reportsTo === null) {
+        data.reportsTo = null;
+      } else {
+        assertObjectId(data.reportsTo, "Reports To id");
+        if (data.reportsTo.toString() === id.toString()) {
+          throw createError("An employee cannot report to themselves.");
+        }
+        const supervisor = await Employee.findOne({
+          _id: data.reportsTo,
+          company: companyId,
+          active: true,
+          employmentStatus: "Active",
+          deletedAt: null,
+        }).select("_id");
+        if (!supervisor) {
+          throw createError("Reports To employee does not belong to this company.");
+        }
+      }
     }
 
     if (data.position !== undefined) {

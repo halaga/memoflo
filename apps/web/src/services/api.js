@@ -7,8 +7,9 @@ function getToken() {
 
 async function request(path, options = {}) {
   const token = getToken();
+  const isFormData = options.body instanceof FormData;
   const headers = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers || {}),
   };
 
@@ -301,6 +302,23 @@ export const api = {
     return request(`/memo-attachments/${memoId}`);
   },
 
+  uploadMemoAttachment(memoId, file) {
+    const form = new FormData();
+    form.append("file", file);
+    return request(`/memo-attachments/${memoId}`, { method: "POST", body: form });
+  },
+
+  downloadMemoAttachment(memoId, attachmentId) {
+    const token = getToken();
+    return fetch(`${API_URL}/memo-attachments/${memoId}/${attachmentId}/download`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
+  removeMemoAttachment(memoId, attachmentId) {
+    return request(`/memo-attachments/${memoId}/${attachmentId}`, { method: "DELETE" });
+  },
+
   getMemo(id) {
     return request(`/memos/${id}`);
   },
@@ -396,27 +414,31 @@ export const api = {
     return request(`/workflow/instances/${instanceId}/current-step`);
   },
 
-  advanceWorkflow(instanceId) {
+  advanceWorkflow(instanceId, comment = "") {
     return request(`/workflow/instances/${instanceId}/advance`, {
       method: "POST",
+      body: JSON.stringify({ comment }),
     });
   },
 
-  rejectWorkflow(instanceId) {
+  rejectWorkflow(instanceId, comment = "") {
     return request(`/workflow/instances/${instanceId}/reject`, {
       method: "POST",
+      body: JSON.stringify({ comment }),
     });
   },
 
-  cancelWorkflow(instanceId) {
+  cancelWorkflow(instanceId, comment = "") {
     return request(`/workflow/instances/${instanceId}/cancel`, {
       method: "POST",
+      body: JSON.stringify({ comment }),
     });
   },
 
-  resubmitWorkflow(instanceId) {
+  resubmitWorkflow(instanceId, comment = "") {
     return request(`/workflow/instances/${instanceId}/resubmit`, {
       method: "POST",
+      body: JSON.stringify({ comment }),
     });
   },
 
@@ -443,6 +465,10 @@ export const api = {
 
   decideLeaveRequest(id, decision, comment = "") {
     return request(`/leave/requests/${id}/decision`, { method: "POST", body: JSON.stringify({ decision, comment }) });
+  },
+
+  fileLeaveRequest(id, comment = "") {
+    return request(`/leave/requests/${id}/file`, { method: "POST", body: JSON.stringify({ comment }) });
   },
 
   cancelLeaveRequest(id) {

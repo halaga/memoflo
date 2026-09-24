@@ -2655,3 +2655,11 @@ improve hierarchy,    readability, tenant branding and responsive behaviour.    
     padding: 1rem;
   }
 }
+
+/* M18 navigation + modal foundation */
+.modal-backdrop{position:fixed!important;inset:0!important;z-index:1000!important;display:grid!important;place-items:center!important;padding:24px!important;background:rgba(15,23,42,.62)!important;backdrop-filter:blur(8px)!important;-webkit-backdrop-filter:blur(8px)!important}
+.modal-card{width:min(680px,calc(100vw - 32px))!important;max-height:calc(100vh - 48px)!important;overflow:auto!important;background:#fff!important;border:1px solid #e2e8f0!important;border-radius:22px!important;box-shadow:0 30px 90px rgba(15,23,42,.28)!important;padding:24px!important;color:#24324a!important}
+.modal-card .card-header{background:transparent!important;border-bottom:1px solid #edf1f5!important;padding:0 0 15px!important;margin-bottom:18px!important}
+.modal-card input,.modal-card select,.modal-card textarea{background:#fbfcfe!important;border:1px solid #dbe3ed!important;border-radius:11px!important;color:#263650!important}
+.modal-actions{display:flex!important;justify-content:flex-end!important;gap:8px!important;padding-top:16px!important;margin-top:18px!important;border-top:1px solid #edf1f5!important}
+@media(max-width:640px){.modal-backdrop{padding:10px!important}.modal-card{width:100%!important;max-height:calc(100vh - 20px)!important;padding:18px!important;border-radius:18px!important}.modal-actions{flex-direction:column-reverse}.modal-actions button{width:100%!important}}
