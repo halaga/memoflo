@@ -5,292 +5,67 @@ import { getSavedEmployee } from "../../services/api";
 
 const router = useRouter();
 const route = useRoute();
-
 const employee = computed(() => getSavedEmployee());
-const company = computed(() => employee.value?.company || null);
-const rolePermissions = computed(() => employee.value?.role?.permissions || []);
+const company = computed(() => employee.value?.company || {});
+const permissions = computed(() => employee.value?.role?.permissions || []);
 
 function can(permission) {
-  return (
-    rolePermissions.value.includes("*") ||
-    rolePermissions.value.includes(permission)
-  );
+  return permissions.value.includes("*") || permissions.value.includes(permission);
 }
 
-const isAdministrator = computed(() => {
-  const roleName = employee.value?.role?.name || "";
-  const roleCode = employee.value?.role?.code || "";
+const isAdmin = computed(() =>
+  can("administration.view") || /admin/i.test(employee.value?.role?.code || "") || /admin/i.test(employee.value?.role?.name || "")
+);
 
-  return (
-    rolePermissions.value.includes("*") ||
-    rolePermissions.value.includes("administration.view") ||
-    rolePermissions.value.includes("workflow.view") ||
-    rolePermissions.value.includes("roles.view") ||
-    rolePermissions.value.includes("company.modules.update") ||
-    rolePermissions.value.includes("company.branding.update") ||
-    /admin/i.test(roleName) ||
-    /ADMIN/i.test(roleCode)
-  );
-});
+const initials = computed(() => `${employee.value?.firstName?.[0] || ""}${employee.value?.lastName?.[0] || ""}`.toUpperCase() || "MF");
 
-const initials = computed(() => {
-  const first = employee.value?.firstName?.[0] || "";
-  const last = employee.value?.lastName?.[0] || "";
-
-  return `${first}${last}`.toUpperCase() || "MF";
-});
-
-const workspace = computed(() => {
-  if (
-    route.path.startsWith("/memos") ||
-    route.name === "approvals" ||
-    route.name === "completed"
-  ) {
-    return "memos";
-  }
-
-  if (route.path.startsWith("/leave")) {
-    return "leave";
-  }
-
-  if (route.path.startsWith("/administration")) {
-    return "admin";
-  }
-
-  return "hub";
-});
-
-const hubItems = computed(() => {
-  const items = [
-    {
-      label: "Module Hub",
-      route: "/modules",
-      icon: "⌘",
-    },
-    {
-      label: "Notifications",
-      route: "/notifications",
-      icon: "◔",
-      permission: "notifications.view",
-    },
-    {
-      label: "Administration",
-      route: "/administration",
-      icon: "⚙",
-      adminOnly: true,
-    },
-  ];
-
-  return items.filter((item) => {
-    if (item.adminOnly && !isAdministrator.value) {
-      return false;
-    }
-
-    return !item.permission || can(item.permission);
-  });
-});
-
-const leaveItems = [
-  { label: "Overview", route: "/leave", icon: "⌂" },
-  { label: "Request Leave", route: "/leave?tab=request", icon: "+" },
-  { label: "Approvals", route: "/leave?tab=approvals", icon: "✓" },
-  { label: "Module Hub", route: "/modules", icon: "⌘" },
+const nav = [
+  { label: "Home", route: "/home", icon: "⌂" },
+  { label: "My Work", route: "/work", icon: "✓" },
+  { label: "Services", route: "/services", icon: "◈" },
+  { label: "People", route: "/people", icon: "◎" },
+  { label: "Company", route: "/company", icon: "▦" },
 ];
 
-const memoItems = [
-  {
-    label: "My Memos",
-    route: "/memos",
-    icon: "▤",
-  },
-  {
-    label: "Create Memo",
-    route: "/memos/create",
-    icon: "+",
-    permission: "memos.create",
-  },
-  {
-    label: "Approvals",
-    route: "/approvals",
-    icon: "✓",
-    permission: "memos.approve",
-  },
-  {
-    label: "Completed",
-    route: "/completed",
-    icon: "◷",
-  },
-  {
-    label: "Module Hub",
-    route: "/modules",
-    icon: "⌂",
-  },
-];
-
-const administrationItems = [
-  {
-    label: "Administration",
-    route: "/administration",
-    icon: "⚙",
-  },
-  {
-    label: "Workflow Definitions",
-    route: "/administration/workflows",
-    icon: "◇",
-    permission: "workflow.view",
-  },
-  {
-    label: "Roles & Permissions",
-    route: "/administration/roles",
-    icon: "♙",
-    permission: "roles.view",
-  },
-  {
-    label: "Employees",
-    route: "/administration/employees",
-    icon: "♙",
-    permission: "employees.view",
-  },
-  {
-    label: "Organization Structure",
-    route: "/administration/organization",
-    icon: "⌘",
-    permission: "employees.view",
-  },
-  {
-    label: "Module Access",
-    route: "/administration/modules",
-    icon: "◈",
-    permission: "company.modules.update",
-  },
-  {
-    label: "Company Branding",
-    route: "/administration/branding",
-    icon: "✦",
-    permission: "company.branding.update",
-  },
-  {
-    label: "Audit Log",
-    route: "/administration/audit",
-    icon: "◌",
-    permission: "audit.view",
-  },
-  {
-    label: "Notifications",
-    route: "/notifications",
-    icon: "◔",
-    permission: "notifications.view",
-  },
-  {
-    label: "Module Hub",
-    route: "/modules",
-    icon: "⌂",
-  },
-];
-
-const items = computed(() => {
-  let list = hubItems.value;
-
-  if (workspace.value === "memos") {
-    list = memoItems;
-  }
-
-  if (workspace.value === "leave") {
-    list = leaveItems;
-  }
-
-  if (workspace.value === "admin") {
-    list = administrationItems;
-  }
-
-  return list.filter((item) => !item.permission || can(item.permission));
-});
-
-function isActive(path) {
-  if (path === "/modules") {
-    return route.path === "/modules";
-  }
-
-  if (path.startsWith("/leave?")) {
-    return route.path === "/leave" && route.query.tab === path.split("tab=")[1];
-  }
-
-  if (path === "/administration") {
-    return (
-      route.path === "/administration" ||
-      route.path.startsWith("/administration/")
-    );
-  }
-
+function active(path) {
   return route.path === path || route.path.startsWith(`${path}/`);
 }
 
-function navigate(path) {
+function go(path) {
   router.push(path);
 }
 </script>
 
 <template>
-  <aside class="sidebar premium-sidebar">
-    <div class="brand">
-      <div class="brand-mark">
-        <img
-          v-if="company?.logo || company?.branding?.logo"
-          :src="company?.logo || company?.branding?.logo"
-          alt=""
-        />
-        <span v-else>M</span>
-      </div>
+  <aside class="sidebar experience-sidebar">
+    <button class="mf-brand" type="button" @click="go('/home')">
+      <span class="mf-logo"><img v-if="company?.branding?.logo || company?.logo" :src="company?.branding?.logo || company?.logo" alt="" /><b v-else>M</b></span>
+      <span><strong>MemoFlo</strong><small>{{ company?.name || "Workspace" }}</small></span>
+    </button>
 
-      <div>
-        <div class="brand-name">MemoFlo</div>
-        <div class="brand-tag">
-          {{ company?.name || "Workflow simplified" }}
-        </div>
-      </div>
-    </div>
+    <nav class="experience-nav">
+      <button v-for="item in nav" :key="item.route" type="button" class="experience-nav-item" :class="{ active: active(item.route) }" @click="go(item.route)">
+        <span>{{ item.icon }}</span><strong>{{ item.label }}</strong>
+      </button>
+    </nav>
 
-    <div class="tenant-chip">
-      <span>WORKSPACE</span>
-      <strong>{{ company?.name || "MemoFlo" }}</strong>
-    </div>
+    <div class="sidebar-divider"></div>
 
-    <div class="sidebar-section">
-      <div class="sidebar-label">
-        {{
-          workspace === "memos"
-            ? "MEMO MANAGEMENT"
-            : workspace === "leave"
-              ? "LEAVE MANAGEMENT"
-            : workspace === "admin"
-              ? "ADMINISTRATION"
-              : "WORKSPACE"
-        }}
-      </div>
-
-      <nav class="nav">
-        <button
-          v-for="item in items"
-          :key="item.route"
-          type="button"
-          class="nav-item"
-          :class="{ active: isActive(item.route) }"
-          @click="navigate(item.route)"
-        >
-          <span class="nav-icon">{{ item.icon }}</span>
-          <span>{{ item.label }}</span>
-        </button>
-      </nav>
+    <div class="sidebar-shortcuts">
+      <span class="sidebar-caption">RECENT</span>
+      <button type="button" @click="go('/memos')">Memos</button>
+      <button type="button" @click="go('/notifications')">Notifications</button>
     </div>
 
     <div class="sidebar-spacer"></div>
 
-    <div class="sidebar-profile">
-      <div class="top-avatar">{{ initials }}</div>
-      <div>
-        <strong>{{ employee?.firstName || "Employee" }}</strong>
-        <span>{{ employee?.role?.name || "Employee" }}</span>
-      </div>
-    </div>
+    <button v-if="isAdmin" type="button" class="admin-entry" @click="go('/administration')">
+      <span>⚙</span><span><b>Administration</b><small>Shape the workspace</small></span><i>→</i>
+    </button>
+
+    <button type="button" class="sidebar-profile" @click="go('/people')">
+      <span class="top-avatar">{{ initials }}</span>
+      <span><b>{{ employee?.firstName || "Employee" }}</b><small>{{ employee?.role?.name || "Employee" }}</small></span>
+    </button>
   </aside>
 </template>

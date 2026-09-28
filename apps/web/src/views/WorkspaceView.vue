@@ -51,7 +51,7 @@ onMounted(loadWorkspace);
 
 <template>
   <div
-    class="app-shell branded-shell"
+    class="app-shell branded-shell experience-shell"
     :style="styleVars"
   >
     <Sidebar />

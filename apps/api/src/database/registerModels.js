@@ -21,3 +21,4 @@ import "../modules/leave/leaveType.model.js";
 import "../modules/leave/leaveBalance.model.js";
 import "../modules/leave/leaveRequest.model.js";
 import "../modules/leave/leaveEvent.model.js";
+import "../modules/procurement/procurement.model.js";

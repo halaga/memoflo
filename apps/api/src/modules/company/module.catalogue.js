@@ -28,8 +28,8 @@ export const MODULE_CATALOGUE = [
     name: "Procurement Management",
     description: "Structured purchasing and approval workflows.",
     icon: "P",
-    status: "building",
-    route: null,
+    status: "live",
+    route: "/procurement",
   },
   {
     id: "assets",

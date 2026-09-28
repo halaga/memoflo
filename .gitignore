@@ -6,7 +6,3 @@ node_modules/
 .vite/
 dist/
 coverage/
-apps/api/storage/
-.memoflo-backup*/
-.memoflo-backups/
-.memoflo-repair-backup*/

@@ -2,6 +2,11 @@ import { createRouter, createWebHistory } from "vue-router";
 import LoginView from "../views/LoginView.vue";
 import WorkspaceView from "../views/WorkspaceView.vue";
 import LandingView from "../views/LandingView.vue";
+import HomeView from "../views/HomeView.vue";
+import MyWorkView from "../views/MyWorkView.vue";
+import ServicesView from "../views/ServicesView.vue";
+import PeopleView from "../views/PeopleView.vue";
+import CompanyView from "../views/CompanyView.vue";
 import { api, getSavedEmployee } from "../services/api";
 
 function hostname() {
@@ -69,10 +74,34 @@ const routes = [
     },
     children: [
       {
+        path: "home",
+        name: "home",
+        component: HomeView,
+      },
+      {
+        path: "work",
+        name: "my-work",
+        component: MyWorkView,
+      },
+      {
+        path: "services",
+        name: "services",
+        component: ServicesView,
+      },
+      {
+        path: "people",
+        name: "people",
+        component: PeopleView,
+      },
+      {
+        path: "company",
+        name: "company",
+        component: CompanyView,
+      },
+      {
         path: "modules",
         name: "modules",
-        component: () =>
-          import("../views/modules/ModulesView.vue"),
+        redirect: { name: "services" },
       },
       {
         path: "email-signature",
@@ -89,6 +118,18 @@ const routes = [
         name: "leave",
         component: () => import("../views/leave/LeaveView.vue"),
         meta: { module: "leave" },
+      },
+      {
+        path: "procurement",
+        name: "procurement",
+        component: () => import("../views/procurement/ProcurementView.vue"),
+        meta: { module: "procurement", permission: "procurement.view" },
+      },
+      {
+        path: "procurement/requests/:id",
+        name: "procurement-request",
+        component: () => import("../views/procurement/ProcurementRequestView.vue"),
+        meta: { module: "procurement", permission: "procurement.view" },
       },
       {
         path: "leave/requests/:id",
@@ -282,7 +323,7 @@ router.beforeEach(async (to) => {
     }
 
     return token
-      ? { name: "modules", replace: true }
+      ? { name: "home", replace: true }
       : { name: "login", replace: true };
   }
 
@@ -292,7 +333,7 @@ router.beforeEach(async (to) => {
     isTenantHost()
   ) {
     return {
-      name: "modules",
+      name: "home",
       replace: true,
     };
   }
@@ -312,7 +353,7 @@ router.beforeEach(async (to) => {
   if (to.meta.permission && token) {
     if (!hasPermission(to.meta.permission)) {
       return {
-        name: "modules",
+        name: "home",
         replace: true,
       };
     }

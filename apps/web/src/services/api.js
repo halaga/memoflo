@@ -483,6 +483,22 @@ export const api = {
     return request(`/leave/types/${id}`, { method: "PATCH", body: JSON.stringify(data) });
   },
 
+  listProcurementRequests(mode = "mine") {
+    return request(`/procurement?mode=${encodeURIComponent(mode)}`);
+  },
+
+  getProcurementRequest(id) {
+    return request(`/procurement/${id}`);
+  },
+
+  createProcurementRequest(data) {
+    return request("/procurement", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  actProcurementRequest(id, data) {
+    return request(`/procurement/${id}/action`, { method: "POST", body: JSON.stringify(data) });
+  },
+
   listNotifications() {
     return request("/notifications");
   },
