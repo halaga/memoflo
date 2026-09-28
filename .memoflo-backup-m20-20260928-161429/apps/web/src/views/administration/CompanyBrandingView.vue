@@ -156,7 +156,7 @@ onMounted(load);
           </div>
 
           <button type="button">
-            Company
+            Module Hub
           </button>
         </div>
       </section>

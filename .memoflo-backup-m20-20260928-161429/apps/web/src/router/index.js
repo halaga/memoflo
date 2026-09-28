@@ -7,7 +7,6 @@ import MyWorkView from "../views/MyWorkView.vue";
 import ServicesView from "../views/ServicesView.vue";
 import PeopleView from "../views/PeopleView.vue";
 import CompanyView from "../views/CompanyView.vue";
-import ServiceDetailView from "../views/ServiceDetailView.vue";
 import { api, getSavedEmployee } from "../services/api";
 
 function hostname() {
@@ -88,11 +87,6 @@ const routes = [
         path: "services",
         name: "services",
         component: ServicesView,
-      },
-      {
-        path: "services/:slug",
-        name: "service-detail",
-        component: ServiceDetailView,
       },
       {
         path: "people",
@@ -224,12 +218,6 @@ const routes = [
         meta: {
           permission: "administration.view",
         },
-      },
-      {
-        path: "administration/services",
-        name: "service-catalogue",
-        component: () => import("../views/administration/ServicesView.vue"),
-        meta: { permission: "business-services.view" },
       },
 
       {

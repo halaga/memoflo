@@ -23,8 +23,6 @@ const titles = {
   "organization-structure": "Organization Structure",
   "module-access": "Module Access",
   "company-branding": "Company Branding",
-  "service-catalogue": "Service Catalogue",
-  "service-detail": "Service",
   memos: "Memos",
   "create-memo": "Create Memo",
   "memo-detail": "Memo Details",
@@ -46,18 +44,7 @@ async function loadNotifications() {
 function runSearch() {
   const value = search.value.trim();
   if (!value) return;
-  const term = value.toLowerCase();
-  const shortcuts = [
-    ["signature", { name: "service-detail", params: { slug: "email-signature" } }],
-    ["leave", { name: "service-detail", params: { slug: "request-leave" } }],
-    ["approval", { name: "service-detail", params: { slug: "my-approvals" } }],
-    ["purchase", { name: "service-detail", params: { slug: "business-purchase-request" } }],
-    ["procurement", { name: "service-detail", params: { slug: "business-purchase-request" } }],
-    ["memo", { name: "service-detail", params: { slug: "create-memo" } }],
-    ["people", { name: "service-detail", params: { slug: "people-directory" } }],
-  ];
-  const match = shortcuts.find(([keyword]) => term.includes(keyword));
-  router.push(match ? match[1] : { name: "my-work", query: { q: value } });
+  router.push({ name: "my-work", query: { q: value } });
   search.value = "";
 }
 

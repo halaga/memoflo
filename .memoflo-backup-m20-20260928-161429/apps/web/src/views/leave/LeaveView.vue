@@ -133,7 +133,7 @@ onMounted(load);
   <div class="leave-workspace">
     <header class="leave-header">
       <div class="leave-header-main">
-        <button class="mf-back-button" type="button" @click="router.push('/services')">← Services</button>
+        <button class="mf-back-button" type="button" @click="router.push('/modules')">← Module Hub</button>
         <div class="leave-heading-row">
           <div class="leave-logo">L</div>
           <div>
@@ -158,7 +158,7 @@ onMounted(load);
         <button type="button" :class="{ active: tab === 'request' }" @click="go('request')">Request leave <span>+</span></button>
         <button type="button" :class="{ active: tab === 'approvals' }" @click="go('approvals')">Approvals <b v-if="approvals.length">{{ approvals.length }}</b></button>
       </div>
-      <button class="mf-secondary-button" type="button" @click="router.push('/services')">Back to services →</button>
+      <button class="mf-secondary-button" type="button" @click="router.push('/modules')">All modules →</button>
     </div>
 
     <div v-if="loading" class="leave-loading"><div></div><div></div><div></div></div>

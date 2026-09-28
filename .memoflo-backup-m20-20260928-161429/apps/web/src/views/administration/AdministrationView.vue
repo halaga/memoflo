@@ -20,12 +20,6 @@ const cards = [
     icon: "◈",
   },
   {
-    title: "Service Catalogue",
-    text: "Define the services employees can request and connect each service to its owner and workflow.",
-    to: "/administration/services",
-    icon: "◈",
-  },
-  {
     title: "Workflow Definitions",
     text: "Create reusable workflows and add, edit or remove their steps.",
     to: "/administration/workflows",
@@ -60,6 +54,12 @@ const cards = [
     text: "Review workflow activity and platform notifications.",
     to: "/notifications",
     icon: "◔",
+  },
+  {
+    title: "Audit Log",
+    text: "Review company activity, administrative changes and security events.",
+    to: "/administration/audit",
+    icon: "◌",
   },
 ];
 
@@ -105,10 +105,10 @@ onMounted(load);
       </div>
 
       <RouterLink
-        to="/company"
+        to="/modules"
         class="btn btn-secondary"
       >
-        ← Company
+        ← Module Hub
       </RouterLink>
     </div>
 

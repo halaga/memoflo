@@ -247,7 +247,7 @@ onMounted(load);
         <button class="btn btn-secondary btn-small" type="button" @click="goToSection('memo-files')">Files</button>
         <button class="btn btn-secondary btn-small" type="button" @click="goToSection('memo-history')">History</button>
         <button class="btn btn-secondary btn-small" type="button" @click="goToSection('memo-workflow')">Workflow</button>
-        <button class="btn btn-secondary btn-small" type="button" @click="router.push('/services')">Services</button>
+        <button class="btn btn-secondary btn-small" type="button" @click="router.push('/modules')">Module Hub</button>
       </div>
       <MemoStatusBadge v-if="memo" :status="memo.status" />
     </div>

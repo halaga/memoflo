@@ -104,7 +104,7 @@ onMounted(load);
         <button class="mf-back-button" type="button" @click="router.push('/leave')">← Leave Management</button>
         <div class="request-title-row"><div class="request-ref">L</div><div><span class="mf-eyebrow">LEAVE REQUEST</span><h1>{{ request?.leaveType?.name || 'Leave request' }}</h1><p>{{ request?.employee ? name(request.employee) : 'Loading request…' }} · {{ request?.days || '—' }} day(s)</p></div></div>
       </div>
-      <div class="request-header-actions"><button class="mf-secondary-button" type="button" @click="router.push('/services')">Services</button><span v-if="request" :class="['request-status', request.status.toLowerCase().replaceAll(' ', '-')]">{{ request.status }}</span></div>
+      <div class="request-header-actions"><button class="mf-secondary-button" type="button" @click="router.push('/modules')">Module Hub</button><span v-if="request" :class="['request-status', request.status.toLowerCase().replaceAll(' ', '-')]">{{ request.status }}</span></div>
     </header>
 
     <div v-if="error" class="mf-alert mf-alert-error">{{ error }}</div>
@@ -156,7 +156,7 @@ onMounted(load);
             <button v-if="request.employee?._id === employee?._id && ['Pending','Approved'].includes(request.status)" class="cancel-link" type="button" @click="cancelRequest">Cancel this request</button>
           </section>
 
-          <section class="request-card quick-card"><span class="mf-eyebrow">QUICK NAVIGATION</span><button type="button" @click="router.push('/leave')">← Leave overview</button><button type="button" @click="router.push('/leave?tab=request')">+ New leave request</button><button type="button" @click="router.push('/services')">⌘ Services</button></section>
+          <section class="request-card quick-card"><span class="mf-eyebrow">QUICK NAVIGATION</span><button type="button" @click="router.push('/leave')">← Leave overview</button><button type="button" @click="router.push('/leave?tab=request')">+ New leave request</button><button type="button" @click="router.push('/modules')">⌘ Module Hub</button></section>
         </aside>
       </div>
     </template>

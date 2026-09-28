@@ -1,10 +1,9 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 import { api, normalizeList } from "../../services/api";
 
 const router = useRouter();
-const route = useRoute();
 
 const services = ref([]);
 const sbus = ref([]);
@@ -41,15 +40,6 @@ async function loadFormData() {
       "services",
       "businessServices",
     ]);
-
-    const requestedService = String(route.query.service || "");
-    if (requestedService) {
-      const match = services.value.find((item) => String(item._id) === requestedService || String(item.slug) === requestedService);
-      if (match) {
-        form.value.businessService = match._id;
-        if (!form.value.title) form.value.title = `${match.name} request`;
-      }
-    }
 
     sbus.value = normalizeList(sbuResult, ["sbus", "SBUs"]);
 
@@ -150,8 +140,8 @@ onMounted(loadFormData);
   <div class="page module-page">
     <div class="page-header">
       <div>
-        <span class="page-kicker">SERVICE REQUEST</span>
-        <h1>{{ route.query.service ? "Request a service" : "Create memo" }}</h1>
+        <span class="page-kicker">MEMO MANAGEMENT</span>
+        <h1>Create memo</h1>
         <p>
           Start a business request and route it through your company's
           configured workflow.

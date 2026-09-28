@@ -124,15 +124,15 @@ onMounted(load);
 </script>
 
 <template>
-  <div class="experience-page procurement-page">
+  <div class="page procurement-page">
     <header class="procurement-hero">
       <div>
-        <div class="page-kicker">SERVICES · BUSINESS PURCHASE</div>
-        <h1>Request something the business needs.</h1>
-        <p>Describe the requirement once. MemoFlo routes it through the right people and keeps the full approval and payment trail.</p>
+        <div class="page-kicker">PROCUREMENT MANAGEMENT</div>
+        <h1>Purchase requests, routed properly.</h1>
+        <p>Raise a request once. MemoFlo routes it through your SBU Head, Administration, ICC, Finance and CEO before payment.</p>
       </div>
       <div class="procurement-hero-actions">
-        <button class="button button-secondary" type="button" @click="router.push('/services')">Services</button>
+        <button class="button button-secondary" type="button" @click="router.push('/modules')">Module Hub</button>
         <button v-if="canCreate" class="button button-primary" type="button" @click="document.getElementById('new-procurement')?.scrollIntoView({ behavior: 'smooth', block: 'start' })">New request</button>
       </div>
     </header>
@@ -140,7 +140,17 @@ onMounted(load);
     <div v-if="error" class="alert alert-error">{{ error }}</div>
     <div v-if="success" class="alert alert-success">{{ success }}</div>
 
-    <div class="procurement-context-line"><span>Business purchase service</span><strong>7-stage approval route</strong><span>Request → SBU Head → Administration → ICC → Finance → CEO → Payment</span></div>
+    <section class="procurement-overview-grid">
+      <article class="procurement-stat-card">
+        <span>My requests</span><strong>{{ activeTab === 'mine' ? requests.length : '—' }}</strong><small>Requests submitted by you</small>
+      </article>
+      <article class="procurement-stat-card accent">
+        <span>My approvals</span><strong>{{ activeTab === 'approvals' ? requests.length : '—' }}</strong><small>Work currently assigned to you</small>
+      </article>
+      <article class="procurement-stat-card">
+        <span>Workflow</span><strong>7 stages</strong><small>SBU → Admin → ICC → Finance → CEO → Payment</small>
+      </article>
+    </section>
 
     <section class="procurement-panel">
       <div class="procurement-tabs">
@@ -168,7 +178,7 @@ onMounted(load);
 
     <section v-if="canCreate" id="new-procurement" class="procurement-panel procurement-form-panel">
       <div class="section-heading compact">
-        <div><div class="page-kicker">NEW REQUEST</div><h2>Business requirement</h2><p>Capture the requirement clearly so each approval stage has the information it needs.</p></div>
+        <div><div class="page-kicker">NEW REQUEST</div><h2>Purchase requirement</h2><p>Capture the requirement clearly so each approval stage has the information it needs.</p></div>
         <div class="form-total"><span>Estimated total</span><strong>{{ money(totalEstimate, form.currency) }}</strong></div>
       </div>
 
@@ -192,7 +202,7 @@ onMounted(load);
           </div>
         </div>
 
-        <div class="form-actions full"><button class="button button-primary" :disabled="saving" type="submit">{{ saving ? 'Submitting…' : 'Submit request' }}</button></div>
+        <div class="form-actions full"><button class="button button-primary" :disabled="saving" type="submit">{{ saving ? 'Submitting…' : 'Submit procurement request' }}</button></div>
       </form>
     </section>
   </div>

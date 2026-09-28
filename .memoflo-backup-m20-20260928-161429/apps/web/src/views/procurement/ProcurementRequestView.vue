@@ -86,7 +86,7 @@ onMounted(load);
     <div v-else-if="error" class="alert alert-error">{{ error }}</div>
     <template v-else>
       <header class="procurement-detail-hero">
-        <div class="detail-back-row"><button class="text-button" type="button" @click="router.push('/procurement')">← Procurement</button><button class="text-button" type="button" @click="router.push('/services')">Services</button></div>
+        <div class="detail-back-row"><button class="text-button" type="button" @click="router.push('/procurement')">← Procurement</button><button class="text-button" type="button" @click="router.push('/modules')">Module Hub</button></div>
         <div class="detail-title-row">
           <div><div class="page-kicker">{{ request.requestNo }}</div><h1>{{ request.title }}</h1><p>{{ request.requestingSbu?.name }} · {{ request.requestingDepartment?.name }} · {{ request.requester?.firstName }} {{ request.requester?.lastName }}</p></div>
           <span class="status-pill large" :class="request.status?.toLowerCase()">{{ request.status }}</span>

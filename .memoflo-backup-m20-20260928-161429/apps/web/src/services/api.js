@@ -290,22 +290,6 @@ export const api = {
     return request("/business-services");
   },
 
-  getBusinessService(id) {
-    return request(`/business-services/${id}`);
-  },
-
-  createBusinessService(data) {
-    return request("/business-services", { method: "POST", body: JSON.stringify(data) });
-  },
-
-  updateBusinessService(id, data) {
-    return request(`/business-services/${id}`, { method: "PATCH", body: JSON.stringify(data) });
-  },
-
-  deleteBusinessService(id) {
-    return request(`/business-services/${id}`, { method: "DELETE" });
-  },
-
   listMemos() {
     return request("/memos");
   },
