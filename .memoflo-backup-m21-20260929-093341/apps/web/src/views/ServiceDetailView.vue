@@ -48,7 +48,7 @@ async function load() {
       { slug: "email-signature", name: "Email signature", category: "Identity", description: "Generate the company-approved signature using the company's brand and approved layout.", ownerName: "Administration", icon: "@", route: "/email-signature" },
       { slug: "my-approvals", name: "My approvals", category: "Approvals", description: "Review work waiting for your decision and keep requests moving.", ownerName: "Workflow", icon: "✓", route: "/approvals" },
       { slug: "request-leave", name: "Request leave", category: "People & HR", description: "Submit leave and follow the configured manager, SBU and HR route.", ownerName: "Human Resources", icon: "L", route: "/leave" },
-      { slug: "business-purchase-request", name: "Business purchase request", category: "Business services", description: "Request equipment, supplies or other business purchases and follow the approval trail through completion.", ownerName: "Administration / Finance", icon: "R", route: "/procurement/requests/new" },
+      { slug: "business-purchase-request", name: "Business purchase request", category: "Business services", description: "Request equipment, supplies or other business purchases and follow the approval trail through completion.", ownerName: "Administration / Finance", icon: "R", route: "/procurement" },
       { slug: "people-directory", name: "People directory", category: "People", description: "Find colleagues, departments, positions and the company structure.", ownerName: "People & HR", icon: "P", route: "/people" },
     ];
     service.value = builtIns.find((item) => item.slug === slug) || null;
