@@ -6,7 +6,7 @@ export async function seedCompany() {
   });
 
   if (company) {
-    await Company.updateOne({ _id: company._id }, { $addToSet: { "settings.modules": { $each: ["leave", "procurement"] } } });
+    await Company.updateOne({ _id: company._id }, { $addToSet: { "settings.modules": { $each: ["leave", "procurement", "hr", "it", "workplace", "communication"] } } });
     console.log("✔ Company already exists");
     return company;
   }
@@ -25,7 +25,7 @@ export async function seedCompany() {
     website: "https://www.ringo.ng",
 
     industry: "Telecommunications",
-    settings: { modules: ["leave", "procurement"] },
+    settings: { modules: ["leave", "procurement", "hr", "it", "workplace", "communication"] },
   });
 
   console.log("✔ Company Created");

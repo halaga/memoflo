@@ -27,6 +27,14 @@ const memoSchema = new mongoose.Schema(
       required: true,
     },
 
+    memoType: { type: String, enum: ["simple", "approval", "request"], default: "simple" },
+
+    recipient: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee",
+      default: null,
+    },
+
     category: {
       type: String,
       default: "General",
@@ -67,7 +75,7 @@ const memoSchema = new mongoose.Schema(
     requestingSbu: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SBU",
-      required: true,
+      default: null,
     },
 
     beneficiarySBU: {

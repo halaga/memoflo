@@ -1,4 +1,8 @@
 export const MODULE_CATALOGUE = [
+  { id: "hr", name: "People & HR", description: "Employee services, leave, recruitment and people requests.", icon: "H", status: "live", route: "/services" },
+  { id: "it", name: "IT Services", description: "Technology, devices, software and support services.", icon: "I", status: "live", route: "/services" },
+  { id: "workplace", name: "Workplace Services", description: "Facilities, vehicles and workplace requests.", icon: "W", status: "live", route: "/services" },
+  { id: "communication", name: "Communication", description: "Memos, announcements and internal communication.", icon: "C", status: "live", route: "/services" },
   {
     id: "memos",
     name: "Memo Management",

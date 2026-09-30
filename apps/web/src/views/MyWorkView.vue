@@ -68,7 +68,7 @@ onMounted(load);
         <h1>Everything that needs you.</h1>
         <p>Approvals, requests, notifications and active work in one actionable queue.</p>
       </div>
-      <RouterLink to="/memos/create" class="action-primary">Start something</RouterLink>
+      <RouterLink to="/services" class="action-primary">Start something</RouterLink>
     </section>
 
     <div class="segmented-tabs">

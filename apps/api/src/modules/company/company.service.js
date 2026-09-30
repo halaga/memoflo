@@ -28,7 +28,7 @@ class CompanyService {
     const configuredBranding = company.settings?.branding || {};
 
     const branding = {
-      logo: configuredBranding.logo || company.logo || "",
+      logo: configuredBranding.logo || company.logo || (company.slug === "ringo" ? "/signatures/ringologo.png" : ""),
       wallpaper: configuredBranding.wallpaper || "",
       primaryColor:
         configuredBranding.primaryColor ||
@@ -66,7 +66,7 @@ class CompanyService {
       name: object.name,
       code: object.code,
       slug: object.slug,
-      logo: configuredBranding.logo || object.logo || "",
+      logo: configuredBranding.logo || object.logo || (object.slug === "ringo" ? "/signatures/ringologo.png" : ""),
       wallpaper: configuredBranding.wallpaper || "",
       primaryColor:
         configuredBranding.primaryColor ||

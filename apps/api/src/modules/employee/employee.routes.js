@@ -13,6 +13,8 @@ router.post(
   EmployeeController.create
 );
 
+router.get("/directory", EmployeeController.directory);
+
 router.get(
   "/",
   authorize("employees.view"),

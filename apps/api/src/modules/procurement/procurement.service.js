@@ -63,8 +63,8 @@ async function resolveDepartment(companyId, employee) {
   const position = await Position.findOne({ _id: employee.position, company: companyId, active: true, isActive: true, deletedAt: null })
     .populate("department", "_id name code head")
     .populate("sbu", "_id name code head");
-  if (!position?.department || !position?.sbu) throw fail("Your position must have both a department and SBU before creating a procurement request.", 422);
-  return { position, department: position.department, sbu: position.sbu };
+  if (!position?.department) throw fail("Your position must have a department before creating a procurement request.", 422);
+  return { position, department: position.department, sbu: position.sbu || null };
 }
 
 async function nextHandler(companyId, permission, label) {
@@ -134,8 +134,13 @@ class ProcurementService {
     const employee = await Employee.findOne({ _id: employeeId, company: companyId, active: true, isActive: true, employmentStatus: "Active" });
     if (!employee) throw fail("Employee not found", 404);
     const { department, sbu } = await resolveDepartment(companyId, employee);
-    const sbuHead = await SBU.findOne({ _id: sbu._id, company: companyId, isActive: true, deletedAt: null }).populate("head", "_id firstName lastName email");
-    if (!sbuHead?.head) throw fail(`The ${sbu.name} SBU Head is not configured. Configure it before creating procurement requests.`, 422);
+    const requestScope = payload.requestScope === "company" ? "company" : "sbu";
+    let sbuHead = null;
+    if (requestScope === "sbu") {
+      if (!sbu) throw fail("This request needs an SBU, but your position is not assigned to one. Choose a company-level request or configure your position SBU.", 422);
+      sbuHead = await SBU.findOne({ _id: sbu._id, company: companyId, isActive: true, deletedAt: null }).populate("head", "_id firstName lastName email");
+      if (!sbuHead?.head) throw fail(`The ${sbu.name} SBU Head is not configured. Configure it before creating procurement requests.`, 422);
+    }
 
     const admin = await nextHandler(companyId, "procurement.dispatch", "procurement dispatcher");
     const icc = await nextHandler(companyId, "procurement.evaluate", "ICC evaluator");
@@ -153,17 +158,18 @@ class ProcurementService {
       description: payload.description?.trim() || "",
       requester: employeeId,
       requestingDepartment: department._id,
-      requestingSbu: sbu._id,
+      requestingSbu: sbu?._id || null,
+      requestScope,
       category: payload.category?.trim() || "General",
       urgency: payload.urgency || "Normal",
       neededBy: payload.neededBy || null,
       currency: payload.currency || "NGN",
       estimatedAmount,
       items,
-      stage: STAGES.SBU_HEAD,
-      currentHandler: sbuHead.head._id,
+      stage: requestScope === "company" ? STAGES.ADMIN : STAGES.SBU_HEAD,
+      currentHandler: requestScope === "company" ? admin._id : sbuHead.head._id,
       participants: {
-        requestingSbuHead: { employee: sbuHead.head._id },
+        requestingSbuHead: { employee: sbuHead?.head?._id || null },
         adminDispatcher: { employee: admin._id },
         iccEvaluator: { employee: icc._id },
         sbuFinanceApprover: { employee: finance._id },
@@ -171,8 +177,8 @@ class ProcurementService {
       },
     });
 
-    await logEvent({ company: companyId, actor: employeeId, request, action: "procurement.created", description: "Procurement request created and routed to the requesting SBU Head." });
-    await notify({ company: companyId, recipient: sbuHead.head._id, request, title: "Procurement review required", message: `${actorName(employee)} submitted ${requestNo} for your SBU review.`, stage: STAGES.SBU_HEAD });
+    await logEvent({ company: companyId, actor: employeeId, request, action: "procurement.created", description: requestScope === "company" ? "Company-level purchase request created and routed to Administration." : "Procurement request created and routed to the requesting SBU Head.", metadata: { requestScope } });
+    await notify({ company: companyId, recipient: request.currentHandler, request, title: requestScope === "company" ? "Company purchase review required" : "Procurement review required", message: requestScope === "company" ? `${actorName(employee)} submitted ${requestNo} for Administration review.` : `${actorName(employee)} submitted ${requestNo} for your SBU review.`, stage: request.stage });
     return this.get(request._id, companyId);
   }
 

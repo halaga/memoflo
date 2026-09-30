@@ -35,6 +35,16 @@ function assertObjectId(value, label) {
 }
 
 class EmployeeService {
+  async listDirectory(companyId, query = "") {
+    const term = String(query || "").trim();
+    const filter = { company: companyId, active: true, isActive: true, employmentStatus: "Active", loginEnabled: true };
+    if (term) {
+      const rx = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      filter.$or = [{ firstName: rx }, { lastName: rx }, { email: rx }, { employeeNo: rx }];
+    }
+    return Employee.find(filter).select("_id employeeNo firstName lastName email position").populate("position", "title code").sort({ firstName: 1, lastName: 1 }).limit(100).lean();
+  }
+
   async generateEmployeeNo(companyId) {
     const company = await Company.findById(companyId)
       .select("code")

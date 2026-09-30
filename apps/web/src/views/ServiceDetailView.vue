@@ -1,103 +1,55 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { RouterLink, useRoute, useRouter } from "vue-router";
+import { RouterLink, useRoute } from "vue-router";
 import { api, normalizeList } from "../services/api";
 
 const route = useRoute();
-const router = useRouter();
 const service = ref(null);
+const workspace = ref(null);
 const loading = ref(true);
 const error = ref("");
 
-const builtInRoutes = {
-  "create-memo": "/memos/create",
-  "email-signature": "/email-signature",
-  "my-approvals": "/approvals",
-  "request-leave": "/leave",
-  "business-purchase-request": "/procurement",
-  "people-directory": "/people",
+const builtIns = {
+  "general-memo": { slug: "general-memo", name: "Simple Memo", category: "Communication", description: "Send a memo directly to a colleague without forcing it through a long approval workflow.", actionType: "memo-simple", moduleId: "communication", route: "/services/general-memo/start", icon: "M" },
+  "approval-memo": { slug: "approval-memo", name: "Approval Memo", category: "Communication", description: "Create a memo that uses a configured approval workflow.", actionType: "memo-approval", moduleId: "communication", route: "/services/approval-memo/start", icon: "A" },
+  "email-signature": { slug: "email-signature", name: "Email Signature", category: "Communication", description: "Generate the company-approved email signature.", actionType: "signature", moduleId: "signature", route: "/email-signature", icon: "@" },
+  "request-leave": { slug: "request-leave", name: "Leave Request", category: "People & HR", description: "Request leave and follow the configured HR route.", actionType: "leave", moduleId: "hr", route: "/leave", icon: "L" },
+  "business-purchase-request": { slug: "business-purchase-request", name: "Business Purchase Request", category: "Business", description: "Request equipment, supplies or other business purchases.", actionType: "procurement", moduleId: "procurement", route: "/procurement/requests/new", icon: "P" },
+  "people-directory": { slug: "people-directory", name: "People Directory", category: "People & HR", description: "Find colleagues and company structure.", actionType: "people", moduleId: "hr", route: "/people", icon: "P" },
 };
 
-const actionRoute = computed(() => {
-  if (!service.value) return "/services";
-  return service.value.route || builtInRoutes[service.value.slug] || `/memos/create?service=${encodeURIComponent(service.value._id || "")}`;
+const available = computed(() => {
+  const id = service.value?.moduleId;
+  if (!id) return true;
+  const item = workspace.value?.modules?.find((m) => m.id === id);
+  return item ? Boolean(item.enabled) : true;
 });
 
-const isDynamic = computed(() => Boolean(service.value?._id));
+const actionRoute = computed(() => service.value?.route || `/services/${route.params.slug}/start`);
 
 async function load() {
-  loading.value = true;
-  error.value = "";
+  loading.value = true; error.value = "";
   try {
-    const result = await api.listBusinessServices();
-    const items = normalizeList(result, ["services", "businessServices"]);
+    const [serviceResult, workspaceResult] = await Promise.all([api.listBusinessServices(), api.getCompanyWorkspace()]);
+    const items = normalizeList(serviceResult, ["services", "businessServices"]);
+    workspace.value = workspaceResult?.data || workspaceResult;
     const slug = String(route.params.slug || "").toLowerCase();
-    const found = items.find((item) => String(item.slug || "").toLowerCase() === slug);
-    if (found) {
-      service.value = {
-        ...found,
-        description: found.description || "A company service available through MemoFlo.",
-        category: found.category || "Company service",
-        ownerName: found.ownerDepartment?.name || "Service owner",
-      };
-      return;
-    }
-
-    const builtIns = [
-      { slug: "create-memo", name: "Create a memo", category: "Communication", description: "Send an internal request, announcement or approval through the company's configured workflow.", ownerName: "Company communications", icon: "M", route: "/memos/create" },
-      { slug: "email-signature", name: "Email signature", category: "Identity", description: "Generate the company-approved signature using the company's brand and approved layout.", ownerName: "Administration", icon: "@", route: "/email-signature" },
-      { slug: "my-approvals", name: "My approvals", category: "Approvals", description: "Review work waiting for your decision and keep requests moving.", ownerName: "Workflow", icon: "✓", route: "/approvals" },
-      { slug: "request-leave", name: "Request leave", category: "People & HR", description: "Submit leave and follow the configured manager, SBU and HR route.", ownerName: "Human Resources", icon: "L", route: "/leave" },
-      { slug: "business-purchase-request", name: "Business purchase request", category: "Business services", description: "Request equipment, supplies or other business purchases and follow the approval trail through completion.", ownerName: "Administration / Finance", icon: "R", route: "/procurement/requests/new" },
-      { slug: "people-directory", name: "People directory", category: "People", description: "Find colleagues, departments, positions and the company structure.", ownerName: "People & HR", icon: "P", route: "/people" },
-    ];
-    service.value = builtIns.find((item) => item.slug === slug) || null;
+    service.value = items.find((item) => String(item.slug || "").toLowerCase() === slug) || builtIns[slug] || null;
     if (!service.value) error.value = "Service not found.";
-  } catch (err) {
-    error.value = err.message || "Unable to load this service.";
-  } finally {
-    loading.value = false;
-  }
+  } catch (err) { error.value = err.message || "Unable to load this service."; }
+  finally { loading.value = false; }
 }
-
 onMounted(load);
 </script>
 
 <template>
   <div class="experience-page service-detail-page">
     <div class="service-breadcrumb"><RouterLink to="/services">Services</RouterLink><span>›</span><strong>{{ service?.name || "Service" }}</strong></div>
-
     <section v-if="loading" class="service-detail-state">Loading service…</section>
     <section v-else-if="error" class="service-detail-state error-state"><strong>{{ error }}</strong><RouterLink to="/services" class="action-secondary">Back to services</RouterLink></section>
     <template v-else-if="service">
-      <section class="service-detail-hero">
-        <div class="service-detail-icon">{{ service.icon || service.name?.[0] || "S" }}</div>
-        <div class="service-detail-copy">
-          <span class="eyebrow">{{ service.category }}</span>
-          <h1>{{ service.name }}</h1>
-          <p>{{ service.description }}</p>
-          <div class="service-detail-meta"><span>Owner</span><strong>{{ service.ownerName }}</strong><span v-if="service.workflow">Workflow configured</span></div>
-        </div>
-        <div class="service-detail-actions">
-          <RouterLink :to="actionRoute" class="action-primary">Start service →</RouterLink>
-          <RouterLink to="/services" class="action-secondary">Back to services</RouterLink>
-        </div>
-      </section>
-
-      <section class="service-detail-grid">
-        <article class="workspace-panel service-info-panel">
-          <span class="eyebrow">HOW IT WORKS</span>
-          <h2>One request. The right route.</h2>
-          <p>MemoFlo uses your company's people, permissions and workflow definitions to determine who handles the work next. Employees don't need to know the internal approval structure before starting.</p>
-          <div class="service-flow"><span>1. You request</span><i>→</i><span>2. MemoFlo routes</span><i>→</i><span>3. People act</span><i>→</i><span>4. You track</span></div>
-        </article>
-        <article class="workspace-panel service-info-panel">
-          <span class="eyebrow">VISIBILITY</span>
-          <h2>Always know where it is.</h2>
-          <p>Requests can appear in My Work, notifications and the permanent activity history so the company has a record of what happened.</p>
-          <RouterLink to="/work" class="panel-link">Open My Work →</RouterLink>
-        </article>
-      </section>
+      <section class="service-detail-hero"><div class="service-detail-icon">{{ service.icon || service.name?.[0] || "S" }}</div><div class="service-detail-copy"><span class="eyebrow">{{ service.category }}</span><h1>{{ service.name }}</h1><p>{{ service.description }}</p><div class="service-detail-meta"><span>Action</span><strong>{{ service.actionType }}</strong><span v-if="service.workflow">Workflow configured</span></div></div><div class="service-detail-actions"><RouterLink v-if="available" :to="actionRoute" class="action-primary">Start service →</RouterLink><span v-else class="service-disabled-message">This service is currently disabled for your company. Contact your MemoFlo administrator to enable it.</span><RouterLink to="/services" class="action-secondary">Back to services</RouterLink></div></section>
+      <section class="service-detail-grid"><article class="workspace-panel service-info-panel"><span class="eyebrow">HOW IT WORKS</span><h2>You choose the outcome.</h2><p>MemoFlo resolves the service action, people, permissions and workflow behind it. Employees do not need to understand the internal module structure before starting.</p></article><article class="workspace-panel service-info-panel"><span class="eyebrow">AVAILABILITY</span><h2>{{ available ? "Available" : "Currently disabled" }}</h2><p>{{ available ? "You can start this service now." : "The service remains discoverable so employees know it exists, but the company subscription/module access currently does not make it available." }}</p></article></section>
     </template>
   </div>
 </template>

@@ -12,7 +12,8 @@ class MemoRepository {
       deletedAt: null,
     })
       .populate("createdBy", "_id firstName lastName email")
-      .populate("businessService", "_id name category")
+      .populate("recipient", "_id firstName lastName email")
+      .populate("businessService", "_id name category actionType routeKey")
       .populate("currentApprover", "_id title code")
       .populate("workflow", "_id name");
   }
@@ -25,7 +26,8 @@ class MemoRepository {
       deletedAt: null,
     })
       .populate("createdBy", "_id firstName lastName email")
-      .populate("businessService", "_id name category")
+      .populate("recipient", "_id firstName lastName email")
+      .populate("businessService", "_id name category actionType routeKey")
       .populate("workflow", "_id name");
   }
 

@@ -29,6 +29,13 @@ const businessServiceSchema = new mongoose.Schema(
       trim: true,
     },
 
+    moduleId: { type: String, default: "", trim: true, index: true },
+    actionType: { type: String, default: "service-request", trim: true },
+    routeKey: { type: String, default: "", trim: true },
+    keywords: { type: [String], default: [] },
+    requiresSbu: { type: Boolean, default: false },
+    subscriptionFeature: { type: String, default: "", trim: true },
+
     description: {
       type: String,
       default: "",

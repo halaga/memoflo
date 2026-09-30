@@ -8,6 +8,7 @@ import ServicesView from "../views/ServicesView.vue";
 import PeopleView from "../views/PeopleView.vue";
 import CompanyView from "../views/CompanyView.vue";
 import ServiceDetailView from "../views/ServiceDetailView.vue";
+import ServiceActionView from "../views/ServiceActionView.vue";
 import { api, getSavedEmployee } from "../services/api";
 
 function hostname() {
@@ -95,6 +96,11 @@ const routes = [
         component: ServiceDetailView,
       },
       {
+        path: "services/:slug/start",
+        name: "service-action",
+        component: ServiceActionView,
+      },
+      {
         path: "people",
         name: "people",
         component: PeopleView,
@@ -130,6 +136,12 @@ const routes = [
         name: "procurement",
         component: () => import("../views/procurement/ProcurementView.vue"),
         meta: { module: "procurement", permission: "procurement.view" },
+      },
+      {
+        path: "procurement/requests/new",
+        name: "procurement-new",
+        component: () => import("../views/procurement/ProcurementCreateView.vue"),
+        meta: { module: "procurement", permission: "procurement.create" },
       },
       {
         path: "procurement/requests/:id",

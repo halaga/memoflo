@@ -19,6 +19,7 @@ import memoAttachmentRoutes from "./modules/memo-attachment/memoAttachment.route
 import leaveRoutes from "./modules/leave/leave.routes.js";
 import notificationRoutes from "./modules/notification/notification.routes.js";
 import procurementRoutes from "./modules/procurement/procurement.routes.js";
+import serviceRequestRoutes from "./modules/service-request/serviceRequest.routes.js";
 import positionRoutes from "./modules/position/position.routes.js";
 import departmentRoutes from "./modules/organization/department/department.routes.js";
 import designationRoutes from "./modules/organization/designation/designation.routes.js";
@@ -61,6 +62,7 @@ app.use("/api/roles", roleRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/procurement", procurementRoutes);
+app.use("/api/service-requests", serviceRequestRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

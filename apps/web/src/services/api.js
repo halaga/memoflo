@@ -163,6 +163,11 @@ export const api = {
     return request("/employees");
   },
 
+  listEmployeeDirectory(query = "") {
+    const q = query ? `?q=${encodeURIComponent(query)}` : "";
+    return request(`/employees/directory${q}`);
+  },
+
   createEmployee(data) {
     return request("/employees", {
       method: "POST",
@@ -513,6 +518,14 @@ export const api = {
 
   actProcurementRequest(id, data) {
     return request(`/procurement/${id}/action`, { method: "POST", body: JSON.stringify(data) });
+  },
+
+  listServiceRequests() {
+    return request("/service-requests");
+  },
+
+  createServiceRequest(data) {
+    return request("/service-requests", { method: "POST", body: JSON.stringify(data) });
   },
 
   listNotifications() {

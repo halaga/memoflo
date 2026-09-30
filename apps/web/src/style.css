@@ -2956,3 +2956,10 @@ improve hierarchy,    readability, tenant branding and responsive behaviour.    
     margin: 0 15px;
   }
 }
+
+
+/* MEMOFLO-M22-REAL-SERVICE-ARCHITECTURE */
+.search-clear{border:0;background:transparent;color:#64748b;font-size:9px;font-weight:800;cursor:pointer}.service-disabled{opacity:.68}.service-availability{font-size:8px;font-weight:900;color:#a16207;background:#fff7ed;border:1px solid #fed7aa;padding:6px 8px;border-radius:999px;white-space:nowrap}.service-disabled-message{display:block;max-width:270px;padding:12px 14px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:10px;line-height:1.5}.service-disabled-panel{padding:22px;border:1px solid #fed7aa;background:#fffaf2;border-radius:16px;color:#9a3412}.service-disabled-panel strong{display:block;font-size:14px}.service-disabled-panel p{margin:6px 0 0;font-size:11px;color:#a16207}.service-action-form{max-width:900px;padding:24px;display:flex;flex-direction:column;gap:16px}.service-action-form label{display:flex;flex-direction:column;gap:7px;font-size:11px;font-weight:800;color:#41516a}.service-action-header{margin:18px 0}.request-item-row{padding:14px 0;border-top:1px solid #edf1f5}.request-item-row .text-button{justify-self:start}.service-detail-actions{display:flex;flex-direction:column;align-items:flex-end;gap:10px}.service-detail-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.service-detail-meta span{font-size:8px;color:#94a3b8}.service-detail-meta strong{font-size:9px;color:#475569}
+
+/* MEMOFLO-M22-LOGIN-CREDIT */
+.login-credit{margin-top:12px;text-align:center;color:#8a97a8;font-size:9px;line-height:1.4}.login-credit strong{color:#4f6077}

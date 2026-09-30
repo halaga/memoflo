@@ -22,3 +22,4 @@ import "../modules/leave/leaveBalance.model.js";
 import "../modules/leave/leaveRequest.model.js";
 import "../modules/leave/leaveEvent.model.js";
 import "../modules/procurement/procurement.model.js";
+import "../modules/service-request/serviceRequest.model.js";

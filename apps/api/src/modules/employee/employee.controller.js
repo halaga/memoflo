@@ -1,6 +1,13 @@
 import EmployeeService from "./employee.service.js";
 
 class EmployeeController {
+  async directory(req, res, next) {
+    try {
+      const employees = await EmployeeService.listDirectory(req.user.company, req.query.q);
+      res.json({ success: true, data: employees });
+    } catch (error) { next(error); }
+  }
+
   async create(req, res, next) {
     try {
       const result = await EmployeeService.createEmployee(
