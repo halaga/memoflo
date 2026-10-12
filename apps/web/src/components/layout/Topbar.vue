@@ -1,53 +1,54 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { api, clearSession, getSavedEmployee } from "../../services/api";
+import AppIcon from "../ui/AppIcon.vue";
 
 const route = useRoute();
 const router = useRouter();
 const employee = computed(() => getSavedEmployee());
 const unread = ref(0);
-const search = ref("");
+const search = ref(String(route.query.q || ""));
+const darkMode = ref(false);
 
 const titles = {
-  home: "Home",
-  "my-work": "My Work",
-  services: "Services",
-  people: "People",
-  company: "Company",
-  notifications: "Notifications",
-  administration: "Administration",
-  "workflow-settings": "Workflow Definitions",
-  roles: "Roles & Permissions",
-  employees: "Employees",
-  "organization-structure": "Organization Structure",
-  "module-access": "Module Access",
-  "company-branding": "Company Branding",
-  "service-catalogue": "Service Catalogue",
-  "service-detail": "Service",
-  memos: "Memos",
-  "create-memo": "Create Memo",
-  "memo-detail": "Memo Details",
-  approvals: "Approvals",
-  completed: "Completed",
-  "email-signature": "Email Signature",
+  home: "Home", "my-work": "My Work", services: "Services", people: "People",
+  company: "Company", notifications: "Notifications", administration: "Administration",
+  "workflow-settings": "Workflow Settings", roles: "Roles & Permissions",
+  employees: "Employees", "organization-structure": "Organization Structure",
+  "module-access": "Module Access", "company-branding": "Company Branding",
+  "service-catalogue": "Service Catalogue", "service-detail": "Service Details",
+  "service-action": "Service Request", "global-search": "Search",
+  "employee-profile": "Employee Profile", inventory: "Inventory",
+  memos: "Memos", "create-memo": "Create Memo", "memo-detail": "Memo Details",
+  approvals: "Approvals", completed: "Completed", "email-signature": "Email Signature",
 };
-
 const title = computed(() => titles[route.name] || "MemoFlo");
 const initials = computed(() => `${employee.value?.firstName?.[0] || ""}${employee.value?.lastName?.[0] || ""}`.toUpperCase() || "MF");
 
 async function loadNotifications() {
   try {
     const result = await api.listNotifications();
-    unread.value = result?.unreadCount || (Array.isArray(result) ? result.filter((item) => !item.readAt && !item.read).length : 0);
-  } catch { unread.value = 0; }
+    const list = Array.isArray(result) ? result : result?.data || [];
+    unread.value = result?.unreadCount ?? list.filter((item) => !item.readAt && !item.read).length;
+  } catch {
+    unread.value = 0;
+  }
 }
 
 function runSearch() {
-  const value = search.value.trim();
-  if (!value) return;
-  router.push({ name: "services", query: { q: value } });
-  search.value = "";
+  const query = search.value.trim();
+  router.push(query ? { name: "global-search", query: { q: query } } : { name: "global-search" });
+}
+
+function applyTheme(isDark) {
+  darkMode.value = isDark;
+  document.documentElement.classList.toggle("theme-dark", isDark);
+  localStorage.setItem("memoflo_theme", isDark ? "dark" : "light");
+}
+
+function toggleTheme() {
+  applyTheme(!darkMode.value);
 }
 
 function logout() {
@@ -55,16 +56,39 @@ function logout() {
   router.replace("/login");
 }
 
-onMounted(loadNotifications);
+watch(() => route.query.q, (value) => {
+  search.value = String(value || "");
+});
+
+onMounted(() => {
+  applyTheme(localStorage.getItem("memoflo_theme") === "dark");
+  loadNotifications();
+});
 </script>
 
 <template>
   <header class="topbar experience-topbar">
-    <div class="topbar-title"><span class="mobile-menu-mark">MF</span><div><span class="topbar-context">MEMOFLO</span><h2>{{ title }}</h2></div></div>
-    <form class="topbar-command" @submit.prevent="runSearch"><span>⌕</span><input v-model="search" placeholder="Search…" aria-label="Search MemoFlo" /><kbd>⌘ K</kbd></form>
+    <div class="topbar-title">
+      <div><span class="topbar-context">MEMOFLO · WORKSPACE</span><h2>{{ title }}</h2></div>
+    </div>
+
+    <form class="topbar-command" role="search" @submit.prevent="runSearch">
+      <AppIcon name="search" :size="19" />
+      <input v-model="search" placeholder="Search anything across MemoFlo…" aria-label="Search everything in MemoFlo" />
+      <kbd>Enter ↵</kbd>
+    </form>
+
     <div class="topbar-actions">
-      <button class="notification-button" type="button" aria-label="Notifications" @click="router.push('/notifications')">◔<b v-if="unread">{{ unread > 9 ? "9+" : unread }}</b></button>
-      <button class="topbar-user" type="button" @click="router.push('/people')"><span class="top-avatar">{{ initials }}</span><span><strong>{{ employee?.firstName || "User" }}</strong><small>{{ employee?.role?.name || "Employee" }}</small></span></button>
+      <button class="icon-button topbar-icon-button" type="button" :aria-label="darkMode ? 'Switch to light mode' : 'Switch to dark mode'" :title="darkMode ? 'Light mode' : 'Dark mode'" @click="toggleTheme">
+        <AppIcon :name="darkMode ? 'sun' : 'moon'" :size="19" />
+      </button>
+      <button class="icon-button topbar-icon-button notification-button" type="button" aria-label="Notifications" @click="router.push('/notifications')">
+        <AppIcon name="bell" :size="20" /><b v-if="unread">{{ unread > 9 ? "9+" : unread }}</b>
+      </button>
+      <button class="topbar-user" type="button" @click="router.push('/people')">
+        <span class="top-avatar">{{ initials }}</span>
+        <span><strong>{{ employee?.firstName || "User" }}</strong><small>{{ employee?.role?.name || "Employee" }}</small></span>
+      </button>
       <button class="topbar-signout" type="button" @click="logout">Sign out</button>
     </div>
   </header>

@@ -3,9 +3,14 @@ import EmployeeService from "./employee.service.js";
 class EmployeeController {
   async directory(req, res, next) {
     try {
-      const employees = await EmployeeService.listDirectory(req.user.company, req.query.q);
+      const employees = await EmployeeService.listDirectory(
+        req.user.company,
+        req.query.q
+      );
       res.json({ success: true, data: employees });
-    } catch (error) { next(error); }
+    } catch (error) {
+      next(error);
+    }
   }
 
   async create(req, res, next) {
@@ -14,7 +19,6 @@ class EmployeeController {
         req.user.company,
         req.body
       );
-
       res.status(201).json({
         success: true,
         data: result.employee,
@@ -27,14 +31,8 @@ class EmployeeController {
 
   async list(req, res, next) {
     try {
-      const employees = await EmployeeService.listEmployees(
-        req.user.company
-      );
-
-      res.json({
-        success: true,
-        data: employees,
-      });
+      const employees = await EmployeeService.listEmployees(req.user.company);
+      res.json({ success: true, data: employees });
     } catch (error) {
       next(error);
     }
@@ -46,11 +44,7 @@ class EmployeeController {
         req.user.company,
         req.params.id
       );
-
-      res.json({
-        success: true,
-        data: employee,
-      });
+      res.json({ success: true, data: employee });
     } catch (error) {
       next(error);
     }
@@ -63,11 +57,7 @@ class EmployeeController {
         req.params.id,
         req.body
       );
-
-      res.json({
-        success: true,
-        data: employee,
-      });
+      res.json({ success: true, data: employee });
     } catch (error) {
       next(error);
     }
@@ -80,7 +70,6 @@ class EmployeeController {
         req.params.id,
         req.body?.password
       );
-
       res.json({
         success: true,
         data: result.employee,
@@ -97,11 +86,7 @@ class EmployeeController {
         req.user.company,
         req.params.id
       );
-
-      res.json({
-        success: true,
-        data: employee,
-      });
+      res.json({ success: true, data: employee });
     } catch (error) {
       next(error);
     }

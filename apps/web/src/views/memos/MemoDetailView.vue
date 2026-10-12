@@ -24,6 +24,14 @@ const error = ref("");
 const actionError = ref("");
 
 const memoId = computed(() => route.params.id);
+const isDirectMemo = computed(() => {
+  const current = memo.value;
+  if (!current) return false;
+  return current.memoType === "simple"
+    && !current.workflow
+    && !current.workflowInstance
+    && !current.requestingSbu;
+});
 const currentApproverId = computed(() => memo.value?.currentApprover?._id || memo.value?.currentApprover);
 const employeePositionIds = computed(() => {
   const position = employee?.position;
@@ -272,6 +280,10 @@ onMounted(load);
               <div><span>Priority</span><strong>{{ memo.priority || "—" }}</strong></div>
               <div><span>Business service</span><strong>{{ memo.businessService?.name || "—" }}</strong></div>
               <div><span>Created by</span><strong>{{ actorName(memo.createdBy) }}</strong></div>
+              <div v-if="memo.memoType === 'simple' || memo.recipients?.length || memo.recipient">
+                <span>Recipients</span>
+                <strong>{{ (memo.recipients?.length ? memo.recipients : memo.recipient ? [memo.recipient] : []).map((person) => actorName(person)).join(", ") || "—" }}</strong>
+              </div>
             </div>
 
             <div class="memo-body-new">
@@ -349,7 +361,11 @@ onMounted(load);
 
           <div v-if="actionError" class="alert alert-error">{{ actionError }}</div>
 
-          <div v-if="!instance && !memo.workflowInstance" class="workflow-start-new">
+          <div v-if="isDirectMemo" class="workflow-start-new">
+            <p>This is a direct memo. It does not require an approval workflow.</p>
+          </div>
+
+          <div v-else-if="!instance && !memo.workflowInstance" class="workflow-start-new">
             <p>This memo has not started its approval workflow.</p>
             <button class="btn btn-primary btn-block" :disabled="workflowLoading" type="button" @click="startWorkflow">
               {{ workflowLoading ? "Starting…" : "Start Approval Workflow" }}

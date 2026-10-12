@@ -24,6 +24,10 @@ const permissions = [
   { name: "company.branding.update", module: "company", action: "branding.update", description: "Customize company tenant branding" },
   { name: "notifications.view", module: "notifications", action: "view", description: "View notifications" },
   { name: "notifications.update", module: "notifications", action: "update", description: "Mark notifications as read" },
+  { name: "inventory.view", module: "inventory", action: "view", description: "View company inventory records" },
+  { name: "inventory.create", module: "inventory", action: "create", description: "Create inventory records" },
+  { name: "inventory.update", module: "inventory", action: "update", description: "Update inventory records and custody" },
+  { name: "inventory.delete", module: "inventory", action: "delete", description: "Retire inventory records" },
   {
     name: "roles.view",
     module: "roles",
@@ -217,6 +221,9 @@ const systemRoles = [
       "procurement.create",
       "notifications.view",
       "notifications.update",
+      "inventory.view",
+      "inventory.create",
+      "inventory.update",
     ],
   },
 

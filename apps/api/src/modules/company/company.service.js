@@ -28,7 +28,7 @@ class CompanyService {
     const configuredBranding = company.settings?.branding || {};
 
     const branding = {
-      logo: configuredBranding.logo || company.logo || (company.slug === "ringo" ? "/signatures/ringologo.png" : ""),
+      logo: configuredBranding.logo || company.logo || "",
       wallpaper: configuredBranding.wallpaper || "",
       primaryColor:
         configuredBranding.primaryColor ||
@@ -38,6 +38,7 @@ class CompanyService {
         configuredBranding.secondaryColor ||
         company.secondaryColor ||
         DEFAULT_BRANDING.secondaryColor,
+      tagline: configuredBranding.tagline || "Workflow, simplified.",
     };
 
     return {
@@ -66,7 +67,7 @@ class CompanyService {
       name: object.name,
       code: object.code,
       slug: object.slug,
-      logo: configuredBranding.logo || object.logo || (object.slug === "ringo" ? "/signatures/ringologo.png" : ""),
+      logo: configuredBranding.logo || object.logo || "",
       wallpaper: configuredBranding.wallpaper || "",
       primaryColor:
         configuredBranding.primaryColor ||
@@ -76,6 +77,7 @@ class CompanyService {
         configuredBranding.secondaryColor ||
         object.secondaryColor ||
         DEFAULT_BRANDING.secondaryColor,
+      tagline: configuredBranding.tagline || "Workflow, simplified.",
     };
   }
 
@@ -108,6 +110,7 @@ class CompanyService {
       "wallpaper",
       "primaryColor",
       "secondaryColor",
+      "tagline",
     ];
 
     const cleanedBranding = {};

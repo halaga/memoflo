@@ -34,6 +34,10 @@ const memoSchema = new mongoose.Schema(
       ref: "Employee",
       default: null,
     },
+    recipients: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee",
+    }],
 
     category: {
       type: String,
@@ -63,7 +67,8 @@ const memoSchema = new mongoose.Schema(
     businessService: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "BusinessService",
-      required: true,
+      required: false,
+      default: null,
     },
 
     createdBy: {

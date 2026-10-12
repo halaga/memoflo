@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import path from "path";
 
 import auditLogger from "./middleware/auditLogger.js";
 import errorHandler from "./middleware/errorHandler.js";
@@ -25,6 +26,7 @@ import departmentRoutes from "./modules/organization/department/department.route
 import designationRoutes from "./modules/organization/designation/designation.routes.js";
 import sbuRoutes from "./modules/organization/sbu/sbu.routes.js";
 import workflowRoutes from "./modules/workflow/workflow.routes.js";
+import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 
 const app = express();
 
@@ -63,6 +65,10 @@ app.use("/api/company", companyRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/procurement", procurementRoutes);
 app.use("/api/service-requests", serviceRequestRoutes);
+app.use("/api/inventory", inventoryRoutes);
+
+const storageRoot = path.resolve(process.env.MEMOFLO_STORAGE_PATH || "storage");
+app.use("/uploads/avatars", express.static(path.join(storageRoot, "public", "avatars"), { fallthrough: false, maxAge: "1d" }));
 
 app.use(notFound);
 app.use(errorHandler);

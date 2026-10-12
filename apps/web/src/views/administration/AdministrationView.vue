@@ -49,8 +49,14 @@ const cards = [
     to: "/administration/organization",
     icon: "⌘",
   },
-  {
-    title: "Company Branding",
+    {
+      title: "Inventory",
+      text: "Track office items by owning department, quantity, location and custodian.",
+      to: "/administration/inventory",
+      icon: "▦",
+    },
+    {
+      title: "Company Branding",
     text: "Customize your logo, wallpaper and company colours.",
     to: "/administration/branding",
     icon: "✦",

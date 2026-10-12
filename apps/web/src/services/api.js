@@ -5,6 +5,13 @@ function getToken() {
   return localStorage.getItem("memoflo_token");
 }
 
+export function assetUrl(value) {
+  if (!value) return "";
+  if (/^(https?:|data:|blob:)/i.test(String(value))) return String(value);
+  const origin = API_URL.replace(/\/api\/?$/, "");
+  return `${origin}${String(value).startsWith("/") ? value : `/${value}`}`;
+}
+
 async function request(path, options = {}) {
   const token = getToken();
   const isFormData = options.body instanceof FormData;
@@ -193,6 +200,67 @@ export const api = {
     return request(`/employees/${id}`, {
       method: "DELETE",
     });
+  },
+
+  getEmployee(id) {
+    return request(`/employees/${encodeURIComponent(id)}`);
+  },
+
+  listEmployeeDocuments(employeeId) {
+    return request(`/employees/${encodeURIComponent(employeeId)}/documents`);
+  },
+
+  uploadEmployeeAvatar(employeeId, file) {
+    const form = new FormData();
+    form.append("file", file);
+    return request(`/employees/${encodeURIComponent(employeeId)}/avatar`, {
+      method: "POST",
+      body: form,
+    });
+  },
+
+  uploadEmployeeDocument(employeeId, documentType, file) {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("documentType", documentType);
+    return request(`/employees/${encodeURIComponent(employeeId)}/documents`, {
+      method: "POST",
+      body: form,
+    });
+  },
+
+  downloadEmployeeDocument(documentId) {
+    const token = getToken();
+    return fetch(`${API_URL}/employees/documents/${encodeURIComponent(documentId)}/download`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+
+  removeEmployeeDocument(documentId) {
+    return request(`/employees/documents/${encodeURIComponent(documentId)}`, {
+      method: "DELETE",
+    });
+  },
+
+  listInventory(filters = {}) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") params.set(key, value);
+    });
+    const query = params.toString();
+    return request(`/inventory${query ? `?${query}` : ""}`);
+  },
+
+  createInventory(data) {
+    return request("/inventory", { method: "POST", body: JSON.stringify(data) });
+  },
+
+  updateInventory(id, data) {
+    return request(`/inventory/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(data) });
+  },
+
+  deleteInventory(id) {
+    return request(`/inventory/${encodeURIComponent(id)}`, { method: "DELETE" });
   },
 
   listPositions() {
@@ -572,3 +640,5 @@ export function getSavedEmployee() {
     return null;
   }
 }
+
+export default api;

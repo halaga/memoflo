@@ -10,10 +10,9 @@ class MemoController {
         requestingSbu:
           req.body.requestingSbu ||
           req.body.requestingSBU,
-        beneficiarySBU:
-          req.body.beneficiarySBU ||
-          req.body.beneficiarySbu ||
-          null,
+        beneficiarySBU: req.body.beneficiarySBU || req.body.beneficiarySbu || null,
+        recipients: Array.isArray(req.body.recipients) ? [...new Set(req.body.recipients.filter(Boolean))] : [],
+        memoType: req.body.memoType || "simple",
       };
 
       const memo = await MemoService.createMemo(payload);

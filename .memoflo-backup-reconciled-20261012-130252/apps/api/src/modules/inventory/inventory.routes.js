@@ -1,0 +1,10 @@
+import express from "express";
+import authenticate from "../auth/auth.middleware.js";
+import authorize from "../../middleware/authorize.js";
+import InventoryController from "./inventory.controller.js";
+const router=express.Router();router.use(authenticate);
+router.get("/",authorize("inventory.view"),InventoryController.list);
+router.post("/",authorize("inventory.create"),InventoryController.create);
+router.patch("/:id",authorize("inventory.update"),InventoryController.update);
+router.delete("/:id",authorize("inventory.delete"),InventoryController.remove);
+export default router;

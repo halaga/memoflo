@@ -8,6 +8,7 @@ const branding = ref({
   wallpaper: "",
   primaryColor: "#2563EB",
   secondaryColor: "#1E293B",
+  tagline: "Workflow, simplified.",
 });
 
 const saving = ref(false);
@@ -99,6 +100,11 @@ onMounted(load);
             class="input"
             placeholder="https://…/ringo-logo.png"
           />
+        </label>
+
+        <label>
+          Product / workspace tagline
+          <input v-model="branding.tagline" class="input" placeholder="Workflow, simplified." />
         </label>
 
         <label>

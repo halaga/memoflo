@@ -8,6 +8,7 @@ import "../modules/auth/role.model.js";
 import "../modules/auth/permission.model.js";
 import "../modules/subscription/subscription.model.js";
 import "../modules/employee/employee.model.js";
+import "../modules/employee/employeeDocument.model.js";
 import "../modules/workflow/workflow.model.js";
 import "../modules/workflow/workflowStep.model.js";
 import "../modules/workflow/workflowInstance.model.js";
@@ -23,3 +24,5 @@ import "../modules/leave/leaveRequest.model.js";
 import "../modules/leave/leaveEvent.model.js";
 import "../modules/procurement/procurement.model.js";
 import "../modules/service-request/serviceRequest.model.js";
+
+import "../modules/inventory/inventory.model.js";

@@ -3,7 +3,10 @@ import Employee from "./employee.model.js";
 const populateEmployee = (query) =>
   query
     .populate("company")
-    .populate("position")
+    .populate({
+      path: "position",
+      populate: { path: "department" },
+    })
     .populate("role")
     .populate("reportsTo");
 

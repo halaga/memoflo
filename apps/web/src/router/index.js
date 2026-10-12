@@ -9,6 +9,12 @@ import PeopleView from "../views/PeopleView.vue";
 import CompanyView from "../views/CompanyView.vue";
 import ServiceDetailView from "../views/ServiceDetailView.vue";
 import ServiceActionView from "../views/ServiceActionView.vue";
+import SearchView from "../views/SearchView.vue";
+import EmployeeProfileView from "../views/EmployeeProfileView.vue";
+import InventoryView from "../views/administration/InventoryView.vue";
+import ServiceRequestDetailView from "../views/ServiceRequestDetailView.vue";
+import AccessDeniedView from "../views/AccessDeniedView.vue";
+import NotFoundView from "../views/NotFoundView.vue";
 import { api, getSavedEmployee } from "../services/api";
 
 function hostname() {
@@ -101,9 +107,25 @@ const routes = [
         component: ServiceActionView,
       },
       {
+        path: "search",
+        name: "global-search",
+        component: SearchView,
+      },
+      {
+        path: "work/requests/:id",
+        name: "service-request-detail",
+        component: ServiceRequestDetailView,
+      },
+      {
         path: "people",
         name: "people",
         component: PeopleView,
+      },
+      {
+        path: "people/:id",
+        name: "employee-profile",
+        component: EmployeeProfileView,
+        meta: { permission: "employees.view" },
       },
       {
         path: "company",
@@ -229,6 +251,11 @@ const routes = [
       },
 
       {
+        path: "access-denied",
+        name: "access-denied",
+        component: AccessDeniedView,
+      },
+      {
         path: "administration",
         name: "administration",
         component: () =>
@@ -297,6 +324,12 @@ const routes = [
       },
 
       {
+        path: "administration/inventory",
+        name: "inventory",
+        component: InventoryView,
+        meta: { permission: "inventory.view" },
+      },
+      {
         path: "administration/audit",
         name: "audit-log",
         component: () =>
@@ -320,9 +353,8 @@ const routes = [
 
   {
     path: "/:pathMatch(.*)*",
-    redirect: () => (
-      isPlatformHost() ? "/" : "/login"
-    ),
+    name: "not-found",
+    component: NotFoundView,
   },
 ];
 
@@ -377,7 +409,8 @@ router.beforeEach(async (to) => {
   if (to.meta.permission && token) {
     if (!hasPermission(to.meta.permission)) {
       return {
-        name: "home",
+        name: "access-denied",
+        query: { from: to.fullPath },
         replace: true,
       };
     }

@@ -13,23 +13,11 @@ router.post(
   BusinessServiceController.create
 );
 
-router.get(
-  "/",
-  authorize("business-services.view"),
-  BusinessServiceController.list
-);
+router.get("/", BusinessServiceController.list);
 
-router.get(
-  "/slug/:slug",
-  authorize("business-services.view"),
-  BusinessServiceController.showBySlug
-);
+router.get("/slug/:slug", BusinessServiceController.showBySlug);
 
-router.get(
-  "/:id",
-  authorize("business-services.view"),
-  BusinessServiceController.show
-);
+router.get("/:id", BusinessServiceController.show);
 
 router.patch(
   "/:id",

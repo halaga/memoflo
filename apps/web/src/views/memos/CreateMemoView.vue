@@ -9,6 +9,7 @@ const route = useRoute();
 const services = ref([]);
 const sbus = ref([]);
 const workflows = ref([]);
+const employees = ref([]);
 
 const loading = ref(false);
 const loadingData = ref(true);
@@ -23,6 +24,8 @@ const form = ref({
   requestingSbu: "",
   beneficiarySBU: "",
   workflow: "",
+  memoType: "simple",
+  recipients: [],
 });
 
 async function loadFormData() {
@@ -30,12 +33,7 @@ async function loadFormData() {
   error.value = "";
 
   try {
-    const [serviceResult, sbuResult, workflowResult] =
-      await Promise.all([
-        api.listBusinessServices(),
-        api.listSBUs(),
-        api.listWorkflows(),
-      ]);
+    const [serviceResult, sbuResult, workflowResult, employeeResult] = await Promise.all([api.listBusinessServices(), api.listSBUs(), api.listWorkflows(), api.listEmployeeDirectory()]);
 
     services.value = normalizeList(serviceResult, [
       "services",
@@ -54,6 +52,7 @@ async function loadFormData() {
     sbus.value = normalizeList(sbuResult, ["sbus", "SBUs"]);
 
     workflows.value = normalizeList(workflowResult, ["workflows"]);
+    employees.value = normalizeList(employeeResult);
   } catch (err) {
     error.value =
       err.message || "Unable to load memo setup data.";
@@ -99,15 +98,8 @@ async function submit() {
     return;
   }
 
-  if (!form.value.businessService) {
-    error.value = "Please select a business service.";
-    return;
-  }
-
-  if (!form.value.requestingSbu) {
-    error.value = "Please select the requesting SBU.";
-    return;
-  }
+  if (form.value.memoType !== "simple" && !form.value.businessService) { error.value = "Please select a business service."; return; }
+  if (form.value.memoType === "simple" && !form.value.recipients.length) { error.value = "Select at least one recipient."; return; }
 
   loading.value = true;
 
@@ -118,11 +110,13 @@ async function submit() {
       category: form.value.category,
       priority: form.value.priority,
       businessService: form.value.businessService,
-      requestingSbu: form.value.requestingSbu,
+      memoType: form.value.memoType,
+      recipients: form.value.recipients,
+      ...(form.value.requestingSbu ? { requestingSbu: form.value.requestingSbu } : {}),
       ...(form.value.beneficiarySBU
         ? { beneficiarySBU: form.value.beneficiarySBU }
         : {}),
-      ...(form.value.workflow
+      ...(form.value.memoType !== "simple" && form.value.workflow
         ? { workflow: form.value.workflow }
         : {}),
     });
@@ -153,7 +147,7 @@ onMounted(loadFormData);
         <span class="page-kicker">SERVICE REQUEST</span>
         <h1>{{ route.query.service ? "Request a service" : "Create memo" }}</h1>
         <p>
-          Start a business request and route it through your company's
+          Send a direct memo or create a request that follows your company's
           configured workflow.
         </p>
       </div>
@@ -178,6 +172,7 @@ onMounted(loadFormData);
     <section v-else class="card form-card premium-form-card">
       <form @submit.prevent="submit">
         <div class="form-row">
+          <label>Memo type<select v-model="form.memoType" class="input"><option value="simple">Simple memo — deliver directly</option><option value="approval">Approval memo — use workflow</option><option value="request">Request memo — start a business request</option></select></label>
           <label>
             Title
             <input
@@ -200,7 +195,12 @@ onMounted(loadFormData);
           </label>
         </div>
 
-        <div class="form-row">
+        <div v-if="form.memoType === 'simple'" class="form-row">
+          <label>Recipients (one or many)<select v-model="form.recipients" class="input" multiple size="5"><option v-for="person in employees" :key="person._id" :value="person._id">{{person.firstName}} {{person.lastName}} · {{person.email}}</option></select></label>
+          <div class="people-setup-hint"><span>Delivery</span><strong>Every selected recipient receives the same memo at the same time.</strong></div>
+        </div>
+
+        <div v-if="form.memoType !== 'simple'" class="form-row">
           <label>
             Business service
             <select
@@ -219,7 +219,7 @@ onMounted(loadFormData);
             </select>
           </label>
 
-          <label>
+          <label v-if="form.memoType !== 'simple'">
             Workflow
             <select v-model="form.workflow" class="input">
               <option value="">
@@ -236,7 +236,7 @@ onMounted(loadFormData);
           </label>
         </div>
 
-        <div class="form-row">
+        <div v-if="form.memoType !== 'simple'" class="form-row">
           <label>
             Requesting SBU
             <select
