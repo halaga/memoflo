@@ -16,12 +16,8 @@ const builtIns = [
   { name: "My Approvals", slug: "my-approvals", description: "Review items waiting for your decision.", category: "Approvals", actionType: "approvals", moduleId: "memos", keywords: ["approval", "decision"], icon: "check" },
   { name: "Leave Request", slug: "leave-request", description: "Submit leave and follow the HR review process.", category: "People & HR", actionType: "leave", moduleId: "leave", keywords: ["hr", "leave", "vacation", "absence"], icon: "calendar" },
   { name: "Business Purchase", slug: "business-purchase-request", description: "Request laptops, equipment, supplies and other business purchases.", category: "Business Purchase", actionType: "procurement", moduleId: "procurement", keywords: ["purchase", "procurement", "laptop", "equipment", "buy"], icon: "purchase" },
-  { name: "Laptop Request", slug: "laptop-request", description: "Request a laptop or other IT equipment through the business purchase workflow.", category: "Business Purchase", actionType: "procurement", moduleId: "procurement", keywords: ["laptop", "computer", "hardware", "equipment", "purchase"], icon: "laptop" },
   { name: "People Directory", slug: "people-directory", description: "Find colleagues, roles and departments.", category: "People & HR", actionType: "people", moduleId: "hr", keywords: ["people", "employee", "staff", "directory"], icon: "people" },
-  { name: "IT Support", slug: "it-support", description: "Report a technology issue and follow its progress.", category: "IT", actionType: "it-request", moduleId: "it", keywords: ["computer", "help", "technical"], icon: "laptop" },
-  { name: "IT Maintenance", slug: "it-maintenance", description: "Request maintenance for computers, printers, network or other IT equipment.", category: "IT", actionType: "it-request", moduleId: "it", keywords: ["maintenance", "repair", "printer", "network"], icon: "settings" },
-  { name: "Software Installation", slug: "software-installation", description: "Request approved software installation or updates.", category: "IT", actionType: "it-request", moduleId: "it", keywords: ["software", "application", "install"], icon: "box" },
-  { name: "Internet Subscription", slug: "internet-subscription", description: "Request internet, Wi-Fi or data support.", category: "IT", actionType: "it-request", moduleId: "it", keywords: ["internet", "wifi", "data", "network"], icon: "wifi" },
+  { name: "IT Support & Maintenance", slug: "it-support", description: "Log an IT support ticket for troubleshooting, equipment repair, software installation, connectivity or data/internet issues, then track its progress.", category: "IT", actionType: "it-request", moduleId: "it", keywords: ["computer", "help", "technical", "maintenance", "repair", "printer", "network", "software", "installation", "internet", "wifi", "data", "ticket"], icon: "laptop" },
 ];
 
 const categoryOrder = ["Communication", "Business Purchase", "IT", "People & HR", "Workplace", "Approvals", "Other"];
@@ -35,17 +31,25 @@ function categoryFor(service) {
 }
 
 const catalog = computed(() => {
-  const dynamic = services.value.map((service) => ({
-    ...service,
-    slug: service.slug || service._id,
-    description: service.description || "Company service.",
-    category: categoryFor(service),
-    actionType: service.actionType || "service-request",
-    moduleId: service.moduleId || "",
-    icon: service.icon || "services",
-    keywords: Array.isArray(service.keywords) ? service.keywords : [],
-    ...(service.slug === "laptop-request" ? { category: "Business Purchase", actionType: "procurement", moduleId: "procurement" } : {}),
-  }));
+  const dynamic = services.value.map((service) => {
+    const originalSlug = String(service.slug || service._id || "").toLowerCase();
+    const slug = ({ "laptop-request": "business-purchase-request", "it-maintenance": "it-support", "software-installation": "it-support", "internet-subscription": "it-support" })[originalSlug] || originalSlug;
+    return {
+      ...service,
+      slug,
+      name: slug === "business-purchase-request" ? "Business Purchase" : slug === "it-support" ? "IT Support & Maintenance" : service.name,
+      description: slug === "business-purchase-request"
+        ? "Request laptops, IT equipment, subscriptions, software, office supplies and other business purchases in one itemised workflow."
+        : slug === "it-support"
+          ? "Log and track IT support tickets for troubleshooting, repairs, software, connectivity and data issues."
+          : service.description || "Company service.",
+      category: slug === "business-purchase-request" ? "Business Purchase" : slug === "it-support" ? "IT" : categoryFor(service),
+      actionType: slug === "business-purchase-request" ? "procurement" : slug === "it-support" ? "it-request" : service.actionType || "service-request",
+      moduleId: slug === "business-purchase-request" ? "procurement" : slug === "it-support" ? "it" : service.moduleId || "",
+      icon: slug === "business-purchase-request" ? "purchase" : slug === "it-support" ? "laptop" : service.icon || "services",
+      keywords: Array.isArray(service.keywords) ? service.keywords : [],
+    };
+  });
   const bySlug = new Map();
   for (const service of [...builtIns, ...dynamic]) {
     bySlug.set(service.slug, { ...bySlug.get(service.slug), ...service, category: categoryFor(service) });

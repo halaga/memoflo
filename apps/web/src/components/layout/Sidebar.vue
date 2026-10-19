@@ -115,3 +115,33 @@ function go(path) {
     </button>
   </aside>
 </template>
+
+<style scoped>
+.experience-sidebar { box-sizing:border-box; min-width:0; overflow-x:hidden; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#334155 transparent; background:#101827; color:#e2e8f0; }
+.experience-sidebar .sidebar-top-row { min-width:0; flex:0 0 auto; }
+.experience-sidebar .mf-brand { min-width:0; flex:1 1 auto; overflow:hidden; }
+.experience-sidebar .mf-brand-copy { min-width:0; }
+.experience-sidebar .mf-brand-copy small { max-width:100%; }
+.experience-sidebar .experience-nav,.experience-sidebar .sidebar-shortcuts { min-width:0; flex:0 0 auto; }
+.experience-sidebar .experience-nav-item { min-width:0; overflow:hidden; color:#cbd5e1; }
+.experience-sidebar .experience-nav-item > svg { flex:0 0 20px; }
+.experience-sidebar .experience-nav-item > .sidebar-nav-label { display:block; flex:1 1 auto; width:auto; min-width:0; overflow:visible; color:inherit; text-align:left; white-space:normal; overflow-wrap:anywhere; line-height:1.35; font-size:12px; }
+.experience-sidebar .experience-nav-item.active { color:#fff; background:var(--company-secondary,#0f172a); border-color:color-mix(in srgb,var(--company-secondary,#0f172a) 72%,#fff); box-shadow:inset 3px 0 0 var(--company-primary,#2563eb); }
+.experience-sidebar .experience-nav-item.active > .sidebar-nav-label { color:#fff; }
+.experience-sidebar .sidebar-caption { color:#94a3b8; }
+.experience-sidebar .sidebar-spacer { flex:1 0 18px; }
+.experience-sidebar .portfolio-link,.experience-sidebar .admin-entry,.experience-sidebar .sidebar-profile { min-width:0; flex:0 0 auto; }
+.experience-sidebar .portfolio-copy,.experience-sidebar .sidebar-profile-copy { min-width:0; }
+.experience-sidebar .portfolio-copy small { overflow-wrap:anywhere; }
+.experience-shell.sidebar-collapsed .experience-sidebar { width:82px; flex-basis:82px; }
+.experience-shell.sidebar-collapsed .experience-sidebar .sidebar-nav-label,.experience-shell.sidebar-collapsed .experience-sidebar .mf-brand-copy,.experience-shell.sidebar-collapsed .experience-sidebar .nav-caption,.experience-shell.sidebar-collapsed .experience-sidebar .sidebar-profile-copy,.experience-shell.sidebar-collapsed .experience-sidebar .portfolio-copy,.experience-shell.sidebar-collapsed .experience-sidebar .portfolio-link > svg,.experience-shell.sidebar-collapsed .experience-sidebar .admin-chevron { display:none; }
+.experience-shell.sidebar-collapsed .experience-sidebar .experience-nav-item,.experience-shell.sidebar-collapsed .experience-sidebar .admin-entry,.experience-shell.sidebar-collapsed .experience-sidebar .sidebar-profile,.experience-shell.sidebar-collapsed .experience-sidebar .portfolio-link { justify-content:center; }
+.experience-shell.sidebar-collapsed .experience-sidebar .experience-nav-item { padding-inline:8px; }
+@media(max-width:900px) {
+ .experience-sidebar { z-index:100; }
+ .experience-shell.is-mobile .experience-sidebar.sidebar-mobile-closed { left:-280px; width:270px; flex-basis:270px; visibility:hidden; pointer-events:none; }
+ .experience-shell.is-mobile .experience-sidebar.sidebar-mobile-open { left:0; width:270px; flex-basis:270px; visibility:visible; pointer-events:auto; }
+ .experience-shell.is-mobile .experience-sidebar.sidebar-mobile-open .sidebar-nav-label,.experience-shell.is-mobile .experience-sidebar.sidebar-mobile-open .mf-brand-copy,.experience-shell.is-mobile .experience-sidebar.sidebar-mobile-open .nav-caption,.experience-shell.is-mobile .experience-sidebar.sidebar-mobile-open .sidebar-profile-copy,.experience-shell.is-mobile .experience-sidebar.sidebar-mobile-open .portfolio-copy,.experience-shell.is-mobile .experience-sidebar.sidebar-mobile-open .portfolio-link > svg,.experience-shell.is-mobile .experience-sidebar.sidebar-mobile-open .admin-chevron { display:block; }
+ .experience-shell.is-mobile .experience-sidebar.sidebar-mobile-open .experience-nav-item { justify-content:flex-start; }
+}
+</style>

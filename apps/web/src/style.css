@@ -3414,3 +3414,919 @@ html.theme-dark {
   .page .form-row, .page .form-two-col { grid-template-columns: 1fr; }
   .page .form-actions { flex-wrap: wrap; }
 }
+
+/* MEMOFLO RESPONSIVE UI REFINEMENT — keep this section at the end */
+:root {
+  --mf-text: #17233b;
+  --mf-muted: #64748b;
+  --mf-border: #e2e8f0;
+  --mf-surface: #ffffff;
+  --mf-page: #f4f7fb;
+  --mf-primary: var(--company-primary, #2563eb);
+  font-size: 14px;
+  -webkit-text-size-adjust: 100%;
+}
+html, body, #app {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+body { font-size: 13px; line-height: 1.5; overflow-x: hidden; }
+button, input, select, textarea { font-size: inherit; }
+button { line-height: 1.35; }
+img, svg { max-width: 100%; }
+.app-shell, .experience-shell { min-height: 100dvh; width: 100%; overflow-x: clip; }
+.experience-shell .sidebar {
+  width: 248px;
+  height: 100dvh;
+  min-height: 0;
+  padding: 14px 12px 12px;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  transition: width .2s ease, transform .2s ease;
+}
+.experience-shell .sidebar-top-row { display:flex; align-items:center; gap:8px; min-width:0; margin-bottom:16px; }
+.experience-shell .mf-brand { flex:1; min-width:0; display:flex; align-items:center; gap:10px; padding:6px; border:0; background:transparent; color:inherit; text-align:left; }
+.experience-shell .mf-logo { flex:0 0 38px; width:38px; height:38px; display:grid; place-items:center; overflow:hidden; border-radius:12px; background:#2563eb; color:white; font-size:22px; }
+.experience-shell .mf-logo img { width:100%; height:100%; object-fit:contain; }
+.experience-shell .mf-brand-copy { min-width:0; display:flex; flex-direction:column; gap:1px; }
+.experience-shell .mf-brand-copy strong { font-size:14px; font-weight:750; line-height:1.25; }
+.experience-shell .mf-brand-copy small { color:#94a3b8; font-size:10px; line-height:1.35; overflow-wrap:anywhere; }
+.experience-shell .sidebar-toggle-inside { flex:0 0 32px; width:32px; height:32px; display:grid; place-items:center; border:1px solid #334155; border-radius:9px; background:#172235; color:#cbd5e1; }
+.experience-shell .sidebar-toggle-inside:hover { background:#26354b; color:white; }
+.experience-shell .experience-nav { display:grid; gap:4px; min-width:0; }
+.experience-shell .sidebar-caption { padding:8px 10px 5px; color:#94a3b8; font-size:9px; font-weight:750; letter-spacing:.12em; }
+.experience-shell .experience-nav-item { display:flex; align-items:center; gap:11px; width:100%; min-width:0; min-height:40px; padding:8px 10px; border:0; border-radius:10px; background:transparent; color:#64748b; text-align:left; font-size:12px; font-weight:600; }
+.experience-shell .experience-nav-item > svg { flex:0 0 20px; }
+.experience-shell .experience-nav-item:hover { background:#f1f5f9; color:#1d4ed8; }
+.experience-shell .experience-nav-item.active { background:#eaf0ff; color:#2563eb; box-shadow:inset 3px 0 #2563eb; }
+.experience-shell .sidebar-nav-label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.experience-shell .sidebar-bottom { margin-top:auto; padding-top:12px; }
+.experience-shell .sidebar-spacer { flex:1 1 auto; min-height:12px; }
+.experience-shell .sidebar-profile { min-width:0; }
+.experience-shell .sidebar-profile strong, .experience-shell .sidebar-profile span { overflow:hidden; text-overflow:ellipsis; }
+.experience-shell .main { width:auto; min-width:0; min-height:100dvh; margin-left:248px; }
+.experience-shell.sidebar-collapsed .sidebar { width:76px; padding-inline:10px; }
+.experience-shell.sidebar-collapsed .main { margin-left:76px; }
+.experience-shell.sidebar-collapsed .mf-brand { justify-content:center; padding:4px 0; }
+.experience-shell.sidebar-collapsed .mf-brand-copy,
+.experience-shell.sidebar-collapsed .sidebar-caption,
+.experience-shell.sidebar-collapsed .sidebar-nav-label,
+.experience-shell.sidebar-collapsed .sidebar-profile-copy,
+.experience-shell.sidebar-collapsed .sidebar-bottom-copy { display:none !important; }
+.experience-shell.sidebar-collapsed .sidebar-top-row { flex-direction:column; }
+.experience-shell.sidebar-collapsed .experience-nav-item { justify-content:center; padding-inline:4px; }
+.experience-shell .topbar.experience-topbar {
+  position:sticky;
+  top:0;
+  z-index:15;
+  display:grid;
+  grid-template-columns:minmax(100px, .7fr) minmax(220px, 1.25fr) auto;
+  align-items:center;
+  gap:18px;
+  width:100%;
+  min-width:0;
+  height:auto;
+  min-height:68px;
+  padding:10px clamp(14px, 2.2vw, 30px);
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(12px);
+}
+.experience-shell .topbar-title, .experience-shell .topbar-title > div { min-width:0; }
+.experience-shell .topbar-context { display:block; color:#7b8aa3; font-size:9px; font-weight:750; letter-spacing:.12em; line-height:1.3; }
+.experience-shell .topbar h2 { margin:3px 0 0; font-size:19px; line-height:1.25; letter-spacing:-.025em; }
+.experience-shell .topbar-command { display:flex; align-items:center; gap:10px; width:100%; min-width:0; height:42px; padding:0 12px; border:1px solid #dfe7f2; border-radius:12px; background:#f8fafc; color:#64748b; }
+.experience-shell .topbar-command input { flex:1; min-width:0; width:100%; height:100%; padding:0; border:0; outline:0; background:transparent; color:#17233b; font-size:12px; }
+.experience-shell .topbar-command kbd { flex:0 0 auto; padding:3px 6px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; color:#64748b; font-size:9px; white-space:nowrap; }
+.experience-shell .topbar-actions { display:flex; align-items:center; justify-content:flex-end; gap:8px; min-width:0; }
+.experience-shell .topbar-actions .icon-button { flex:0 0 38px; width:38px; height:38px; display:grid; place-items:center; border:1px solid #e2e8f0; border-radius:11px; background:#fff; color:#52627b; }
+.experience-shell .topbar-user { display:flex; align-items:center; gap:8px; min-width:0; padding:0 4px; border:0; background:transparent; text-align:left; }
+.experience-shell .topbar-user > span:last-child { min-width:0; }
+.experience-shell .topbar-user strong { max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; }
+.experience-shell .topbar-user small { display:block; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#8794a8; font-size:9px; }
+.experience-shell .topbar-signout { flex:0 0 auto; padding:8px 10px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; color:#475569; font-size:11px; }
+.experience-shell .content { width:100%; max-width:1600px; min-width:0; margin:0 auto; padding:clamp(18px, 2.2vw, 30px) clamp(14px, 2.2vw, 30px) 40px; }
+.experience-shell .content > *, .experience-shell .page, .experience-shell .page-header, .experience-shell .card { min-width:0; }
+.experience-shell h1 { font-size:clamp(21px, 2vw, 27px); line-height:1.2; letter-spacing:-.03em; }
+.experience-shell h2 { font-size:clamp(17px, 1.5vw, 21px); line-height:1.3; }
+.experience-shell h3 { font-size:15px; line-height:1.35; }
+.experience-shell p, .experience-shell label, .experience-shell td, .experience-shell th { font-size:12px; line-height:1.55; }
+.experience-shell small, .experience-shell .muted, .experience-shell .helper-text { font-size:11px; }
+.experience-shell .page-header { gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+.experience-shell .page-header h1 { margin:3px 0 6px; }
+.experience-shell .card { border-radius:16px; }
+.experience-shell .btn { min-height:34px; padding:8px 12px; border-radius:9px; font-size:11px; }
+.experience-shell input, .experience-shell select, .experience-shell textarea { max-width:100%; font-size:12px; }
+.experience-shell table { width:100%; border-collapse:collapse; }
+.experience-shell .table-wrap, .experience-shell .table-container { max-width:100%; overflow-x:auto; overscroll-behavior-x:contain; }
+.experience-shell .stats-grid { gap:12px; }
+.experience-shell .stat-card { padding:16px; }
+.experience-shell .stat-card span { font-size:10px; }
+.experience-shell .stat-card strong { font-size:23px; }
+.experience-shell .sidebar-backdrop { display:none; }
+/* Home/dashboard layout */
+.experience-shell .home-hero, .experience-shell .dashboard-hero, .experience-shell .hero-panel { max-width:100%; }
+.experience-shell .home-hero h1, .experience-shell .dashboard-hero h1 { font-size:clamp(25px, 2.8vw, 36px); }
+.experience-shell .home-hero p, .experience-shell .dashboard-hero p { max-width:64ch; font-size:13px; }
+.experience-shell .dashboard-grid, .experience-shell .home-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.experience-shell .dashboard-card, .experience-shell .quick-card { min-width:0; }
+/* Dark theme consistency */
+.theme-dark body { background:#0b1220; color:#e5edf8; }
+.theme-dark .experience-shell .topbar.experience-topbar { background:rgba(15,23,42,.96); border-color:#263449; }
+.theme-dark .experience-shell .topbar-command { background:#111c2e; border-color:#2b3a50; }
+.theme-dark .experience-shell .topbar-command input { color:#e5edf8; }
+.theme-dark .experience-shell .topbar-command kbd,
+.theme-dark .experience-shell .topbar-actions .icon-button,
+.theme-dark .experience-shell .topbar-signout { background:#172235; border-color:#334155; color:#dbe5f4; }
+.theme-dark .experience-shell .content { color:#e5edf8; }
+.theme-dark .experience-shell .card,
+.theme-dark .experience-shell .dashboard-card,
+.theme-dark .experience-shell .quick-card { background:#111c2e; border-color:#263449; color:#e5edf8; }
+.theme-dark .experience-shell .experience-nav-item { color:#a9b8ce; }
+.theme-dark .experience-shell .experience-nav-item:hover { background:#172235; color:#bfdbfe; }
+.theme-dark .experience-shell .experience-nav-item.active { background:#1d3155; color:#bfdbfe; }
+.theme-dark .experience-shell input,
+.theme-dark .experience-shell select,
+.theme-dark .experience-shell textarea { background-color:#111c2e; border-color:#334155; color:#e5edf8; }
+@media (max-width: 1180px) {
+  .experience-shell .topbar.experience-topbar { grid-template-columns:minmax(90px,.55fr) minmax(180px,1fr) auto; gap:10px; padding-inline:16px; }
+  .experience-shell .topbar-user small { display:none; }
+  .experience-shell .topbar-signout { padding:7px 8px; }
+  .experience-shell .content { padding-inline:20px; }
+  .experience-shell .dashboard-grid, .experience-shell .home-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 900px) {
+  .experience-shell .sidebar { width:248px; transform:translateX(-105%); box-shadow:12px 0 35px #0f172a20; }
+  .experience-shell .sidebar.sidebar-mobile-open { transform:translateX(0); }
+  .experience-shell .main, .experience-shell.sidebar-collapsed .main { width:100%; margin-left:0; }
+  .experience-shell.sidebar-collapsed .sidebar { width:248px; padding:14px 12px 12px; }
+  .experience-shell .sidebar-backdrop { position:fixed; inset:0; z-index:19; display:block; border:0; background:rgba(15,23,42,.42); }
+  .experience-shell .topbar.experience-topbar { grid-template-columns:minmax(70px,.4fr) minmax(150px,1fr) auto; gap:10px; min-height:64px; padding:9px 14px; }
+  .experience-shell .topbar-context { font-size:8px; }
+  .experience-shell .topbar h2 { font-size:17px; }
+  .experience-shell .topbar-actions { gap:5px; }
+  .experience-shell .topbar-actions .icon-button { width:34px; height:34px; flex-basis:34px; }
+  .experience-shell .topbar-user { display:none; }
+  .experience-shell .content { padding:18px 16px 32px; }
+}
+@media (max-width: 600px) {
+  .experience-shell .topbar.experience-topbar { position:sticky; grid-template-columns:1fr auto; gap:8px; }
+  .experience-shell .topbar-title { grid-column:1; grid-row:1; }
+  .experience-shell .topbar-actions { grid-column:2; grid-row:1; }
+  .experience-shell .topbar-command { grid-column:1 / -1; grid-row:2; height:39px; }
+  .experience-shell .topbar-command kbd { display:none; }
+  .experience-shell .topbar-signout { font-size:10px; }
+  .experience-shell .content { padding:16px 12px 28px; }
+  .experience-shell .page-header { display:flex; flex-direction:column; align-items:stretch; gap:10px; margin-bottom:16px; }
+  .experience-shell .page-header > :last-child { max-width:100%; }
+  .experience-shell .dashboard-grid, .experience-shell .home-grid, .experience-shell .stats-grid { grid-template-columns:1fr; }
+  .experience-shell .home-hero, .experience-shell .dashboard-hero { padding:20px !important; }
+  .experience-shell .home-hero h1, .experience-shell .dashboard-hero h1 { font-size:25px; }
+  .experience-shell .content .card { padding:14px; }
+  .experience-shell .table-wrap table, .experience-shell .table-container table { min-width:620px; }
+}
+
+/* ================================================================
+   MemoFlo UI refinement — appended overrides, preserves existing UI
+   Goals: calmer type scale, readable dark mode, contained pages,
+   scrollable sidebar, and a properly positioned sidebar toggle.
+   ================================================================ */
+:root {
+  --mf-font-size: 13px;
+  --mf-text: #243247;
+  --mf-muted: #64748b;
+  --mf-page: #f3f6fb;
+  --mf-card: #ffffff;
+  --mf-border: #dce4ef;
+  --mf-sidebar-light: #17263d;
+  --mf-sidebar-text: #d8e3f3;
+}
+html { font-size: 13px; }
+body { min-width: 320px; overflow-x: hidden; font-size: 13px; line-height: 1.5; }
+#app, .app, .workspace, .workspace-shell, .experience-shell { min-width: 0; max-width: 100%; }
+button, input, select, textarea { font-size: 13px; }
+
+/* Balanced type sizes without changing the page structure. */
+h1, .page-title { font-size: clamp(20px, 1.65vw, 25px) !important; line-height: 1.25 !important; }
+h2 { font-size: clamp(17px, 1.3vw, 20px) !important; line-height: 1.3 !important; }
+h3 { font-size: 15px !important; line-height: 1.35 !important; }
+h4 { font-size: 13px !important; line-height: 1.4 !important; }
+p, label, td, th, li, .muted, .helper-text { line-height: 1.5; }
+.page p, .content p, .card p { font-size: 12.5px; }
+small, .text-sm, .helper-text { font-size: 11px; }
+input, select, textarea { min-width: 0; max-width: 100%; }
+button, .btn { max-width: 100%; }
+
+/* Keep the overall application inside the viewport. */
+.experience-shell, .workspace-shell, .workspace {
+  width: 100%; max-width: 100vw; min-height: 100dvh; overflow-x: clip;
+}
+.experience-shell .main, .experience-shell .workspace-main,
+.experience-shell .main-content, .experience-shell .content-area {
+  min-width: 0; max-width: 100%;
+}
+.experience-shell .content, .experience-shell .page-content,
+.experience-shell main, .workspace main {
+  min-width: 0; max-width: 100%;
+}
+.experience-shell .content {
+  width: 100%; padding: 22px clamp(14px, 2vw, 28px) 32px;
+}
+.experience-shell .content > *, .experience-shell .page > *,
+.experience-shell .page-header > *, .experience-shell .card > * { min-width: 0; }
+.experience-shell .page-header { gap: 12px; flex-wrap: wrap; }
+.experience-shell .page-header > :last-child { max-width: 100%; }
+.experience-shell .dashboard-grid, .experience-shell .home-grid,
+.experience-shell .stats-grid, .experience-shell .quick-actions,
+.experience-shell .card-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+.experience-shell .card, .experience-shell .dashboard-card,
+.experience-shell .quick-card { min-width: 0; overflow-wrap: anywhere; }
+.experience-shell .table-wrap, .experience-shell .table-container,
+.experience-shell .table-responsive { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+.experience-shell table { width: 100%; border-collapse: collapse; }
+.experience-shell td, .experience-shell th { overflow-wrap: anywhere; }
+
+/* Sidebar contrast: dark slate even when the main app is in light mode. */
+.experience-shell .sidebar, .workspace .sidebar, aside.sidebar {
+  background: var(--mf-sidebar-light) !important;
+  color: var(--mf-sidebar-text) !important;
+  border-right: 1px solid #253954 !important;
+  height: 100dvh; max-height: 100dvh;
+  overflow-y: auto !important; overflow-x: hidden !important;
+  overscroll-behavior-y: contain; scrollbar-gutter: stable;
+  scrollbar-width: thin; scrollbar-color: #526783 #17263d;
+}
+.experience-shell .sidebar a, .experience-shell .sidebar button,
+.experience-shell .sidebar .experience-nav-item,
+.workspace .sidebar a, .workspace .sidebar button,
+aside.sidebar a, aside.sidebar button { color: #d8e3f3; }
+.experience-shell .sidebar a:hover, .experience-shell .sidebar button:hover,
+.experience-shell .sidebar .experience-nav-item:hover,
+.workspace .sidebar a:hover, aside.sidebar a:hover { background: #263b58; color: #ffffff; }
+.experience-shell .sidebar .experience-nav-item.active,
+.experience-shell .sidebar a.router-link-active,
+.workspace .sidebar a.router-link-active, aside.sidebar a.router-link-active {
+  color: #ffffff !important; background: #2b4770 !important;
+}
+.experience-shell .sidebar small, .experience-shell .sidebar .muted,
+.experience-shell .sidebar .nav-section-title { color: #a9bad1 !important; }
+.experience-shell .sidebar hr, .workspace .sidebar hr, aside.sidebar hr { border-color: #344861; }
+
+/* Toggle stays inside the sidebar header and remains reachable while scrolling. */
+.experience-shell .sidebar-toggle, .experience-shell .sidebar-collapse,
+.experience-shell .sidebar-toggle-button, .experience-shell .sidebar-header button,
+.workspace .sidebar-toggle, .workspace .sidebar-collapse,
+.workspace .sidebar-header button, aside.sidebar .sidebar-toggle,
+aside.sidebar .sidebar-collapse, aside.sidebar .sidebar-header button {
+  position: sticky; top: 8px; z-index: 25;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto; width: 36px; height: 36px; min-width: 36px;
+  margin: 4px 0 8px auto; padding: 0;
+  border: 1px solid #405773; border-radius: 10px;
+  background: #243954; color: #f1f6ff;
+  box-shadow: 0 2px 8px #08142630;
+}
+.experience-shell .sidebar-toggle:hover, .experience-shell .sidebar-collapse:hover,
+.experience-shell .sidebar-toggle-button:hover, .experience-shell .sidebar-header button:hover,
+.workspace .sidebar-toggle:hover, .workspace .sidebar-collapse:hover,
+.workspace .sidebar-header button:hover, aside.sidebar .sidebar-toggle:hover,
+aside.sidebar .sidebar-collapse:hover, aside.sidebar .sidebar-header button:hover {
+  background: #355273; color: #fff;
+}
+/* Avoid a page-level horizontal scrollbar from fixed/floating nav elements. */
+.experience-shell .sidebar-backdrop { z-index: 19; }
+
+/* Dark mode: explicitly set foregrounds for common legacy page elements too. */
+.theme-dark, .theme-dark body { color: #e5edf8; background: #0b1220; }
+.theme-dark .experience-shell, .theme-dark .experience-shell .content,
+.theme-dark .experience-shell main, .theme-dark .experience-shell .page { color: #e5edf8; }
+.theme-dark .experience-shell .card, .theme-dark .experience-shell .panel,
+.theme-dark .experience-shell .dashboard-card, .theme-dark .experience-shell .quick-card,
+.theme-dark .experience-shell .modal, .theme-dark .experience-shell .table-wrap {
+  background-color: #111c2e; border-color: #2b3b52; color: #e5edf8;
+}
+.theme-dark .experience-shell h1, .theme-dark .experience-shell h2,
+.theme-dark .experience-shell h3, .theme-dark .experience-shell h4,
+.theme-dark .experience-shell strong, .theme-dark .experience-shell label,
+.theme-dark .experience-shell th, .theme-dark .experience-shell td,
+.theme-dark .experience-shell p, .theme-dark .experience-shell li { color: #e5edf8; }
+.theme-dark .experience-shell .muted, .theme-dark .experience-shell small,
+.theme-dark .experience-shell .helper-text, .theme-dark .experience-shell .page-kicker {
+  color: #aabbd1;
+}
+.theme-dark .experience-shell a { color: #9cc5ff; }
+.theme-dark .experience-shell button:not(.primary):not(.btn-primary) {
+  color: #e5edf8; border-color: #3a4b63;
+}
+.theme-dark .experience-shell input, .theme-dark .experience-shell select,
+.theme-dark .experience-shell textarea {
+  background: #0d1728; color: #e5edf8; border-color: #3a4b63;
+}
+.theme-dark .experience-shell input::placeholder,
+.theme-dark .experience-shell textarea::placeholder { color: #8fa2bb; }
+.theme-dark .experience-shell .sidebar { background: #080f1c !important; }
+
+@media (max-width: 1100px) {
+  .experience-shell .content { padding: 18px 18px 28px; }
+  .experience-shell .topbar.experience-topbar { min-width: 0; }
+  .experience-shell .topbar-command { min-width: 0; }
+}
+@media (max-width: 760px) {
+  body { overflow-x: hidden; }
+  .experience-shell .content { padding: 16px 12px 24px; }
+  .experience-shell .page-header { align-items: flex-start; }
+  .experience-shell .dashboard-grid, .experience-shell .home-grid,
+  .experience-shell .stats-grid, .experience-shell .quick-actions,
+  .experience-shell .card-grid { grid-template-columns: minmax(0, 1fr); }
+  .experience-shell .topbar.experience-topbar { max-width: 100%; }
+  .experience-shell .home-hero h1, .experience-shell .dashboard-hero h1 { font-size: 24px !important; }
+  .experience-shell .content .card { padding: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+
+
+/* ==========================================================
+   MEMOFLO — SIDEBAR / CONTENT LAYOUT REFINEMENT
+   Keep existing styles; append these overrides at the bottom.
+   ========================================================== */
+
+:root {
+  --mf-sidebar-expanded: 250px;
+  --mf-sidebar-collapsed: 68px;
+  --mf-content-padding-x: clamp(18px, 2.2vw, 34px);
+  --mf-content-padding-y: 26px;
+}
+
+/* Prevent flex/grid children from forcing the app wider than
+   the viewport. Let the shell control the available width. */
+html,
+body,
+#app {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+#app,
+#app > *,
+.experience-shell,
+.workspace-shell,
+.workspace,
+.workspace-main,
+.main-content,
+.content-area {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Main application shell */
+.experience-shell,
+.workspace-shell,
+.workspace {
+  display: flex;
+  width: 100%;
+  min-height: 100dvh;
+  overflow-x: clip;
+}
+
+/* Sidebar: fixed viewport height, independently scrollable. */
+.experience-shell .sidebar,
+.workspace .sidebar,
+aside.sidebar {
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  flex: 0 0 var(--mf-sidebar-expanded);
+  width: var(--mf-sidebar-expanded);
+  min-width: var(--mf-sidebar-expanded);
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  transition:
+    width 180ms ease,
+    min-width 180ms ease,
+    flex-basis 180ms ease;
+}
+
+/* Main column must grow into the width released by the sidebar. */
+.experience-shell .main,
+.experience-shell .workspace-main,
+.experience-shell .main-content,
+.workspace .main,
+.workspace .workspace-main,
+.workspace .main-content {
+  flex: 1 1 0%;
+  width: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+/* Main content should use the available width rather than a
+   narrow fixed width or an oversized fixed left margin. */
+.experience-shell .content,
+.experience-shell .page-content,
+.workspace .content,
+.workspace .page-content {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin-inline: auto;
+  padding:
+    var(--mf-content-padding-y)
+    var(--mf-content-padding-x)
+    36px;
+}
+
+/* Keep the topbar inside the main column. */
+.experience-shell .topbar,
+.experience-shell .experience-topbar,
+.workspace .topbar {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.experience-shell .topbar > *,
+.experience-shell .experience-topbar > *,
+.workspace .topbar > * {
+  min-width: 0;
+}
+
+/* Collapsed state:
+   support common class names used by app shells. */
+.experience-shell.sidebar-collapsed .sidebar,
+.experience-shell.is-collapsed .sidebar,
+.workspace.sidebar-collapsed .sidebar,
+.workspace.is-collapsed .sidebar,
+.workspace-shell.sidebar-collapsed .sidebar,
+.workspace-shell.is-collapsed .sidebar {
+  flex-basis: var(--mf-sidebar-collapsed);
+  width: var(--mf-sidebar-collapsed);
+  min-width: var(--mf-sidebar-collapsed);
+}
+
+/* Hide navigation labels in collapsed mode, but retain icons.
+   These selectors only apply when the shell has a collapsed class. */
+.experience-shell.sidebar-collapsed .sidebar .nav-label,
+.experience-shell.sidebar-collapsed .sidebar .nav-text,
+.experience-shell.sidebar-collapsed .sidebar .nav-section-title,
+.experience-shell.sidebar-collapsed .sidebar .sidebar-description,
+.experience-shell.is-collapsed .sidebar .nav-label,
+.experience-shell.is-collapsed .sidebar .nav-text,
+.experience-shell.is-collapsed .sidebar .nav-section-title,
+.experience-shell.is-collapsed .sidebar .sidebar-description,
+.workspace.sidebar-collapsed .sidebar .nav-label,
+.workspace.sidebar-collapsed .sidebar .nav-text,
+.workspace.sidebar-collapsed .sidebar .nav-section-title,
+.workspace.is-collapsed .sidebar .nav-label,
+.workspace.is-collapsed .sidebar .nav-text,
+.workspace.is-collapsed .sidebar .nav-section-title,
+.workspace-shell.sidebar-collapsed .sidebar .nav-label,
+.workspace-shell.sidebar-collapsed .sidebar .nav-text,
+.workspace-shell.sidebar-collapsed .sidebar .nav-section-title,
+.workspace-shell.is-collapsed .sidebar .nav-label,
+.workspace-shell.is-collapsed .sidebar .nav-text,
+.workspace-shell.is-collapsed .sidebar .nav-section-title {
+  display: none !important;
+}
+
+/* Centre icons in the narrow rail. */
+.experience-shell.sidebar-collapsed .sidebar a,
+.experience-shell.sidebar-collapsed .sidebar button,
+.experience-shell.is-collapsed .sidebar a,
+.experience-shell.is-collapsed .sidebar button,
+.workspace.sidebar-collapsed .sidebar a,
+.workspace.sidebar-collapsed .sidebar button,
+.workspace.is-collapsed .sidebar a,
+.workspace.is-collapsed .sidebar button,
+.workspace-shell.sidebar-collapsed .sidebar a,
+.workspace-shell.sidebar-collapsed .sidebar button,
+.workspace-shell.is-collapsed .sidebar a,
+.workspace-shell.is-collapsed .sidebar button {
+  box-sizing: border-box;
+  justify-content: center;
+  gap: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Keep the brand area and toggle inside the sidebar in both states. */
+.experience-shell .sidebar-header,
+.experience-shell .sidebar-brand,
+.workspace .sidebar-header,
+.workspace .sidebar-brand,
+aside.sidebar .sidebar-header {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.experience-shell .sidebar-toggle,
+.experience-shell .sidebar-collapse,
+.experience-shell .sidebar-toggle-button,
+.workspace .sidebar-toggle,
+.workspace .sidebar-collapse,
+aside.sidebar .sidebar-toggle,
+aside.sidebar .sidebar-collapse {
+  flex: 0 0 auto;
+  z-index: 5;
+}
+
+/* Content sections and cards should shrink gracefully. */
+.experience-shell .content > *,
+.experience-shell .page-content > *,
+.workspace .content > *,
+.workspace .page-content > *,
+.experience-shell .page-header > *,
+.experience-shell .card > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.experience-shell .dashboard-grid,
+.experience-shell .home-grid,
+.experience-shell .stats-grid,
+.experience-shell .quick-actions,
+.experience-shell .card-grid,
+.workspace .dashboard-grid,
+.workspace .home-grid,
+.workspace .stats-grid,
+.workspace .quick-actions,
+.workspace .card-grid {
+  width: 100%;
+  min-width: 0;
+  grid-template-columns:
+    repeat(auto-fit, minmax(min(100%, 235px), 1fr));
+  gap: 18px;
+}
+
+.experience-shell .card,
+.experience-shell .panel,
+.experience-shell .dashboard-card,
+.experience-shell .quick-card,
+.workspace .card,
+.workspace .panel {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Tables scroll within their own container. */
+.experience-shell .table-wrap,
+.experience-shell .table-container,
+.experience-shell .table-responsive,
+.workspace .table-wrap,
+.workspace .table-container,
+.workspace .table-responsive {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* Tablet */
+@media (max-width: 1000px) {
+  :root {
+    --mf-content-padding-x: 20px;
+    --mf-content-padding-y: 22px;
+  }
+
+  .experience-shell .dashboard-grid,
+  .experience-shell .home-grid,
+  .experience-shell .stats-grid,
+  .experience-shell .quick-actions,
+  .experience-shell .card-grid,
+  .workspace .dashboard-grid,
+  .workspace .home-grid,
+  .workspace .stats-grid,
+  .workspace .quick-actions,
+  .workspace .card-grid {
+    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  }
+}
+
+/* Mobile: sidebar becomes an overlay and content uses the full width. */
+@media (max-width: 700px) {
+  :root {
+    --mf-content-padding-x: 14px;
+    --mf-content-padding-y: 18px;
+  }
+
+  .experience-shell,
+  .workspace-shell,
+  .workspace {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .experience-shell .sidebar,
+  .workspace .sidebar,
+  aside.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 30;
+    width: min(var(--mf-sidebar-expanded), 86vw);
+    min-width: 0;
+    max-width: 86vw;
+    height: 100dvh;
+    transform: translateX(-105%);
+    transition: transform 180ms ease;
+  }
+
+  .experience-shell.sidebar-open .sidebar,
+  .experience-shell.mobile-sidebar-open .sidebar,
+  .workspace.sidebar-open .sidebar,
+  .workspace.mobile-sidebar-open .sidebar,
+  .workspace-shell.sidebar-open .sidebar,
+  .workspace-shell.mobile-sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .experience-shell .main,
+  .experience-shell .workspace-main,
+  .experience-shell .main-content,
+  .workspace .main,
+  .workspace .workspace-main,
+  .workspace .main-content {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .experience-shell .content,
+  .experience-shell .page-content,
+  .workspace .content,
+  .workspace .page-content {
+    width: 100%;
+    padding:
+      var(--mf-content-padding-y)
+      var(--mf-content-padding-x)
+      28px;
+  }
+
+  .experience-shell .dashboard-grid,
+  .experience-shell .home-grid,
+  .experience-shell .stats-grid,
+  .experience-shell .quick-actions,
+  .experience-shell .card-grid,
+  .workspace .dashboard-grid,
+  .workspace .home-grid,
+  .workspace .stats-grid,
+  .workspace .quick-actions,
+  .workspace .card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* ==========================================================
+   MEMOFLO — FINAL SPACING AND ALIGNMENT REFINEMENT
+   Append after the existing CSS. Do not remove previous styles.
+   ========================================================== */
+
+:root {
+  --mf-sidebar-top-space: 14px;
+  --mf-page-top-space: 26px;
+  --mf-page-side-space: clamp(20px, 2.4vw, 36px);
+}
+
+/* Prevent the application shell from clipping its top content. */
+html,
+body,
+#app {
+  min-height: 100%;
+  overflow-x: clip;
+}
+
+.experience-shell,
+.workspace-shell,
+.workspace {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  height: auto;
+  align-items: flex-start;
+}
+
+/* Give the sidebar its own top breathing room.
+   Keep the full-height scroll area so its bottom remains accessible. */
+.experience-shell .sidebar,
+.workspace .sidebar,
+aside.sidebar {
+  box-sizing: border-box;
+  height: 100dvh;
+  max-height: 100dvh;
+  padding-top: var(--mf-sidebar-top-space);
+  padding-bottom: 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+/* Do not let the brand or toggle be pushed above the visible area. */
+.experience-shell .sidebar-header,
+.experience-shell .sidebar-brand,
+.workspace .sidebar-header,
+.workspace .sidebar-brand,
+aside.sidebar .sidebar-header {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.experience-shell .sidebar-toggle,
+.experience-shell .sidebar-collapse,
+.experience-shell .sidebar-toggle-button,
+.workspace .sidebar-toggle,
+.workspace .sidebar-collapse,
+aside.sidebar .sidebar-toggle,
+aside.sidebar .sidebar-collapse {
+  position: relative;
+  top: auto;
+  flex-shrink: 0;
+  margin: 8px auto 12px;
+}
+
+/* The main column must use all the space released by the sidebar. */
+.experience-shell .main,
+.experience-shell .workspace-main,
+.experience-shell .main-content,
+.workspace .main,
+.workspace .workspace-main,
+.workspace .main-content {
+  box-sizing: border-box;
+  flex: 1 1 0%;
+  width: 0;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Keep the topbar at the top of the content column, with breathing room. */
+.experience-shell .topbar,
+.experience-shell .experience-topbar,
+.workspace .topbar {
+  box-sizing: border-box;
+  min-height: 76px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-inline: var(--mf-page-side-space);
+  margin: 0;
+}
+
+/* Centre the content within the available column, not the entire viewport.
+   This allows the layout to remain balanced in both sidebar states. */
+.experience-shell .content,
+.experience-shell .page-content,
+.workspace .content,
+.workspace .page-content {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 1600px;
+  margin-inline: auto;
+  padding:
+    var(--mf-page-top-space)
+    var(--mf-page-side-space)
+    40px;
+}
+
+/* Avoid accidentally shrinking the page's children when the sidebar opens. */
+.experience-shell .content > *,
+.experience-shell .page-content > *,
+.workspace .content > *,
+.workspace .page-content > * {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Cards remain evenly aligned and fill available space naturally. */
+.experience-shell .dashboard-grid,
+.experience-shell .home-grid,
+.experience-shell .stats-grid,
+.experience-shell .quick-actions,
+.experience-shell .card-grid,
+.workspace .dashboard-grid,
+.workspace .home-grid,
+.workspace .stats-grid,
+.workspace .quick-actions,
+.workspace .card-grid {
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, 245px), 1fr)
+  );
+  align-items: stretch;
+  gap: 20px;
+}
+
+/* Collapsed sidebar: remove excess width, preserve vertical spacing. */
+.experience-shell.sidebar-collapsed .sidebar,
+.experience-shell.is-collapsed .sidebar,
+.workspace.sidebar-collapsed .sidebar,
+.workspace.is-collapsed .sidebar,
+.workspace-shell.sidebar-collapsed .sidebar,
+.workspace-shell.is-collapsed .sidebar {
+  flex: 0 0 var(--mf-sidebar-collapsed);
+  width: var(--mf-sidebar-collapsed);
+  min-width: var(--mf-sidebar-collapsed);
+  padding-inline: 6px;
+  padding-top: var(--mf-sidebar-top-space);
+}
+
+/* Keep collapsed navigation icons centred without clipping the toggle. */
+.experience-shell.sidebar-collapsed .sidebar a,
+.experience-shell.sidebar-collapsed .sidebar button,
+.experience-shell.is-collapsed .sidebar a,
+.experience-shell.is-collapsed .sidebar button,
+.workspace.sidebar-collapsed .sidebar a,
+.workspace.sidebar-collapsed .sidebar button,
+.workspace.is-collapsed .sidebar a,
+.workspace.is-collapsed .sidebar button,
+.workspace-shell.sidebar-collapsed .sidebar a,
+.workspace-shell.sidebar-collapsed .sidebar button,
+.workspace-shell.is-collapsed .sidebar a,
+.workspace-shell.is-collapsed .sidebar button {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  margin-inline: auto;
+}
+
+/* Smaller screens */
+@media (max-width: 1000px) {
+  :root {
+    --mf-page-top-space: 22px;
+    --mf-page-side-space: 20px;
+  }
+
+  .experience-shell .dashboard-grid,
+  .experience-shell .home-grid,
+  .experience-shell .stats-grid,
+  .experience-shell .quick-actions,
+  .experience-shell .card-grid,
+  .workspace .dashboard-grid,
+  .workspace .home-grid,
+  .workspace .stats-grid,
+  .workspace .quick-actions,
+  .workspace .card-grid {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  :root {
+    --mf-page-top-space: 18px;
+    --mf-page-side-space: 14px;
+  }
+
+  .experience-shell .sidebar,
+  .workspace .sidebar,
+  aside.sidebar {
+    padding-top: 12px;
+  }
+
+  .experience-shell .topbar,
+  .experience-shell .experience-topbar,
+  .workspace .topbar {
+    min-height: 68px;
+    padding-inline: 14px;
+  }
+
+  .experience-shell .content,
+  .experience-shell .page-content,
+  .workspace .content,
+  .workspace .page-content {
+    max-width: 100%;
+    padding-bottom: 28px;
+  }
+
+  .experience-shell .dashboard-grid,
+  .experience-shell .home-grid,
+  .experience-shell .stats-grid,
+  .experience-shell .quick-actions,
+  .experience-shell .card-grid,
+  .workspace .dashboard-grid,
+  .workspace .home-grid,
+  .workspace .stats-grid,
+  .workspace .quick-actions,
+  .workspace .card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+

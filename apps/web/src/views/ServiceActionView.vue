@@ -235,3 +235,10 @@ onMounted(load);
     </template>
   </div>
 </template>
+
+<style scoped>
+.service-action-form { width:100%; box-sizing:border-box; gap:17px; }
+.service-action-form .form-two-col { align-items:start; }
+.service-form-note { margin:-5px 0 0; padding:12px 14px; border:1px solid var(--mf-border); border-radius:10px; color:var(--mf-muted); background:var(--mf-surface-soft); font-size:12px; line-height:1.55; }
+@media(max-width:680px) { .service-action-form { padding:18px; } .service-action-form .form-two-col { grid-template-columns:minmax(0,1fr); } }
+</style>

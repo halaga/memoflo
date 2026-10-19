@@ -126,3 +126,9 @@ onMounted(load);
     </template>
   </div>
 </template>
+
+<style scoped>
+.service-guide-steps { margin:15px 0 0; padding-left:21px; color:var(--mf-muted); font-size:13px; line-height:1.7; }
+.service-guide-steps li { padding-left:4px; margin:5px 0; }
+.service-info-panel h2 { line-height:1.35; }
+</style>
