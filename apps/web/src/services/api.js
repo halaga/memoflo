@@ -588,8 +588,31 @@ export const api = {
     return request(`/procurement/${id}/action`, { method: "POST", body: JSON.stringify(data) });
   },
 
-  listServiceRequests() {
-    return request("/service-requests");
+  listServiceRequests(filters = {}) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") params.set(key, value);
+    });
+    const query = params.toString();
+    return request(`/service-requests${query ? `?${query}` : ""}`);
+  },
+
+  getServiceRequest(id) {
+    return request(`/service-requests/${id}`);
+  },
+
+  addServiceRequestComment(id, message) {
+    return request(`/service-requests/${id}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    });
+  },
+
+  updateServiceRequest(id, data) {
+    return request(`/service-requests/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
   },
 
   createServiceRequest(data) {
