@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { api, normalizeList } from "../../services/api";
 
@@ -13,6 +13,14 @@ const employees = ref([]);
 
 const loading = ref(false);
 const loadingData = ref(true);
+const eligibleServices = computed(() => services.value.filter((service) => {
+  const slug = String(service.slug || "").toLowerCase();
+  const name = String(service.name || "").toLowerCase();
+  const action = String(service.actionType || "").toLowerCase();
+  if (form.value.memoType === "approval") return /memo|approval|communication/.test(`${slug} ${name} ${service.category || ""}`) && !/it support|maintenance|software installation|internet subscription/.test(name);
+  if (form.value.memoType === "request") return action !== "it-request" && !/it support|maintenance/.test(name) && action !== "procurement";
+  return false;
+}));
 const error = ref("");
 
 const form = ref({
@@ -44,6 +52,12 @@ async function loadFormData() {
     if (requestedService) {
       const match = services.value.find((item) => String(item._id) === requestedService || String(item.slug) === requestedService);
       if (match) {
+        const slug = String(match.slug || "").toLowerCase();
+        if (/business-purchase|laptop-request/.test(slug) || match.actionType === "procurement") {
+          router.replace({ path: "/procurement/requests/new" });
+          return;
+        }
+        form.value.memoType = /approval/.test(slug) ? "approval" : "request";
         form.value.businessService = match._id;
         if (!form.value.title) form.value.title = `${match.name} request`;
       }
@@ -84,6 +98,12 @@ watch(
   () => form.value.businessService,
   applyServiceDefaults
 );
+watch(() => form.value.memoType, () => {
+  if (form.value.businessService && !eligibleServices.value.some((item) => String(item._id) === String(form.value.businessService))) {
+    form.value.businessService = "";
+    form.value.workflow = "";
+  }
+});
 
 async function submit() {
   error.value = "";
@@ -210,7 +230,7 @@ onMounted(loadFormData);
             >
               <option value="">Select a service</option>
               <option
-                v-for="service in services"
+                v-for="service in eligibleServices"
                 :key="service._id"
                 :value="service._id"
               >

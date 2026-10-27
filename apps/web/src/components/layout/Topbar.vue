@@ -6,6 +6,7 @@ import AppIcon from "../ui/AppIcon.vue";
 
 const route = useRoute();
 const router = useRouter();
+const emit = defineEmits(["toggle-mobile"]);
 const employee = computed(() => getSavedEmployee());
 const unread = ref(0);
 const search = ref(String(route.query.q || ""));
@@ -34,6 +35,17 @@ async function loadNotifications() {
   } catch {
     unread.value = 0;
   }
+}
+
+function goHome() {
+  if (route.path === "/home") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.querySelector(".content")?.scrollTo({ top: 0, behavior: "smooth" });
+  } else router.push("/home");
+}
+function goBack() {
+  if (window.history.length > 1) router.back();
+  else router.push("/home");
 }
 
 function runSearch() {
@@ -69,6 +81,9 @@ onMounted(() => {
 <template>
   <header class="topbar experience-topbar">
     <div class="topbar-title">
+      <button class="mobile-nav-trigger" type="button" aria-label="Open navigation menu" title="Open navigation menu" @click="emit('toggle-mobile')"><AppIcon name="menu" :size="21" /></button>
+      <button class="topbar-back-trigger" type="button" aria-label="Go back" title="Go back" @click="goBack"><AppIcon name="chevron" :size="18" /></button>
+      <button class="topbar-home-trigger" type="button" aria-label="Go to Home" title="Go to Home" @click="goHome"><AppIcon name="home" :size="18" /></button>
       <div><span class="topbar-context">MEMOFLO · WORKSPACE</span><h2>{{ title }}</h2></div>
     </div>
 
@@ -93,3 +108,24 @@ onMounted(() => {
     </div>
   </header>
 </template>
+
+<style scoped>
+.topbar-title { display:flex; align-items:center; gap:7px; min-width:0; }
+.topbar-title > div { min-width:0; }
+.mobile-nav-trigger,.topbar-back-trigger,.topbar-home-trigger { display:inline-grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border:1px solid var(--mf-border, #e2e8f0); border-radius:10px; background:var(--mf-surface, #fff); color:var(--mf-text, #0f172a); cursor:pointer; }
+.topbar-back-trigger svg { transform:rotate(180deg); }
+.mobile-nav-trigger { display:none; }
+@media(max-width:900px) {
+ .mobile-nav-trigger { display:inline-grid; }
+ .topbar-back-trigger { display:none; }
+ .topbar-home-trigger { display:inline-grid; }
+ .topbar-title { gap:5px; }
+ .topbar-context { display:none; }
+ .topbar-title h2 { font-size:15px; margin:0; }
+}
+@media(max-width:560px) {
+ .topbar-home-trigger { display:none; }
+ .topbar-title { flex:0 0 auto; }
+ .topbar-title h2 { max-width:95px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+}
+</style>

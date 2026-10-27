@@ -36,7 +36,12 @@ function active(path) {
   return route.path === path || route.path.startsWith(`${path}/`);
 }
 function go(path) {
-  router.push(path);
+  if (route.path === path || (path === "/home" && route.path === "/home")) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.querySelector(".content")?.scrollTo({ top: 0, behavior: "smooth" });
+  } else {
+    router.push(path);
+  }
   emit("toggle-mobile", false);
 }
 </script>

@@ -65,7 +65,7 @@ onBeforeUnmount(() => window.removeEventListener("resize", handleResize));
     <Sidebar :collapsed="sidebarCollapsed" :mobile-open="mobileOpen" @toggle-collapse="toggleCollapse" @toggle-mobile="toggleMobile" />
     <button v-if="mobileOpen" class="sidebar-backdrop" type="button" aria-label="Close navigation" @click="toggleMobile(false)"></button>
     <main class="main">
-      <Topbar />
+      <Topbar @toggle-mobile="toggleMobile()" />
       <section class="content"><router-view /></section>
     </main>
   </div>
