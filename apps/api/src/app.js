@@ -27,6 +27,7 @@ import designationRoutes from "./modules/organization/designation/designation.ro
 import sbuRoutes from "./modules/organization/sbu/sbu.routes.js";
 import workflowRoutes from "./modules/workflow/workflow.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
+import announcementRoutes from "./modules/announcement/announcement.routes.js";
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/procurement", procurementRoutes);
 app.use("/api/service-requests", serviceRequestRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/api/announcements", announcementRoutes);
 
 const storageRoot = path.resolve(process.env.MEMOFLO_STORAGE_PATH || "storage");
 app.use("/uploads/avatars", express.static(path.join(storageRoot, "public", "avatars"), { fallthrough: false, maxAge: "1d" }));

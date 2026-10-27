@@ -39,7 +39,12 @@ class ServiceRequestService {
     if (!payload.details?.trim()) throw fail("Please describe the issue or request.");
     const count = await ServiceRequest.countDocuments({ company: companyId });
     const ticketNo = `IT-${new Date().getFullYear()}-${String(count + 1).padStart(5, "0")}`;
-    const category = String(payload.category || service?.category || "General").trim().slice(0, 80);
+    const requestedAction = String(payload.metadata?.actionType || "").toLowerCase();
+    const serviceCategory = String(service?.category || "").toLowerCase();
+    const serviceSlug = String(service?.slug || "").toLowerCase();
+    const isITService = service ? (serviceCategory === "it" && (requestedAction === "it-request" || ["it-support", "it-maintenance", "software-installation", "internet-subscription"].includes(serviceSlug))) : requestedAction === "it-request";
+    if (!isITService) throw fail("IT tickets can only be created from an IT Support or IT Maintenance service. Use the appropriate Workplace or Business Purchase service for non-IT requests.", 400);
+    const category = "IT";
     const priority = ["Low", "Normal", "High", "Urgent", "Critical"].includes(payload.priority) ? payload.priority : "Normal";
     const firstActivity = { actor: requesterId, actorName: displayName(actor), type: "created", message: "Ticket created and added to the support queue.", toStatus: "Submitted" };
     const request = await ServiceRequest.create({
@@ -53,11 +58,11 @@ class ServiceRequestService {
 
   async list(companyId, actorId, filters = {}) {
     const actor = await getActor(companyId, actorId);
-    const query = { company: companyId, isActive: true, deletedAt: null };
+    const query = { company: companyId, category: "IT", isActive: true, deletedAt: null };
     if (!isManager(actor)) query.requester = actorId;
     else if (filters.mode === "mine") query.requester = actorId;
     if (filters.status && TICKET_STATUSES.includes(filters.status)) query.status = filters.status;
-    if (filters.category) query.category = String(filters.category).slice(0, 80);
+    if (filters.category && String(filters.category).toUpperCase() !== "IT") query.category = String(filters.category).slice(0, 80);
     if (filters.q) query.$or = [
       { ticketNo: new RegExp(escapeRegex(String(filters.q).slice(0, 80)), "i") },
       { title: new RegExp(escapeRegex(String(filters.q).slice(0, 80)), "i") },

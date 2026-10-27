@@ -8,6 +8,7 @@ const employee = computed(() => getSavedEmployee());
 const workspace = ref(null);
 const memos = ref([]);
 const notifications = ref([]);
+const announcements = ref([]);
 const loading = ref(true);
 const greeting = computed(() => {
   const hour = new Date().getHours();
@@ -29,6 +30,7 @@ async function load() {
     api.getCompanyWorkspace(),
     api.listMemos(),
     api.listNotifications(),
+    api.listAnnouncements(),
   ]);
   if (results[0].status === "fulfilled") {
     workspace.value = results[0].value?.data || results[0].value;
@@ -40,6 +42,9 @@ async function load() {
   }
   if (results[2].status === "fulfilled") {
     notifications.value = normalizeList(results[2].value, ["notifications"]);
+  }
+  if (results[3].status === "fulfilled") {
+    announcements.value = normalizeList(results[3].value, ["announcements"]).filter(a => a.status === "Published");
   }
   loading.value = false;
 }
@@ -61,6 +66,7 @@ onMounted(load);
         <p>Workflow, simplified. Find people, services, memos, assets and everything your team needs from the search at the top.</p>
       </div>
       <div class="welcome-actions">
+        <RouterLink to="/announcements" class="action-secondary">Announcements</RouterLink>
         <RouterLink to="/memos/create" class="action-primary">
           <AppIcon name="plus" :size="18" /> Create a memo
         </RouterLink>
@@ -68,6 +74,13 @@ onMounted(load);
           <AppIcon name="grid" :size="18" /> Browse services
         </RouterLink>
       </div>
+    </section>
+
+    <section v-if="announcements.length" class="mf-announcement-strip" aria-label="Company announcements">
+      <span class="mf-announcement-label">ANNOUNCEMENTS</span>
+      <div class="mf-announcement-window"><div class="mf-announcement-track">
+        <template v-for="copy in 2" :key="copy"><a v-for="item in announcements" :key="copy + '-' + item._id" class="mf-announcement-item" :href="item.link || undefined" :target="item.link ? '_blank' : undefined" :rel="item.link ? 'noopener noreferrer' : undefined"><strong>{{ item.title }}</strong><span>{{ item.body }}</span><time v-if="item.publishedAt">{{ formatDate(item.publishedAt) }}</time></a></template>
+      </div></div>
     </section>
 
     <section class="home-stat-grid">
@@ -140,3 +153,7 @@ onMounted(load);
     </section>
   </div>
 </template>
+
+<style scoped>
+.mf-announcement-strip{display:flex;align-items:center;gap:14px;min-width:0;margin:0 0 22px;padding:12px 15px;border:1px solid var(--mf-border);border-radius:14px;background:var(--mf-surface);overflow:hidden}.mf-announcement-label{flex:0 0 auto;padding:7px 9px;border-radius:8px;background:color-mix(in srgb,var(--mf-primary) 12%,var(--mf-surface));color:var(--mf-primary);font-size:9px;font-weight:900;letter-spacing:.08em}.mf-announcement-window{min-width:0;flex:1;overflow:hidden}.mf-announcement-track{display:flex;width:max-content;animation:mf-announcement-scroll 55s linear infinite}.mf-announcement-window:hover .mf-announcement-track{animation-play-state:paused}.mf-announcement-item{display:inline-flex;align-items:center;gap:9px;padding:0 30px 0 0;color:var(--mf-text);text-decoration:none;white-space:nowrap;font-size:12px}.mf-announcement-item strong{color:var(--mf-primary)}.mf-announcement-item span{max-width:48vw;overflow:hidden;text-overflow:ellipsis}.mf-announcement-item time{color:var(--mf-muted);font-size:10px}@keyframes mf-announcement-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}@media(max-width:600px){.mf-announcement-strip{align-items:flex-start;flex-direction:column;gap:8px}.mf-announcement-item{font-size:11px}.mf-announcement-item span{max-width:70vw}}@media(prefers-reduced-motion:reduce){.mf-announcement-track{animation:none;flex-wrap:wrap;width:auto}}
+</style>

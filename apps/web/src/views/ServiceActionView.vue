@@ -107,6 +107,13 @@ const employee = computed(() => getSavedEmployee());
 function back() {
   router.push(`/services/${route.params.slug}`);
 }
+function scrollToTicket() {
+  document.getElementById("it-ticket-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.setTimeout(() => document.querySelector("#it-ticket-form input")?.focus({ preventScroll: true }), 350);
+}
+function scrollToTracker() {
+  document.querySelector(".it-ticket-tracker")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
 async function load() {
   loading.value = true;
@@ -192,7 +199,7 @@ async function loadTickets() {
   ticketsLoading.value = true;
   ticketError.value = "";
   try {
-    tickets.value = normalizeList(await api.listServiceRequests(), ["requests", "serviceRequests"]);
+    tickets.value = normalizeList(await api.listServiceRequests({ category: "IT" }), ["requests", "serviceRequests"]);
     if (selectedTicket.value?._id) {
       const refreshed = tickets.value.find((item) => item._id === selectedTicket.value._id);
       if (refreshed) selectedTicket.value = refreshed;
@@ -221,7 +228,7 @@ async function submitItTicket() {
       serviceId: service.value?._id,
       title: itForm.value.title.trim(),
       details: itForm.value.details.trim(),
-      category: itForm.value.category,
+      category: "IT",
       priority: itForm.value.priority,
       metadata: {
         actionType: "it-request",
@@ -360,7 +367,7 @@ async function submit() {
   }
 }
 
-onMounted(load);
+onMounted(async () => { await load(); if (route.query.section === "ticket" || route.query.action === "ticket") { requestAnimationFrame(() => { document.getElementById("it-ticket-form")?.scrollIntoView({ behavior: "smooth", block: "start" }); document.querySelector("#it-ticket-form input")?.focus({ preventScroll: true }); }); } });
 </script>
 
 <template>
@@ -376,7 +383,7 @@ onMounted(load);
     </section>
     <template v-else-if="service">
       <header class="page-intro-row service-action-header">
-        <div><span class="eyebrow">{{ service.category }}</span><h1>{{ service.name }}</h1><p>Complete the details below. MemoFlo will send it to the relevant recipient or request queue.</p></div>
+        <div><span class="eyebrow">{{ service.category }}</span><h1>{{ service.name }}</h1><p>Complete the details below. MemoFlo will send it to the relevant recipient or request queue.</p><div class="service-quick-actions"><button v-if="action === 'it-request'" type="button" class="action-primary" @click="scrollToTicket()">Log a Ticket</button><button v-if="action === 'it-request'" type="button" class="action-secondary" @click="scrollToTracker()">Track Tickets</button></div></div>
       </header>
       <div v-if="!enabled" class="service-disabled-panel"><strong>Service unavailable</strong><p>This service is disabled for your company. Contact your administrator.</p></div>
       <template v-else-if="action === 'it-request'">
@@ -487,3 +494,5 @@ onMounted(load);
 @media(max-width:1000px){.it-center-intro{align-items:flex-start;flex-direction:column}.it-center-stats{width:100%}.it-section-heading{align-items:flex-start;flex-direction:column}.it-section-heading>.it-search{max-width:none;width:100%}.it-ticket-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.it-center-section{padding:16px;margin:14px 0}.it-center-intro{padding:20px}.it-center-stats{grid-template-columns:repeat(3,minmax(0,1fr))}.it-center-stats div{min-width:0;padding:10px}.it-center-stats strong{font-size:20px}.it-solution-grid,.it-form-grid{grid-template-columns:1fr}.it-full-width{grid-column:auto}.it-form-footer,.it-ticket-comment{align-items:stretch;flex-direction:column}.it-form-footer .action-primary,.it-ticket-comment .action-primary{width:100%;justify-content:center}.it-ticket-tools{flex-direction:column}.it-ticket-tools select{width:100%;flex-basis:auto}.it-ticket-row{flex-wrap:wrap;gap:9px}.it-ticket-summary{flex-basis:calc(100% - 55px)}.it-ticket-row>.it-ticket-status{margin-left:48px}.it-ticket-detail{padding:13px}.it-ticket-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.it-ticket-description dl{grid-template-columns:repeat(2,minmax(0,1fr))}.it-support-controls{align-items:stretch;flex-direction:column}.it-support-controls .form-field{width:100%}.it-support-controls>small{padding:0}.it-activity-meta{flex-direction:column;gap:3px}}
 </style>
+
+<style scoped>.service-quick-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.service-action-page{min-width:0;max-width:100%;overflow-x:clip}.service-action-page :deep(*){min-width:0;box-sizing:border-box}.service-action-page :deep(input),.service-action-page :deep(select),.service-action-page :deep(textarea){max-width:100%}.service-action-page :deep(#it-ticket-form),.service-action-page :deep(.it-ticket-tracker){scroll-margin-top:90px}@media(max-width:700px){.service-action-page{padding-left:12px;padding-right:12px}.service-action-page :deep(.service-action-form),.service-action-page :deep(.it-center-section),.service-action-page :deep(.workspace-panel){max-width:100%;overflow-wrap:anywhere}.service-action-page :deep(.it-center-intro){gap:16px;padding:16px}.service-action-page :deep(.it-section-heading){gap:12px}.service-action-page :deep(.it-search){min-width:0;width:100%}.service-action-page :deep(.it-ticket-detail-grid),.service-action-page :deep(.it-ticket-description dl){grid-template-columns:repeat(2,minmax(0,1fr))}.service-quick-actions>*{flex:1;justify-content:center}}</style>

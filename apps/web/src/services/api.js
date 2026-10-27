@@ -619,6 +619,11 @@ export const api = {
     return request("/service-requests", { method: "POST", body: JSON.stringify(data) });
   },
 
+  listAnnouncements() { return request("/announcements"); },
+  createAnnouncement(data) { return request("/announcements", { method: "POST", body: JSON.stringify(data) }); },
+  updateAnnouncement(id, data) { return request(`/announcements/${id}`, { method: "PATCH", body: JSON.stringify(data) }); },
+  archiveAnnouncement(id) { return request(`/announcements/${id}`, { method: "DELETE" }); },
+
   listNotifications() {
     return request("/notifications");
   },

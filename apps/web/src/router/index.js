@@ -240,6 +240,8 @@ const routes = [
         },
       },
 
+      { path: "announcements", name: "announcements", component: () => import("../views/AnnouncementsView.vue") },
+
       {
         path: "notifications",
         name: "notifications",

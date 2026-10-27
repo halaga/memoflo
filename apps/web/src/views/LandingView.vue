@@ -10,9 +10,9 @@
         <RouterLink to="/login" class="marketing-link">
           Login
         </RouterLink>
-        <button class="marketing-button" type="button">
+        <RouterLink to="/login" class="marketing-button marketing-button-link">
           Request a demo
-        </button>
+        </RouterLink>
       </div>
     </nav>
 
@@ -26,9 +26,9 @@
         </p>
 
         <div class="marketing-actions">
-          <button class="marketing-button" type="button">
+          <RouterLink to="/login" class="marketing-button marketing-button-link">
             Get started
-          </button>
+          </RouterLink>
           <RouterLink to="/login" class="marketing-link">
             Sign in to a company workspace →
           </RouterLink>
