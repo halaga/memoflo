@@ -5,6 +5,7 @@ class AuthRepository {
     const employee = await Employee.findOne({
       email: email.toLowerCase(),
       active: true,
+      isActive: true,
       loginEnabled: true,
       employmentStatus: "Active",
       deletedAt: null,
@@ -40,6 +41,7 @@ class AuthRepository {
     return Employee.findOne({
       _id: id,
       active: true,
+      isActive: true,
       loginEnabled: true,
       employmentStatus: "Active",
       deletedAt: null,
