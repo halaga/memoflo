@@ -2,14 +2,70 @@ import WorkflowRepository from "./workflow.repository.js";
 import WorkflowResolver from "./workflow.resolver.js";
 import WorkflowEngine from "./workflow.engine.js";
 import BusinessService from "../business-service/businessService.model.js";
+import Position from "../position/position.model.js";
+import WorkflowStep from "./workflowStep.model.js";
 import {
   validateCreateWorkflow,
   validateCreateWorkflowStep,
 } from "./workflow.validator.js";
 
+async function validateBusinessService(companyId, businessServiceId) {
+  if (!businessServiceId) return;
+
+  const service = await BusinessService.findOne({
+    _id: businessServiceId,
+    company: companyId,
+    isActive: true,
+    active: true,
+    deletedAt: null,
+  }).select("_id").lean();
+
+  if (!service) {
+    throw new Error("Business service not found in this company");
+  }
+}
+
+async function validateWorkflowPosition(companyId, positionId) {
+  if (!positionId) {
+    throw new Error("Workflow position is required");
+  }
+
+  const position = await Position.findOne({
+    _id: positionId,
+    company: companyId,
+    isActive: true,
+    active: true,
+    isWorkflowNode: true,
+    deletedAt: null,
+  }).select("_id").lean();
+
+  if (!position) {
+    throw new Error("Workflow position not found in this company");
+  }
+}
+
+function safeWorkflowUpdates(payload = {}) {
+  const updates = { ...payload };
+  // Tenant ownership and lifecycle fields are server-controlled.
+  for (const field of ["_id", "company", "createdBy", "isActive", "deletedAt"]) {
+    delete updates[field];
+  }
+  return updates;
+}
+
+function safeStepUpdates(payload = {}) {
+  const updates = { ...payload };
+  // A step must remain attached to the workflow selected by the route.
+  for (const field of ["_id", "workflow", "isActive", "deletedAt", "createdBy"]) {
+    delete updates[field];
+  }
+  return updates;
+}
+
 class WorkflowService {
   async createWorkflow(companyId, payload) {
     validateCreateWorkflow(payload);
+    await validateBusinessService(companyId, payload.businessService);
 
     const workflow = await WorkflowRepository.create({
       ...payload,
@@ -54,13 +110,18 @@ class WorkflowService {
       throw new Error("Workflow not found");
     }
 
+    const updates = safeWorkflowUpdates(payload);
+    if (updates.businessService !== undefined) {
+      await validateBusinessService(companyId, updates.businessService);
+    }
+
     const workflow = await WorkflowRepository.update(
       id,
       companyId,
-      payload
+      updates
     );
 
-    if (payload.businessService !== undefined) {
+    if (updates.businessService !== undefined) {
       await BusinessService.updateMany(
         {
           company: companyId,
@@ -69,10 +130,10 @@ class WorkflowService {
         { workflow: null }
       );
 
-      if (payload.businessService) {
+      if (updates.businessService) {
         await BusinessService.findOneAndUpdate(
           {
-            _id: payload.businessService,
+            _id: updates.businessService,
             company: companyId,
             isActive: true,
             active: true,
@@ -127,6 +188,7 @@ class WorkflowService {
       ...payload,
       order,
     });
+    await validateWorkflowPosition(companyId, payload.position);
 
     if (steps.some((step) => Number(step.order) === order)) {
       await WorkflowRepository.shiftStepsFromOrder(
@@ -172,6 +234,10 @@ class WorkflowService {
           ? Number(payload.order)
           : existing.order,
     });
+    await validateWorkflowPosition(
+      companyId,
+      payload.position !== undefined ? payload.position : existing.position
+    );
 
     if (
       payload.order !== undefined &&
@@ -186,7 +252,7 @@ class WorkflowService {
     const step = await WorkflowRepository.updateStep(
       workflowId,
       stepId,
-      payload
+      safeStepUpdates(payload)
     );
 
     if (!step) {
@@ -206,10 +272,22 @@ class WorkflowService {
       throw new Error("Workflow not found");
     }
 
+    const existing = await WorkflowStep.findOne({
+      _id: stepId,
+      workflow: workflowId,
+      isActive: false,
+    });
+    if (!existing) {
+      throw new Error("Workflow step not found");
+    }
+
+    const positionId = payload.position !== undefined ? payload.position : existing.position;
+    await validateWorkflowPosition(companyId, positionId);
+
     const step = await WorkflowRepository.reactivateStep(
       workflowId,
       stepId,
-      payload
+      safeStepUpdates(payload)
     );
 
     if (!step) {
