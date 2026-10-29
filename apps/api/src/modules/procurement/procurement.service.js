@@ -187,8 +187,21 @@ class ProcurementService {
       .populate("requester", "_id firstName lastName")
       .populate("requestingSbu", "_id name head");
     if (!request) throw fail("Procurement request not found", 404);
-    const actor = await Employee.findOne({ _id: actorId, company: companyId }).select("_id firstName lastName email");
-    if (!actor) throw fail("Actor not found", 404);
+    const actor = await Employee.findOne({
+      _id: actorId,
+      company: companyId,
+      active: true,
+      isActive: true,
+      employmentStatus: "Active",
+      loginEnabled: true,
+    }).select("_id firstName lastName email");
+    if (!actor) throw fail("Active actor not found", 404);
+
+    // Every workflow action, including rejection, is restricted to the employee
+    // currently assigned to this request. Keep this check before branching on action.
+    if (String(request.currentHandler || "") !== String(actorId)) {
+      throw fail("This procurement request is not assigned to you.", 403);
+    }
 
     const reject = async (reason) => {
       if (!reason?.trim()) throw fail("A rejection reason is required.");
@@ -203,8 +216,6 @@ class ProcurementService {
     };
 
     if (action === "reject") return reject(payload.comment || payload.reason);
-
-    if (String(request.currentHandler) !== String(actorId)) throw fail("This procurement request is not assigned to you.", 403);
 
     if (request.stage === STAGES.SBU_HEAD && action === "minute") {
       if (!payload.comment?.trim()) throw fail("The SBU Head minute/comment is required.");

@@ -255,7 +255,7 @@ class LeaveService {
       .lean();
   }
 
-  async getRequest(id, company) {
+  async getRequest(id, company, actorId) {
     const request = await LeaveRequest.findOne({ _id: id, company, isActive: true, deletedAt: null })
       .populate("employee", "_id firstName lastName email employeeNo position reportsTo")
       .populate("leaveType")
@@ -266,6 +266,25 @@ class LeaveService {
       .lean();
 
     if (!request) throw fail("Leave request not found", 404);
+    if (!actorId) throw fail("You are not authorized to view this leave request", 403);
+
+    // A company boundary alone is insufficient: leave reasons and approval history
+    // are personal employee records. Restrict detail access to the requester,
+    // current approver, or an active employee with an explicit leave oversight role.
+    const isRequester = String(request.employee?._id || request.employee) === String(actorId);
+    const isApprover = String(request.approver?._id || request.approver || "") === String(actorId);
+    if (!isRequester && !isApprover) {
+      const actor = await Employee.findOne({
+        _id: actorId,
+        company,
+        active: true,
+        employmentStatus: "Active",
+        deletedAt: null,
+      }).populate("role");
+      const permissions = actor?.role?.permissions || [];
+      const canViewAll = permissions.includes("leave.manage") || permissions.includes("leave.approve") || permissions.includes("*");
+      if (!canViewAll) throw fail("You are not authorized to view this leave request", 403);
+    }
 
     const events = await LeaveEvent.find({ company, leaveRequest: id })
       .populate("actor", "_id firstName lastName email")
@@ -322,7 +341,7 @@ class LeaveService {
       await request.save();
       await this.recordEvent({ company, leaveRequest: request._id, actor: actorId, type: "leave.hr_filed", title: "HR filed leave request", description: "HR recorded the approved leave request as filed.", fromStatus: "Approved", toStatus: "HR Filed", comment: cleanComment || null });
       await NotificationService.create({ company, recipient: request.employee._id, type: "leave", title: "Leave filed by HR", message: `Your ${request.leaveType.name} request has been filed by HR.`, link: `/leave/requests/${request._id}`, data: { resourceType: "leave", resourceId: request._id.toString(), stage: "HR" }, createdBy: actorId });
-      return this.getRequest(request._id, company);
+      return this.getRequest(request._id, company, actorId);
     }
 
     const normalized = decision === "approve" ? "Approved" : "Rejected";
@@ -340,7 +359,7 @@ class LeaveService {
       await LeaveBalance.updateOne({ _id: balance._id }, { $inc: { pending: -request.days } });
       await this.recordEvent({ company, leaveRequest: request._id, actor: actorId, type: "leave.rejected", title: "Leave request rejected", description: `The ${actorName} rejected the leave request.`, fromStatus, toStatus: "Rejected", comment: cleanComment, metadata: { stage: request.approvalStage } });
       await NotificationService.create({ company, recipient: request.employee._id, type: "leave", title: "Leave request rejected", message: `Your ${request.leaveType.name} leave request was rejected.`, link: `/leave/requests/${request._id}`, data: { resourceType: "leave", resourceId: request._id.toString() }, createdBy: actorId });
-      return this.getRequest(request._id, company);
+      return this.getRequest(request._id, company, actorId);
     }
 
     if (request.approvalStage === "SUPERVISOR") {
@@ -350,7 +369,7 @@ class LeaveService {
       await request.save();
       await this.recordEvent({ company, leaveRequest: request._id, actor: actorId, type: "leave.supervisor_approved", title: "Line manager approved", description: "The line manager consented and forwarded the request to the SBU Head.", fromStatus, toStatus: "Pending", comment: cleanComment || null, metadata: { nextStage: "SBU_HEAD" } });
       await NotificationService.create({ company, recipient: request.sbuHead, type: "leave", title: "Leave approval required — SBU Head", message: `${request.employee.firstName} ${request.employee.lastName}'s leave request is waiting for your approval.`, link: `/leave/requests/${request._id}`, data: { resourceType: "leave", resourceId: request._id.toString(), stage: "SBU_HEAD" }, createdBy: actorId });
-      return this.getRequest(request._id, company);
+      return this.getRequest(request._id, company, actorId);
     }
 
     request.sbuHeadDecisionAt = new Date();
@@ -367,7 +386,7 @@ class LeaveService {
     await this.recordEvent({ company, leaveRequest: request._id, actor: actorId, type: "leave.sbu_head_approved", title: "SBU Head approved", description: "The SBU Head approved the request. It is now ready for HR filing.", fromStatus, toStatus: "Approved", comment: cleanComment || null, metadata: { nextStage: "HR" } });
     await NotificationService.create({ company, recipient: request.employee._id, type: "leave", title: "Leave approved — submit to HR", message: `Your ${request.leaveType.name} leave request has received line manager and SBU Head approval.`, link: `/leave/requests/${request._id}`, data: { resourceType: "leave", resourceId: request._id.toString(), stage: "HR" }, createdBy: actorId });
     await this.notifyHr(company, request, actorId);
-    return this.getRequest(request._id, company);
+    return this.getRequest(request._id, company, actorId);
   }
 
   async cancel(company, requestId, employeeId) {
@@ -382,7 +401,7 @@ class LeaveService {
     request.approver = null;
     await request.save();
     await this.recordEvent({ company, leaveRequest: request._id, actor: employeeId, type: "leave.cancelled", title: "Leave request cancelled", description: "The employee cancelled the leave request.", fromStatus, toStatus: "Cancelled" });
-    return this.getRequest(request._id, company);
+    return this.getRequest(request._id, company, employeeId);
   }
 }
 

@@ -1,16 +1,20 @@
 import Employee from "../employee/employee.model.js";
 
 class PermissionService {
-  /** Return current permissions only for an active employee's same-company role. */
-  async getEmployeePermissions(employeeId) {
-    const employee = await Employee.findOne({
+  /** Return only permissions from the active employee's role in their own company. */
+  async getEmployeePermissions(employeeId, companyId = null) {
+    const query = {
       _id: employeeId,
       active: true,
-      isActive: true,
       loginEnabled: { $ne: false },
       employmentStatus: "Active",
       deletedAt: null,
-    }).populate("role", "_id company permissions");
+    };
+    if (companyId) query.company = companyId;
+
+    const employee = await Employee.findOne(query)
+      .populate("role")
+      .select("_id company role active loginEnabled employmentStatus deletedAt");
 
     if (!employee) {
       const error = new Error("Employee not found or inactive");
@@ -18,33 +22,31 @@ class PermissionService {
       throw error;
     }
 
-    if (!employee.role) {
+    if (!employee.role) return [];
+
+    // A role reference must not grant permissions from another tenant.
+    const roleCompany = employee.role.company?.toString?.() || employee.role.company?.toString?.();
+    if (!roleCompany || roleCompany !== employee.company.toString() || employee.role.deletedAt) {
       return [];
     }
 
-    if (String(employee.role.company) !== String(employee.company)) {
-      const error = new Error("Employee role does not belong to this company");
-      error.status = 403;
-      throw error;
-    }
-
-    return employee.role.permissions || [];
+    return Array.isArray(employee.role.permissions) ? employee.role.permissions : [];
   }
 
-  async employeeHasPermission(employeeId, permission) {
-    const permissions = await this.getEmployeePermissions(employeeId);
+  async employeeHasPermission(employeeId, permission, companyId = null) {
+    const permissions = await this.getEmployeePermissions(employeeId, companyId);
     return permissions.includes(permission);
   }
 
-  async hasAnyPermission(employeeId, permissions = []) {
+  async hasAnyPermission(employeeId, permissions = [], companyId = null) {
     if (!permissions.length) return false;
-    const employeePermissions = await this.getEmployeePermissions(employeeId);
+    const employeePermissions = await this.getEmployeePermissions(employeeId, companyId);
     return permissions.some((permission) => employeePermissions.includes(permission));
   }
 
-  async hasAllPermissions(employeeId, permissions = []) {
+  async hasAllPermissions(employeeId, permissions = [], companyId = null) {
     if (!permissions.length) return false;
-    const employeePermissions = await this.getEmployeePermissions(employeeId);
+    const employeePermissions = await this.getEmployeePermissions(employeeId, companyId);
     return permissions.every((permission) => employeePermissions.includes(permission));
   }
 }

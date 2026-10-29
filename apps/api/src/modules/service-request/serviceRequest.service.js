@@ -20,6 +20,14 @@ async function getActor(companyId, actorId) {
   if (!actor) throw fail("Your employee account could not be found.", 404);
   return actor;
 }
+function redactInternalActivity(ticket, canSeeInternal) {
+  if (!ticket || canSeeInternal) return ticket;
+  const result = typeof ticket.toObject === "function" ? ticket.toObject() : { ...ticket };
+  if (Array.isArray(result.activity)) {
+    result.activity = result.activity.filter((entry) => !entry?.internal);
+  }
+  return result;
+}
 function populate(query) {
   return query.populate("service", "name slug category actionType routeKey")
     .populate("requester", "_id employeeNo firstName lastName email department position")
@@ -68,7 +76,8 @@ class ServiceRequestService {
       { title: new RegExp(escapeRegex(String(filters.q).slice(0, 80)), "i") },
       { details: new RegExp(escapeRegex(String(filters.q).slice(0, 80)), "i") },
     ];
-    return populate(ServiceRequest.find(query).sort({ updatedAt: -1 }).limit(200)).lean();
+    const tickets = await populate(ServiceRequest.find(query).sort({ updatedAt: -1 }).limit(200)).lean();
+    return tickets.map((ticket) => redactInternalActivity(ticket, isManager(actor)));
   }
 
   async get(id, companyId, actorId) {
@@ -77,7 +86,7 @@ class ServiceRequestService {
     const request = await populate(ServiceRequest.findOne({ _id: id, company: companyId, isActive: true, deletedAt: null }));
     if (!request) throw fail("Ticket not found.", 404);
     if (String(request.requester?._id || request.requester) !== String(actorId) && !isManager(actor)) throw fail("You do not have access to this ticket.", 403);
-    return request.toObject();
+    return redactInternalActivity(request, isManager(actor));
   }
 
   async comment(id, companyId, actorId, payload = {}) {

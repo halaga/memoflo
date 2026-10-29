@@ -16,7 +16,8 @@ export function authorize(...requiredPermissions) {
 
       const permissions =
         await PermissionService.getEmployeePermissions(
-          req.user.id
+          req.user.id,
+          req.user.company
         );
 
       const allowed = requiredPermissions.every(
@@ -52,7 +53,8 @@ export function authorizeAny(...requiredPermissions) {
 
       const permissions =
         await PermissionService.getEmployeePermissions(
-          req.user.id
+          req.user.id,
+          req.user.company
         );
 
       const allowed = requiredPermissions.some(
