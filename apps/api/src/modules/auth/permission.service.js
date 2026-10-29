@@ -1,52 +1,69 @@
 import Employee from "../employee/employee.model.js";
 
 class PermissionService {
-  /** Return only permissions from the active employee's role in their own company. */
-  async getEmployeePermissions(employeeId, companyId = null) {
-    const query = {
+  /**
+   * Resolve permissions only from an active employee's active role in the
+   * same company. Permissions themselves remain a global catalogue.
+   */
+  async getEmployeePermissions(employeeId) {
+    const employee = await Employee.findOne({
       _id: employeeId,
       active: true,
       loginEnabled: { $ne: false },
       employmentStatus: "Active",
+      isActive: true,
       deletedAt: null,
-    };
-    if (companyId) query.company = companyId;
-
-    const employee = await Employee.findOne(query)
-      .populate("role")
-      .select("_id company role active loginEnabled employmentStatus deletedAt");
+    })
+      .populate("company")
+      .populate("role");
 
     if (!employee) {
-      const error = new Error("Employee not found or inactive");
+      const error = new Error("Employee account is inactive or unavailable");
       error.status = 401;
       throw error;
     }
 
-    if (!employee.role) return [];
+    if (
+      !employee.company ||
+      employee.company.isActive !== true ||
+      employee.company.deletedAt != null
+    ) {
+      const error = new Error("Employee company is inactive or unavailable");
+      error.status = 403;
+      throw error;
+    }
 
-    // A role reference must not grant permissions from another tenant.
-    const roleCompany = employee.role.company?.toString?.() || employee.role.company?.toString?.();
-    if (!roleCompany || roleCompany !== employee.company.toString() || employee.role.deletedAt) {
+    if (!employee.role) {
       return [];
     }
 
-    return Array.isArray(employee.role.permissions) ? employee.role.permissions : [];
+    if (
+      String(employee.role.company) !== String(employee.company._id) ||
+      employee.role.isActive !== true ||
+      employee.role.deletedAt != null
+    ) {
+      const error = new Error("Employee role is invalid for this company");
+      error.status = 403;
+      throw error;
+    }
+
+    return employee.role.permissions || [];
   }
 
-  async employeeHasPermission(employeeId, permission, companyId = null) {
-    const permissions = await this.getEmployeePermissions(employeeId, companyId);
+  async employeeHasPermission(employeeId, permission) {
+    const permissions = await this.getEmployeePermissions(employeeId);
     return permissions.includes(permission);
   }
 
-  async hasAnyPermission(employeeId, permissions = [], companyId = null) {
+  async hasAnyPermission(employeeId, permissions = []) {
     if (!permissions.length) return false;
-    const employeePermissions = await this.getEmployeePermissions(employeeId, companyId);
+    const employeePermissions = await this.getEmployeePermissions(employeeId);
     return permissions.some((permission) => employeePermissions.includes(permission));
   }
 
-  async hasAllPermissions(employeeId, permissions = [], companyId = null) {
+  async hasAllPermissions(employeeId, permissions = []) {
     if (!permissions.length) return false;
-    const employeePermissions = await this.getEmployeePermissions(employeeId, companyId);
+    const employeePermissions = await this.getEmployeePermissions(employeeId);
     return permissions.every((permission) => employeePermissions.includes(permission));
   }
 }
