@@ -5,7 +5,7 @@ import Memo from "../memo/memo.model.js";
 import MemoEventService from "../memo-event/memoEvent.service.js";
 import MemoAttachment from "./memoAttachment.model.js";
 
-const STORAGE_ROOT = path.resolve(process.cwd(), "storage");
+const STORAGE_ROOT = path.resolve(process.env.MEMOFLO_STORAGE_PATH || "storage");
 const ALLOWED = new Set([
   "application/pdf",
   "application/msword",
@@ -40,29 +40,80 @@ class MemoAttachmentService {
   }
 
   async add({ company, memoId, employeeId, file }) {
-    const memo = await getMemo(company, memoId);
-    if (!file) throw fail("Choose a file to upload.");
-    if (file.size > MAX_BYTES) throw fail("Attachments are limited to 10 MB per file.");
-    if (!ALLOWED.has(file.mimetype)) throw fail("This file type is not supported.");
+    let storedAbsolutePath = null;
+    let movedFile = false;
 
-    const safeName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "_");
-    const storedName = `${crypto.randomUUID()}-${safeName}`;
-    const relativeDir = path.join("companies", String(company), "memos", String(memoId));
-    const absoluteDir = path.join(STORAGE_ROOT, relativeDir);
-    const relativePath = path.join(relativeDir, storedName);
-    await fs.mkdir(absoluteDir, { recursive: true });
-    await fs.rename(file.path, path.join(absoluteDir, storedName));
+    try {
+      const memo = await getMemo(company, memoId);
+      if (!file) throw fail("Choose a file to upload.");
+      if (file.size > MAX_BYTES) throw fail("Attachments are limited to 10 MB per file.");
+      if (!ALLOWED.has(file.mimetype)) throw fail("This file type is not supported.");
 
-    const attachment = await MemoAttachment.create({ company, memo: memo._id, uploadedBy: employeeId, originalName: file.originalname, storedName, relativePath, mimeType: file.mimetype, size: file.size });
-    await MemoEventService.record({ company, memo: memo._id, actor: employeeId, type: "memo.attachment_added", title: "Attachment added", description: `${file.originalname} was attached to the memo.`, metadata: { attachmentId: attachment._id.toString(), fileName: file.originalname, mimeType: file.mimetype, fileSize: file.size } });
-    return attachment;
+      const safeName = path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, "_");
+      const storedName = `${crypto.randomUUID()}-${safeName}`;
+      const relativeDir = path.join("companies", String(company), "memos", String(memoId));
+      const absoluteDir = path.join(STORAGE_ROOT, relativeDir);
+      const relativePath = path.join(relativeDir, storedName);
+      storedAbsolutePath = path.resolve(STORAGE_ROOT, relativePath);
+
+      // Do not allow generated or persisted paths to escape the configured storage root.
+      const fromRoot = path.relative(STORAGE_ROOT, storedAbsolutePath);
+      if (!fromRoot || fromRoot.startsWith(`..${path.sep}`) || fromRoot === ".." || path.isAbsolute(fromRoot)) {
+        throw fail("Invalid attachment path", 400);
+      }
+
+      await fs.mkdir(absoluteDir, { recursive: true });
+      await fs.rename(file.path, storedAbsolutePath);
+      movedFile = true;
+
+      const attachment = await MemoAttachment.create({
+        company,
+        memo: memo._id,
+        uploadedBy: employeeId,
+        originalName: file.originalname,
+        storedName,
+        relativePath,
+        mimeType: file.mimetype,
+        size: file.size,
+      });
+
+      try {
+        await MemoEventService.record({
+          company,
+          memo: memo._id,
+          actor: employeeId,
+          type: "memo.attachment_added",
+          title: "Attachment added",
+          description: `${file.originalname} was attached to the memo.`,
+          metadata: {
+            attachmentId: attachment._id.toString(),
+            fileName: file.originalname,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+          },
+        });
+      } catch (error) {
+        await MemoAttachment.deleteOne({ _id: attachment._id, company, memo: memo._id });
+        throw error;
+      }
+
+      return attachment;
+    } catch (error) {
+      // Multer writes to a temporary directory; clean up rejected uploads and partial writes.
+      if (file?.path) await fs.rm(file.path, { force: true }).catch(() => {});
+      if (movedFile && storedAbsolutePath) await fs.rm(storedAbsolutePath, { force: true }).catch(() => {});
+      throw error;
+    }
   }
 
   async getFile(company, memoId, attachmentId) {
     const attachment = await MemoAttachment.findOne({ _id: attachmentId, company, memo: memoId }).lean();
     if (!attachment) throw fail("Attachment not found", 404);
     const absolutePath = path.resolve(STORAGE_ROOT, attachment.relativePath);
-    if (!absolutePath.startsWith(STORAGE_ROOT)) throw fail("Invalid attachment path", 400);
+    const fromRoot = path.relative(STORAGE_ROOT, absolutePath);
+    if (!fromRoot || fromRoot === ".." || fromRoot.startsWith(`..${path.sep}`) || path.isAbsolute(fromRoot)) {
+      throw fail("Invalid attachment path", 400);
+    }
     return { attachment, absolutePath };
   }
 
