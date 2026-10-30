@@ -69,22 +69,33 @@ export function normalizeList(result, keys = []) {
 
 export function tenantSlug() {
   const host = window.location.hostname.toLowerCase();
-
   if (host.endsWith(".memoflo.com") || host.endsWith(".localhost")) {
-    return host.split(".")[0];
+    const slug = host.split(".")[0];
+    return ["www", "app"].includes(slug) ? null : slug;
   }
-
   return null;
 }
 
-export const api = {
-  registerCompany(payload) {
-    return request("/company/register", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  },
+export function tenantWorkspaceUrl(slug) {
+  const normalized = String(slug || "").trim().toLowerCase();
+  if (!normalized) throw new Error("The new company workspace has no slug.");
 
+  const { hostname, port, protocol } = window.location;
+  let baseDomain;
+  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname.endsWith(".localhost")) {
+    baseDomain = "localhost";
+  } else if (hostname === "memoflo.com" || hostname === "www.memoflo.com" || hostname.endsWith(".memoflo.com")) {
+    baseDomain = "memoflo.com";
+  } else {
+    // For custom/self-hosted deployments, retain the current host rather than
+    // inventing a tenant domain that DNS may not serve.
+    return `${protocol}//${hostname}${port ? `:${port}` : ""}/login`;
+  }
+
+  return `${protocol}//${normalized}.${baseDomain}${port ? `:${port}` : ""}/login`;
+}
+
+export const api = {
   login(email, password) {
     return request("/auth/login", {
       method: "POST",

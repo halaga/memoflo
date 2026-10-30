@@ -1,9 +1,8 @@
 <script setup>
 import { reactive, ref } from "vue";
-import { useRouter, RouterLink } from "vue-router";
-import { api, saveSession } from "../services/api";
+import { RouterLink } from "vue-router";
+import { api, tenantWorkspaceUrl } from "../services/api";
 
-const router = useRouter();
 const loading = ref(false);
 const error = ref("");
 const form = reactive({
@@ -31,8 +30,13 @@ async function submitRegistration() {
     if (!result?.token || !result?.employee) {
       throw new Error("Registration completed without a valid session. Please sign in.");
     }
-    saveSession(result);
-    await router.replace("/home");
+    const slug = result?.company?.slug;
+    if (!slug) throw new Error("Your company was created, but its workspace address was not returned. Please sign in from the company workspace.");
+
+    // Browser storage is origin-scoped. Do not carry a token from the page's
+    // old tenant origin to the newly-created tenant origin. Switch to the new
+    // workspace and let the administrator sign in there.
+    window.location.assign(tenantWorkspaceUrl(slug));
   } catch (e) {
     error.value = e?.message || "Unable to register your company. Please try again.";
   } finally {
