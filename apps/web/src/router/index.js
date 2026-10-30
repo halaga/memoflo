@@ -348,6 +348,13 @@ const routes = [
       },
 
       {
+        path: "administration/company-profile",
+        name: "company-profile",
+        component: () => import("../views/administration/CompanyProfileView.vue"),
+        meta: { permission: "company.branding.update" },
+      },
+
+      {
         path: "administration/branding",
         name: "company-branding",
         component: () =>

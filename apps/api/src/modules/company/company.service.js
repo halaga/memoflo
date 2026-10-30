@@ -81,6 +81,28 @@ class CompanyService {
     };
   }
 
+  async updateProfile(companyId, profile = {}) {
+    const allowed = ["name", "email", "phone", "website", "industry", "address", "city", "state", "country", "timezone"];
+    const cleaned = {};
+    for (const key of allowed) {
+      if (profile[key] === undefined) continue;
+      const value = String(profile[key] ?? "").trim();
+      const limits = { name: 120, email: 254, phone: 40, website: 200, industry: 80, address: 240, city: 80, state: 80, country: 80, timezone: 80 };
+      if (value.length > limits[key]) throw new Error(`${key} is too long`);
+      cleaned[key] = value;
+    }
+    if ("name" in cleaned && cleaned.name.length < 2) throw new Error("Company name must be at least 2 characters");
+    if (cleaned.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned.email)) throw new Error("Enter a valid company email address");
+    if (cleaned.website && !/^https?:\/\//i.test(cleaned.website)) throw new Error("Website must start with http:// or https://");
+    if (cleaned.timezone) {
+      try { new Intl.DateTimeFormat("en", { timeZone: cleaned.timezone }); }
+      catch { throw new Error("Choose a valid time zone"); }
+    }
+    const updated = await CompanyRepository.updateProfile(companyId, cleaned);
+    if (!updated) throw new Error("Company not found");
+    return this.getWorkspace(companyId);
+  }
+
   async updateModules(companyId, requestedModules = []) {
     if (!Array.isArray(requestedModules)) {
       throw new Error("Modules must be an array");

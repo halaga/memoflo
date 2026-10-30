@@ -41,6 +41,15 @@ class CompanyController {
     }
   }
 
+  async updateProfile(req, res, next) {
+    try {
+      const workspace = await CompanyService.updateProfile(req.user.company, req.body.profile);
+      return res.json({ success: true, data: workspace });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   async updateModules(req, res, next) {
     try {
       const workspace = await CompanyService.updateModules(

@@ -17,6 +17,14 @@ class CompanyRepository {
     });
   }
 
+  async updateProfile(companyId, profile) {
+    return Company.findOneAndUpdate(
+      { _id: companyId, isActive: true, deletedAt: null },
+      { $set: profile },
+      { new: true, runValidators: true }
+    );
+  }
+
   async updateModules(companyId, modules) {
     return Company.findOneAndUpdate(
       {

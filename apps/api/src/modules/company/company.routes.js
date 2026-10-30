@@ -22,6 +22,11 @@ router.use(authenticate);
 
 router.get("/workspace", CompanyController.workspace);
 router.patch(
+  "/profile",
+  authorize("company.branding.update"),
+  CompanyController.updateProfile
+);
+router.patch(
   "/modules",
   authorize("company.modules.update"),
   CompanyController.updateModules

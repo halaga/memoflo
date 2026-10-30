@@ -119,6 +119,10 @@ export const api = {
     return request("/company/workspace");
   },
 
+  updateCompanyProfile(profile) {
+    return request("/company/profile", { method: "PATCH", body: JSON.stringify({ profile }) });
+  },
+
   updateCompanyModules(modules) {
     return request("/company/modules", {
       method: "PATCH",
