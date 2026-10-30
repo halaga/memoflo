@@ -1,6 +1,16 @@
 import CompanyService from "./company.service.js";
+import CompanyRegistrationService from "./companyRegistration.service.js";
 
 class CompanyController {
+  async register(req, res, next) {
+    try {
+      const result = await CompanyRegistrationService.register(req.body);
+      return res.status(201).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   async public(req, res, next) {
     try {
       const company = await CompanyService.getPublicBySlug(

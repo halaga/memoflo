@@ -78,6 +78,13 @@ export function tenantSlug() {
 }
 
 export const api = {
+  registerCompany(payload) {
+    return request("/company/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
   login(email, password) {
     return request("/auth/login", {
       method: "POST",

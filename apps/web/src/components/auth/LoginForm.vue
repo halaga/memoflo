@@ -87,7 +87,7 @@ async function login() {
         <button class="primary-button full login-submit" type="submit" :disabled="loading || tenantLoading"><span>{{ loading ? 'Signing you in…' : tenantLoading ? 'Preparing workspace…' : 'Sign in to workspace' }}</span><span aria-hidden="true">→</span></button>
         <p v-if="!tenant" class="login-demo-note">Demo access: <strong>melvin@memoflo.com</strong> / <strong>password123</strong></p>
         <div class="login-divider"><span>Need a different workspace?</span></div>
-        <RouterLink to="/platform" class="login-platform-link">Visit the MemoFlo platform <span>↗</span></RouterLink>
+        <RouterLink to="/register" class="login-platform-link">Register a new company <span>↗</span></RouterLink>
         <p class="login-security-note"><span>●</span> Your workspace access is protected by your company account.</p>
       </form>
       <footer class="login-credit login-credit-refresh"><span>Workflow, simplified.</span><a href="https://xplicitcrafted.netlify.app/" target="_blank" rel="noopener noreferrer">Crafted with care by Xplicit_Crafted ↗</a></footer>

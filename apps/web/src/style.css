@@ -4433,3 +4433,17 @@ html,body,#app{width:100%;min-height:100%;max-width:100%;overflow-x:clip}*,*::be
   .login-refresh { padding:18px 12px; }
   .login-card-refresh { padding:24px 18px; }
 }
+
+
+/* Company registration */
+.register-page { min-height: 100vh; }
+.register-form-side { padding: 30px 18px; display:flex; align-items:center; justify-content:center; }
+.register-card { max-width: 560px; }
+.register-fields { display:grid; gap:12px; }
+.register-fields label { display:grid; gap:6px; color:#34445c; font-size:11px; font-weight:800; }
+.register-fields label span { color:#7b8ba2; font-weight:600; }
+.register-fields input { box-sizing:border-box; width:100%; min-width:0; padding:12px 13px; border:1px solid #dfe7f1; border-radius:10px; outline:none; background:#fff; color:#172b49; font:inherit; font-size:13px; font-weight:500; transition:border-color .15s,box-shadow .15s; }
+.register-fields input:focus { border-color:#6c9df0; box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+.register-field-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.register-password-hint { margin:12px 0; color:#718198; font-size:11px; line-height:1.5; }
+@media (max-width: 680px) { .register-form-side { padding:18px 12px; } .register-field-row { grid-template-columns:minmax(0,1fr); } .register-card { padding:24px 18px; } }
