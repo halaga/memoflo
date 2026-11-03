@@ -53,7 +53,7 @@ class RoleService {
       level,
       description,
       permissions = [],
-    } = payload;
+    } = payload || {};
 
     const roleName = String(name || "").trim();
 
@@ -61,24 +61,36 @@ class RoleService {
       throw createError("Role name is required");
     }
 
-    const existing = await Role.findOne({
-      company: companyId,
-      name: roleName,
-      deletedAt: null,
-    });
+    const normalizedCode = String(code || roleName)
+      .trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
 
-    if (existing) {
-      throw createError("Role already exists", 409);
+    if (!normalizedCode || ["SYSTEM_ADMIN", "COMPANY_ADMIN"].includes(normalizedCode)) {
+      throw createError("This role code is reserved", 400);
     }
 
-    const validPermissions =
-      await this.validatePermissions(permissions);
+    const numericLevel = level === undefined ? 10 : Number(level);
+    if (!Number.isInteger(numericLevel) || numericLevel < 1 || numericLevel > 99) {
+      throw createError("Custom role level must be an integer between 1 and 99");
+    }
+
+    const existing = await Role.findOne({
+      company: companyId,
+      deletedAt: null,
+      $or: [{ name: roleName }, { code: normalizedCode }],
+    });
+
+    if (existing) throw createError("Role name or code already exists", 409);
+
+    const validPermissions = await this.validatePermissions(permissions);
 
     return Role.create({
       company: companyId,
       name: roleName,
-      code: code?.trim().toUpperCase(),
-      level: level || 1,
+      code: normalizedCode,
+      level: numericLevel,
       description: description || "",
       permissions: validPermissions,
       isSystem: false,
@@ -98,8 +110,35 @@ class RoleService {
       throw createError("Role not found", 404);
     }
 
-    if (role.isSystem && payload.name !== undefined) {
-      throw createError("System role name cannot be changed");
+    if (role.isSystem) {
+      throw createError("Built-in roles cannot be modified. Create a custom role instead", 403);
+    }
+
+    if (payload.code !== undefined) {
+      const code = String(payload.code || "")
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+      if (!code || ["SYSTEM_ADMIN", "COMPANY_ADMIN"].includes(code)) {
+        throw createError("This role code is reserved", 400);
+      }
+      const duplicate = await Role.findOne({
+        company: companyId,
+        code,
+        _id: { $ne: role._id },
+        deletedAt: null,
+      });
+      if (duplicate) throw createError("Role code already exists", 409);
+      role.code = code;
+    }
+
+    if (payload.level !== undefined) {
+      const level = Number(payload.level);
+      if (!Number.isInteger(level) || level < 1 || level > 99) {
+        throw createError("Custom role level must be an integer between 1 and 99");
+      }
+      role.level = level;
     }
 
     if (payload.permissions !== undefined) {
@@ -114,14 +153,6 @@ class RoleService {
         throw createError("Role name cannot be empty");
       }
       role.name = name;
-    }
-
-    if (payload.code !== undefined) {
-      role.code = String(payload.code).trim().toUpperCase();
-    }
-
-    if (payload.level !== undefined) {
-      role.level = payload.level;
     }
 
     if (payload.description !== undefined) {
@@ -204,7 +235,7 @@ class RoleService {
     return uniqueNames;
   }
 
-  async assignRole(roleId, employeeId, companyId) {
+  async assignRole(roleId, employeeId, companyId, actorId) {
     assertId(roleId, "Role id");
     assertId(employeeId, "Employee id");
 
@@ -216,6 +247,22 @@ class RoleService {
 
     if (!role) {
       throw createError("Role not found", 404);
+    }
+
+    if (role.code === "SYSTEM_ADMIN" || role.deletedAt) {
+      throw createError("This role is not assignable", 403);
+    }
+
+    if (role.code === "COMPANY_ADMIN") {
+      const actor = await Employee.findOne({
+        _id: actorId,
+        company: companyId,
+        active: true,
+        deletedAt: null,
+      }).populate("role");
+      if (actor?.role?.code !== "COMPANY_ADMIN") {
+        throw createError("Only a company administrator can assign administrator access", 403);
+      }
     }
 
     const employee = await Employee.findOne({

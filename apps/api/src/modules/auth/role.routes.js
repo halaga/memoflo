@@ -50,7 +50,8 @@ router.patch(
       const employee = await RoleService.assignRole(
         req.params.id,
         req.params.employeeId,
-        req.user.company
+        req.user.company,
+        req.user.id
       );
 
       res.json({

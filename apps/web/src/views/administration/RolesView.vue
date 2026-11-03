@@ -350,7 +350,7 @@ onMounted(load);
 
             <div class="role-header-actions">
               <button
-                v-if="canManageRoles"
+                v-if="canManageRoles && !selectedRole.isSystem"
                 type="button"
                 class="btn btn-secondary"
                 @click="beginEditRole"
@@ -358,7 +358,7 @@ onMounted(load);
                 Edit role
               </button>
               <span v-if="selectedRole.isSystem" class="count-pill">
-                System
+                Built-in · protected
               </span>
             </div>
           </div>
@@ -457,7 +457,7 @@ onMounted(load);
 
           <div class="assign-section">
             <h3>Assign to employee</h3>
-            <p>Select an active employee in this company.</p>
+            <p>Select an active employee in this company. Administrator access can only be assigned by an existing company administrator.</p>
 
             <div class="assign-row">
               <select v-model="selectedEmployee" class="input">

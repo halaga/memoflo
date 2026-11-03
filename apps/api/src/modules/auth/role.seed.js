@@ -180,14 +180,6 @@ const permissions = [
 
 const systemRoles = [
   {
-    name: "System Administrator",
-    code: "SYSTEM_ADMIN",
-    level: 100,
-    description: "Full administrative access to the MemoFlo tenant.",
-    permissions: permissions.map((permission) => permission.name),
-  },
-
-  {
     name: "Company Administrator",
     code: "COMPANY_ADMIN",
     level: 100,
@@ -286,10 +278,31 @@ export async function seedRoles(company) {
     code: "IT_STAFF",
   });
 
-  const adminRole = await Role.findOne({
+  // SYSTEM_ADMIN was historically seeded inside each company even though
+  // platform administration must never be represented by a tenant role.
+  // Migrate legacy tenant assignments to the company-scoped administrator.
+  const legacySystemRole = await Role.findOne({
     company: company._id,
     code: "SYSTEM_ADMIN",
+    deletedAt: null,
   });
+  const adminRole = await Role.findOne({
+    company: company._id,
+    code: "COMPANY_ADMIN",
+    deletedAt: null,
+  });
+
+  if (legacySystemRole) {
+    if (adminRole) {
+      await Employee.updateMany(
+        { company: company._id, role: legacySystemRole._id },
+        { $set: { role: adminRole._id } }
+      );
+    }
+    await legacySystemRole.updateOne({
+      $set: { deletedAt: new Date(), isActive: false },
+    });
+  }
 
   if (itRole) {
     await Employee.updateOne(
