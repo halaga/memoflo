@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import LoginView from "../views/LoginView.vue";
 import RegisterView from "../views/RegisterView.vue";
+import AcceptInvitationView from "../views/AcceptInvitationView.vue";
 import WorkspaceView from "../views/WorkspaceView.vue";
 import LandingView from "../views/LandingView.vue";
 import HomeView from "../views/HomeView.vue";
@@ -70,6 +71,13 @@ const routes = [
     path: "/register",
     name: "register-company",
     component: RegisterView,
+    meta: { public: true },
+  },
+
+  {
+    path: "/accept-invitation",
+    name: "accept-invitation",
+    component: AcceptInvitationView,
     meta: { public: true },
   },
 

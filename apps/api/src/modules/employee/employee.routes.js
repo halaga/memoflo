@@ -2,6 +2,7 @@ import crypto from "crypto";
 import fs from "fs/promises";
 import path from "path";
 import express from "express";
+import rateLimit from "express-rate-limit";
 import multer from "multer";
 import authorize from "../../middleware/authorize.js";
 import authenticate from "../auth/auth.middleware.js";
@@ -10,12 +11,23 @@ import Employee from "./employee.model.js";
 import EmployeeController from "./employee.controller.js";
 
 const router = express.Router();
+const invitationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+});
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
+router.get("/invitations/:token", invitationLimiter, EmployeeController.inspectInvitation);
+router.post("/invitations/accept", invitationLimiter, EmployeeController.acceptInvitation);
+
 router.use(authenticate);
+
+router.post("/invitations", authorize("employees.create"), EmployeeController.createInvitation);
 
 router.get("/directory", EmployeeController.directory);
 

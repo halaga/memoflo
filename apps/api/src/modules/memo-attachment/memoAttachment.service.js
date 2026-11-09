@@ -1,11 +1,22 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import crypto from "node:crypto";
 import Memo from "../memo/memo.model.js";
 import MemoEventService from "../memo-event/memoEvent.service.js";
 import MemoAttachment from "./memoAttachment.model.js";
 
-const STORAGE_ROOT = path.resolve(process.env.MEMOFLO_STORAGE_PATH || "storage");
+const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
+// Resolve storage from the API package, never from whichever directory started Node.
+const STORAGE_ROOT = path.resolve(
+  process.env.MEMOFLO_STORAGE_PATH || path.resolve(MODULE_DIR, "../../../storage")
+);
+const LEGACY_STORAGE_ROOTS = [...new Set([
+  STORAGE_ROOT,
+  path.resolve(process.cwd(), "storage"),
+  path.resolve(MODULE_DIR, "../../../storage"),
+  path.resolve(MODULE_DIR, "../../../../../storage"),
+])];
 const ALLOWED = new Set([
   "application/pdf",
   "application/msword",
@@ -25,6 +36,28 @@ function fail(message, status = 400) {
   const error = new Error(message);
   error.status = status;
   return error;
+}
+
+function safeRelativePath(value) {
+  const normalized = String(value || "").replace(/[\\\\/]+/g, path.sep);
+  if (!normalized || path.isAbsolute(normalized) || normalized.split(path.sep).some((part) => part === "..")) {
+    throw fail("Invalid attachment path", 400);
+  }
+  return normalized;
+}
+
+async function locateStoredFile(relativePath) {
+  const safePath = safeRelativePath(relativePath);
+  for (const root of LEGACY_STORAGE_ROOTS) {
+    const absolutePath = path.resolve(root, safePath);
+    const fromRoot = path.relative(root, absolutePath);
+    if (!fromRoot || fromRoot === ".." || fromRoot.startsWith(`..${path.sep}`) || path.isAbsolute(fromRoot)) continue;
+    try {
+      await fs.access(absolutePath);
+      return absolutePath;
+    } catch { /* Try the next known storage root for files uploaded before this fix. */ }
+  }
+  throw fail("Attachment file is missing from storage. The attachment record exists, but the stored file could not be found.", 404);
 }
 
 async function getMemo(company, memoId) {
@@ -109,11 +142,10 @@ class MemoAttachmentService {
   async getFile(company, memoId, attachmentId) {
     const attachment = await MemoAttachment.findOne({ _id: attachmentId, company, memo: memoId }).lean();
     if (!attachment) throw fail("Attachment not found", 404);
-    const absolutePath = path.resolve(STORAGE_ROOT, attachment.relativePath);
-    const fromRoot = path.relative(STORAGE_ROOT, absolutePath);
-    if (!fromRoot || fromRoot === ".." || fromRoot.startsWith(`..${path.sep}`) || path.isAbsolute(fromRoot)) {
-      throw fail("Invalid attachment path", 400);
-    }
+    // Older MemoFlo builds stored this field as `storagePath`; newer records use `relativePath`.
+    const storedPath = attachment.relativePath || attachment.storagePath;
+    if (!storedPath) throw fail("Attachment record has no storage path.", 404);
+    const absolutePath = await locateStoredFile(storedPath);
     return { attachment, absolutePath };
   }
 

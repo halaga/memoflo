@@ -203,15 +203,29 @@ async function uploadAttachment() {
 }
 
 async function downloadAttachment(attachment) {
-  const response = await api.downloadMemoAttachment(memoId.value, attachment._id);
-  if (!response.ok) throw new Error("Unable to download attachment.");
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = attachment.originalName;
-  anchor.click();
-  URL.revokeObjectURL(url);
+  actionError.value = "";
+  try {
+    const response = await api.downloadMemoAttachment(memoId.value, attachment._id);
+    if (!response.ok) {
+      let message = `Unable to download attachment (${response.status}).`;
+      try {
+        const result = await response.json();
+        message = result?.message || result?.error || message;
+      } catch { /* The API may return a plain-text 404 response. */ }
+      throw new Error(message);
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = attachment.originalName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    actionError.value = err.message || "Unable to download attachment.";
+  }
 }
 
 async function removeAttachment(attachment) {

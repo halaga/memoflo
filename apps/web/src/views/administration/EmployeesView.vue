@@ -12,6 +12,7 @@ const success = ref("");
 const showForm = ref(false);
 const credentials = ref(null);
 const editingId = ref(null);
+const inviteMode = ref(false);
 
 const form = ref({
   firstName: "",
@@ -33,6 +34,7 @@ const canCreate = computed(() => {
 
 function resetForm() {
   editingId.value = null;
+  inviteMode.value = false;
   form.value = { firstName: "", lastName: "", email: "", phone: "", role: "", position: "", reportsTo: "", createLogin: true, password: "" };
 }
 
@@ -48,8 +50,26 @@ async function load() {
 }
 
 function openCreate() { resetForm(); credentials.value = null; success.value = ""; showForm.value = true; }
+function openInvite() {
+  resetForm();
+  inviteMode.value = true;
+  form.value.createLogin = false;
+  credentials.value = null;
+  success.value = "";
+  showForm.value = true;
+}
+async function copyInvitationLink() {
+  if (!credentials.value?.invitationUrl) return;
+  try {
+    await navigator.clipboard.writeText(credentials.value.invitationUrl);
+    success.value = "Invitation link copied. Share it with the employee.";
+  } catch {
+    success.value = "Copy the invitation link from the field below.";
+  }
+}
 function openEdit(employee) {
   editingId.value = employee._id;
+  inviteMode.value = false;
   credentials.value = null;
   success.value = "";
   form.value = {
@@ -78,6 +98,18 @@ async function save() {
       delete payload.password;
       const result = await api.updateEmployee(editingId.value, payload);
       success.value = `${result?.data?.firstName || "Employee"} updated successfully.`;
+    } else if (inviteMode.value) {
+      const result = await api.inviteEmployee(payload);
+      credentials.value = {
+        name: `${result?.data?.firstName || ""} ${result?.data?.lastName || ""}`.trim(),
+        email: result?.data?.email,
+        employeeNo: result?.data?.employeeNo,
+        invitationUrl: result?.invitationUrl,
+        expiresAt: result?.invitation?.expiresAt,
+      };
+      success.value = "Employee created and invitation link generated.";
+      resetForm();
+      showForm.value = false;
     } else {
       const result = await api.createEmployee(payload);
       credentials.value = {
@@ -128,7 +160,10 @@ onMounted(load);
         <h1>Employees</h1>
         <p>Set up people, assign their position and role, and create their MemoFlo login.</p>
       </div>
-      <button v-if="canCreate" class="btn btn-primary" type="button" @click="openCreate">+ Add employee</button>
+      <div v-if="canCreate" class="inline-actions">
+        <button class="btn btn-secondary" type="button" @click="openInvite">Invite employee</button>
+        <button class="btn btn-primary" type="button" @click="openCreate">+ Add employee</button>
+      </div>
     </div>
 
     <div v-if="error" class="alert alert-error">{{ error }}</div>
@@ -136,28 +171,33 @@ onMounted(load);
 
     <section v-if="credentials" class="card credential-card">
       <div>
-        <span class="page-kicker">LOGIN CREDENTIALS</span>
+        <span class="page-kicker">{{ credentials.invitationUrl ? "EMPLOYEE INVITATION" : "LOGIN CREDENTIALS" }}</span>
         <h2>Give these credentials to {{ credentials.name }}</h2>
-        <p>This temporary password is shown once here. Share it securely and ask the employee to change it later.</p>
+        <p v-if="credentials.invitationUrl">Share this single-use invitation link with the employee. It expires after 7 days and lets them create their own password.</p>
+        <p v-else>This temporary password is shown once here. Share it securely and ask the employee to change it later.</p>
       </div>
       <div class="credential-grid">
         <div><span>Employee no.</span><strong>{{ credentials.employeeNo }}</strong></div>
         <div><span>Email</span><strong>{{ credentials.email }}</strong></div>
-        <div><span>Temporary password</span><strong class="credential-password">{{ credentials.password || "Login disabled" }}</strong></div>
+        <div v-if="credentials.password"><span>Temporary password</span><strong class="credential-password">{{ credentials.password }}</strong></div>
+        <div v-if="credentials.invitationUrl" class="invitation-link-field"><span>Invitation link</span><input class="input" :value="credentials.invitationUrl" readonly /><small>Expires: {{ new Date(credentials.expiresAt).toLocaleString() }}</small></div>
       </div>
-      <button class="btn btn-secondary" type="button" @click="credentials=null">Dismiss</button>
+      <div class="inline-actions">
+        <button v-if="credentials.invitationUrl" class="btn btn-primary" type="button" @click="copyInvitationLink">Copy invitation link</button>
+        <button class="btn btn-secondary" type="button" @click="credentials=null">Dismiss</button>
+      </div>
     </section>
 
     <section v-if="showForm" class="card employee-form-card">
       <div class="builder-title">
         <div>
           <span class="page-kicker">
-            {{ editingId ? "EDIT EMPLOYEE" : "NEW EMPLOYEE" }}
+            {{ editingId ? "EDIT EMPLOYEE" : inviteMode ? "EMPLOYEE INVITATION" : "NEW EMPLOYEE" }}
           </span>
-          <h2>{{ editingId ? "Update employee" : "Add employee" }}</h2>
+          <h2>{{ editingId ? "Update employee" : inviteMode ? "Invite employee" : "Add employee" }}</h2>
           <p>
             Position and role determine where this person sits in the
-            company and what they can do.
+            company and what they can do. {{ inviteMode ? "They will receive a one-time link to set their own password." : "" }}
           </p>
         </div>
         <button class="btn btn-secondary" type="button" @click="showForm=false">Close</button>
@@ -228,7 +268,7 @@ onMounted(load);
           <strong>This person will receive the first leave approval.</strong>
         </div>
       </div>
-      <div v-if="!editingId" class="login-setup">
+      <div v-if="!editingId && !inviteMode" class="login-setup">
         <label class="check-label"><input v-model="form.createLogin" type="checkbox" /> Create login account</label>
         <label v-if="form.createLogin">Temporary password <input v-model="form.password" class="input" placeholder="Leave blank to generate securely" /></label>
       </div>
@@ -244,6 +284,8 @@ onMounted(load);
               ? "Saving…"
               : editingId
                 ? "Save changes"
+                : inviteMode
+                ? "Create invitation"
                 : "Create employee"
           }}
         </button>

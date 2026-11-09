@@ -204,6 +204,24 @@ export const api = {
     });
   },
 
+  inviteEmployee(data) {
+    return request("/employees/invitations", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  getEmployeeInvitation(token) {
+    return request(`/employees/invitations/${encodeURIComponent(token)}`);
+  },
+
+  acceptEmployeeInvitation(token, password, passwordConfirmation) {
+    return request("/employees/invitations/accept", {
+      method: "POST",
+      body: JSON.stringify({ token, password, passwordConfirmation }),
+    });
+  },
+
   updateEmployee(id, data) {
     return request(`/employees/${id}`, {
       method: "PATCH",

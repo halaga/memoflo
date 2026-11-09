@@ -1,6 +1,39 @@
 import EmployeeService from "./employee.service.js";
+import EmployeeInvitationService from "./employeeInvitation.service.js";
 
 class EmployeeController {
+
+  async createInvitation(req, res, next) {
+    try {
+      const origin = req.get("origin") || `${req.protocol}://${req.get("host")}`;
+      const result = await EmployeeInvitationService.create(
+        req.user.company,
+        req.user.id,
+        { ...req.body, origin }
+      );
+      res.status(201).json({ success: true, data: result.employee, invitation: result.invitation, invitationUrl: result.invitationUrl });
+    } catch (error) { next(error); }
+  }
+
+  async inspectInvitation(req, res, next) {
+    try {
+      const data = await EmployeeInvitationService.inspect(req.params.token);
+      res.json({ success: true, data });
+    } catch (error) { next(error); }
+  }
+
+  async acceptInvitation(req, res, next) {
+    try {
+      const data = await EmployeeInvitationService.accept(
+        req.body?.token,
+        req.body?.password,
+        req.body?.passwordConfirmation
+      );
+      res.json({ success: true, data });
+    } catch (error) { next(error); }
+  }
+
+
   async directory(req, res, next) {
     try {
       const employees = await EmployeeService.listDirectory(

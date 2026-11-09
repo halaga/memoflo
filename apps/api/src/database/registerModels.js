@@ -8,6 +8,7 @@ import "../modules/auth/role.model.js";
 import "../modules/auth/permission.model.js";
 import "../modules/subscription/subscription.model.js";
 import "../modules/employee/employee.model.js";
+import "../modules/employee/employeeInvitation.model.js";
 import "../modules/employee/employeeDocument.model.js";
 import "../modules/workflow/workflow.model.js";
 import "../modules/workflow/workflowStep.model.js";
