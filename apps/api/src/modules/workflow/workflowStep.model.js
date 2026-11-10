@@ -3,6 +3,13 @@ import BaseSchema from "../../database/BaseSchema.js";
 
 const workflowStepSchema = new mongoose.Schema(
   {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+      index: true,
+    },
+
     workflow: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Workflow",
@@ -67,7 +74,7 @@ const workflowStepSchema = new mongoose.Schema(
 );
 
 workflowStepSchema.index(
-  { workflow: 1, order: 1 },
+  { company: 1, workflow: 1, order: 1 },
   { unique: true }
 );
 

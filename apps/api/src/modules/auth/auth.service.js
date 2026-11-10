@@ -44,7 +44,7 @@ class AuthService {
       throw createError("This employee account is inactive", 403);
     }
 
-    await AuthRepository.updateLastLogin(employee._id);
+    await AuthRepository.updateLastLogin(employee._id, employee.company?._id);
 
     const token = generateToken({
       id: employee._id,
@@ -63,7 +63,8 @@ class AuthService {
   }
 
   async me(id, companyId = null) {
-    const employee = await AuthRepository.findById(id);
+    if (!companyId) throw createError("Session is no longer valid", 401);
+    const employee = await AuthRepository.findById(id, companyId);
 
     if (!employee) {
       throw createError("Session is no longer valid", 401);

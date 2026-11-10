@@ -78,14 +78,15 @@ class WorkflowRepository {
     return WorkflowStep.create(data);
   }
 
-  async shiftStepsFromOrder(workflowId, order) {
+  async shiftStepsFromOrder(companyId, workflowId, order) {
     return WorkflowStep.updateMany(
-      { workflow: workflowId, order: { $gte: order }, isActive: true },
+      { company: companyId, workflow: workflowId, order: { $gte: order }, isActive: true },
       { $inc: { order: 1 } }
     );
   }
 
 async updateStep(
+  companyId,
   workflowId,
   stepId,
   data
@@ -93,6 +94,7 @@ async updateStep(
   return WorkflowStep.findOneAndUpdate(
     {
       _id: stepId,
+      company: companyId,
       workflow: workflowId,
       isActive: true,
     },
@@ -101,10 +103,11 @@ async updateStep(
       new: true,
       runValidators: true,
     }
-  ).populate("position");
+  ).populate({ path: "position", match: { company: companyId } });
 }
 
 async reactivateStep(
+  companyId,
   workflowId,
   stepId,
   data = {}
@@ -112,6 +115,7 @@ async reactivateStep(
   return WorkflowStep.findOneAndUpdate(
     {
       _id: stepId,
+      company: companyId,
       workflow: workflowId,
       isActive: false,
     },
@@ -123,16 +127,18 @@ async reactivateStep(
       new: true,
       runValidators: true,
     }
-  ).populate("position");
+  ).populate({ path: "position", match: { company: companyId } });
 }
 
 async deactivateStep(
+  companyId,
   workflowId,
   stepId
 ) {
   return WorkflowStep.findOneAndUpdate(
     {
       _id: stepId,
+      company: companyId,
       workflow: workflowId,
       isActive: true,
     },
@@ -145,44 +151,50 @@ async deactivateStep(
   );
 }
 
-  async findSteps(workflowId) {
+  async findSteps(companyId, workflowId) {
     return WorkflowStep.find({
+      company: companyId,
       workflow: workflowId,
       isActive: true,
     })
-      .populate("position")
+      .populate({ path: "position", match: { company: companyId } })
       .sort({ order: 1 });
   }
 
   async findStepByOrder(
+    companyId,
     workflowId,
     order
   ) {
     return WorkflowStep.findOne({
+      company: companyId,
       workflow: workflowId,
       order,
       isActive: true,
-    }).populate("position");
+    }).populate({ path: "position", match: { company: companyId } });
   }
 
   async findFirstStep(
+    companyId,
     workflowId
   ) {
     return WorkflowStep.findOne({
+      company: companyId,
       workflow: workflowId,
       isActive: true,
     })
       .sort({ order: 1 })
-      .populate("position");
+      .populate({ path: "position", match: { company: companyId } });
   }
 
   async findNextStep(
+    companyId,
     workflowId,
     currentOrder
   ) {
     return WorkflowStep.findOne({
+      company: companyId,
       workflow: workflowId,
-
       order: {
         $gt: currentOrder,
       },
@@ -190,7 +202,7 @@ async deactivateStep(
       isActive: true,
     })
       .sort({ order: 1 })
-      .populate("position");
+      .populate({ path: "position", match: { company: companyId } });
   }
 
   // ==========================================
@@ -209,35 +221,30 @@ async deactivateStep(
   ) {
     return WorkflowInstance.findOne({
       _id: id,
-
       company: companyId,
-
       isActive: true,
+      deletedAt: null,
     })
-      .populate("workflow")
-
+      .populate({ path: "workflow", match: { company: companyId, isActive: true } })
       .populate({
         path: "currentStep",
-
+        match: { company: companyId, isActive: true },
         populate: {
           path: "position",
-
+          match: { company: companyId },
           populate: {
             path: "occupant",
-
-            select:
-              "_id employeeNo firstName lastName email position employmentStatus active isActive",
+            match: { company: companyId },
+            select: "_id employeeNo firstName lastName email position employmentStatus active isActive",
           },
         },
       })
-
-      .populate("currentPosition")
-      .populate("currentEmployee")
-
-      .populate("startedBy")
-      .populate("completedBy")
-      .populate("rejectedBy")
-      .populate("cancelledBy");
+      .populate({ path: "currentPosition", match: { company: companyId } })
+      .populate({ path: "currentEmployee", match: { company: companyId } })
+      .populate({ path: "startedBy", match: { company: companyId } })
+      .populate({ path: "completedBy", match: { company: companyId } })
+      .populate({ path: "rejectedBy", match: { company: companyId } })
+      .populate({ path: "cancelledBy", match: { company: companyId } });
   }
 
   async findInstanceByResource(
@@ -253,7 +260,7 @@ async deactivateStep(
       resourceId,
 
       isActive: true,
-
+      deletedAt: null,
       status: {
         $in: [
           "running",
@@ -261,26 +268,22 @@ async deactivateStep(
         ],
       },
     })
-
-      .populate("workflow")
-
+      .populate({ path: "workflow", match: { company: companyId, isActive: true } })
       .populate({
         path: "currentStep",
-
+        match: { company: companyId, isActive: true },
         populate: {
           path: "position",
-
+          match: { company: companyId },
           populate: {
             path: "occupant",
-
-            select:
-              "_id employeeNo firstName lastName email position employmentStatus active isActive",
+            match: { company: companyId },
+            select: "_id employeeNo firstName lastName email position employmentStatus active isActive",
           },
         },
       })
-
-      .populate("currentPosition")
-      .populate("currentEmployee");
+      .populate({ path: "currentPosition", match: { company: companyId } })
+      .populate({ path: "currentEmployee", match: { company: companyId } });
   }
 
   async updateInstance(
@@ -291,44 +294,35 @@ async deactivateStep(
     return WorkflowInstance.findOneAndUpdate(
       {
         _id: id,
-
         company: companyId,
-
         isActive: true,
+        deletedAt: null,
       },
-
       data,
-
       {
         new: true,
-
         runValidators: true,
       }
     )
-
-      .populate("workflow")
-
+      .populate({ path: "workflow", match: { company: companyId, isActive: true } })
       .populate({
         path: "currentStep",
-
+        match: { company: companyId, isActive: true },
         populate: {
           path: "position",
-
+          match: { company: companyId },
           populate: {
             path: "occupant",
-
-            select:
-              "_id employeeNo firstName lastName email position employmentStatus active isActive",
+            match: { company: companyId },
+            select: "_id employeeNo firstName lastName email position employmentStatus active isActive",
           },
         },
       })
-
-      .populate("currentPosition")
-      .populate("currentEmployee")
-
-      .populate("completedBy")
-      .populate("rejectedBy")
-      .populate("cancelledBy");
+      .populate({ path: "currentPosition", match: { company: companyId } })
+      .populate({ path: "currentEmployee", match: { company: companyId } })
+      .populate({ path: "completedBy", match: { company: companyId } })
+      .populate({ path: "rejectedBy", match: { company: companyId } })
+      .populate({ path: "cancelledBy", match: { company: companyId } });
   }
 }
 

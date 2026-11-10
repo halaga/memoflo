@@ -61,7 +61,7 @@ class ServiceRequestService {
       metadata: { ...(payload.metadata || {}), channel: "MemoFlo IT Solution Center" }, activity: [firstActivity], createdBy: String(requesterId),
     });
     await logAudit(companyId, requesterId, request, "it.ticket.created", "IT support ticket created.", { category, priority });
-    return populate(ServiceRequest.findById(request._id)).lean();
+    return populate(ServiceRequest.findOne({ _id: request._id, company: companyId, isActive: true, deletedAt: null })).lean();
   }
 
   async list(companyId, actorId, filters = {}) {

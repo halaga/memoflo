@@ -10,6 +10,10 @@ const branding = ref({
   secondaryColor: "#1E293B",
   tagline: "Workflow, simplified.",
 });
+const signature = ref({ bannerUrl: "", previewUrl: "", address: "", website: "", socials: { facebook: "", x: "", instagram: "", linkedin: "" } });
+const signatureSaving = ref(false);
+const signatureSuccess = ref("");
+const signatureError = ref("");
 
 const saving = ref(false);
 const error = ref("");
@@ -23,6 +27,11 @@ async function load() {
       ...branding.value,
       companyName: workspace?.company?.name || "",
       ...(workspace?.company?.branding || {}),
+    };
+    signature.value = {
+      ...signature.value,
+      ...(workspace?.signature || {}),
+      socials: { ...signature.value.socials, ...(workspace?.signature?.socials || {}) },
     };
   } catch (err) {
     error.value = err.message || "Unable to load company branding.";
@@ -43,6 +52,20 @@ async function save() {
     error.value = err.message || "Unable to save branding.";
   } finally {
     saving.value = false;
+  }
+}
+
+async function saveSignature() {
+  signatureSaving.value = true;
+  signatureError.value = "";
+  signatureSuccess.value = "";
+  try {
+    await api.updateCompanySignature({ ...signature.value, socials: { ...signature.value.socials } });
+    signatureSuccess.value = "Email signature identity saved for this company.";
+  } catch (err) {
+    signatureError.value = err.message || "Unable to save email signature settings.";
+  } finally {
+    signatureSaving.value = false;
   }
 }
 
@@ -133,6 +156,24 @@ onMounted(load);
             />
           </label>
         </div>
+      </section>
+
+      <section class="card signature-settings-card">
+        <h2>Email signature identity</h2>
+        <p class="muted">These settings belong only to {{ branding.companyName || "this company" }}. They do not change other tenants. Leave the banner fields empty if your company does not use a banner.</p>
+        <label>Banner image URL<input v-model.trim="signature.bannerUrl" class="input" type="url" placeholder="https://your-company.com/email-banner.png" /></label>
+        <label>In-app preview image URL or public path<input v-model.trim="signature.previewUrl" class="input" placeholder="/signatures/company-banner.gif or https://…" /></label>
+        <label>Signature address<textarea v-model.trim="signature.address" class="input" rows="2" maxlength="240" /></label>
+        <label>Signature website<input v-model.trim="signature.website" class="input" type="url" placeholder="https://your-company.com" /></label>
+        <div class="form-row">
+          <label>Facebook URL<input v-model.trim="signature.socials.facebook" class="input" type="url" /></label>
+          <label>X URL<input v-model.trim="signature.socials.x" class="input" type="url" /></label>
+          <label>Instagram URL<input v-model.trim="signature.socials.instagram" class="input" type="url" /></label>
+          <label>LinkedIn URL<input v-model.trim="signature.socials.linkedin" class="input" type="url" /></label>
+        </div>
+        <div v-if="signatureError" class="alert alert-error">{{ signatureError }}</div>
+        <div v-if="signatureSuccess" class="alert alert-success">{{ signatureSuccess }}</div>
+        <button class="btn btn-primary" type="button" :disabled="signatureSaving" @click="saveSignature">{{ signatureSaving ? "Saving…" : "Save signature identity" }}</button>
       </section>
 
       <section

@@ -36,5 +36,10 @@ router.patch(
   authorize("company.branding.update"),
   CompanyController.updateBranding
 );
+router.patch(
+  "/signature",
+  authorize("company.branding.update"),
+  CompanyController.updateSignature
+);
 
 export default router;

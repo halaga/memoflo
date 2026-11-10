@@ -1,33 +1,30 @@
 <template>
   <div class="signature-page">
     <div class="page-head">
-      <div>
-        <div class="eyebrow">BUSINESS TOOL</div>
-        <h1>Email Signature</h1>
-        <p>Create a professional signature using your company identity.</p>
-      </div>
+      <div><div class="eyebrow">BUSINESS TOOL</div><h1>Email Signature</h1><p>Create a professional signature using your company's configured identity.</p></div>
       <RouterLink class="back" to="/services">← Services</RouterLink>
     </div>
 
     <div class="signature-grid">
       <section class="card editor">
-        <div class="card-head"><div><h2>Signature details</h2><p>These fields are used to generate your email signature.</p></div></div>
-        <div class="company-banner"><img :src="company.bannerPreview" alt="Ringo banner" @error="useFallbackBanner" /></div>
+        <div class="card-head"><div><h2>Signature details</h2><p>Your company identity is managed by your workspace administrator.</p></div></div>
+        <div v-if="company.previewUrl" class="company-banner"><img v-if="previewBanner" :src="previewBanner" :alt="company.name + ' email banner'" @error="previewFailed = true" /></div>
         <div class="fields">
-          <label>Company<select v-model="companyKey" @change="loadCompany"><option value="ringo">Ringo Telecommunications Limited</option><option value="approot">Approot Technologies</option></select></label>
-          <label>Full name<input v-model.trim="form.name" placeholder="David Dabo" /></label>
-          <label>Job title<input v-model.trim="form.title" placeholder="IT Specialist" /></label>
-          <label>Phone number<input v-model.trim="form.phone" placeholder="+2349036792601" /></label>
+          <label>Company<input :value="company.name" readonly /></label>
+          <label>Full name<input v-model.trim="form.name" autocomplete="name" placeholder="Your full name" /></label>
+          <label>Job title<input v-model.trim="form.title" placeholder="Your job title" /></label>
+          <label>Phone number<input v-model.trim="form.phone" type="tel" placeholder="+234…" /></label>
           <label>Email address<input v-model.trim="form.email" type="email" placeholder="name@company.com" /></label>
-          <label>Address<input v-model.trim="company.address" /></label>
-          <label>Website<input v-model.trim="company.website" /></label>
+          <label>Address<input :value="company.address" readonly /></label>
+          <label>Website<input :value="company.website" readonly /></label>
         </div>
         <div class="actions"><button class="primary" @click="generate">Generate signature</button><button @click="copyHtml" :disabled="!html">Copy HTML</button><button @click="copyRendered" :disabled="!html">Copy signature</button></div>
-        <p v-if="copied" class="success">{{ copied }}</p>
+        <p v-if="copied" class="success" role="status">{{ copied }}</p>
+        <p v-if="loadError" class="load-error" role="alert">{{ loadError }}</p>
       </section>
 
       <section class="card preview-card">
-        <div class="card-head"><div><h2>Live preview</h2><p>What the generated signature looks like.</p></div></div>
+        <div class="card-head"><div><h2>Live preview</h2><p>Copy the rendered signature into your email client.</p></div></div>
         <div class="preview-shell"><div class="signature-render" v-html="html || previewHtml"></div></div>
         <details class="html-details"><summary>View generated HTML</summary><textarea readonly :value="html"></textarea></details>
       </section>
@@ -36,33 +33,85 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { api, assetUrl, getSavedEmployee } from '../../services/api';
 
-const root = '/signatures/';
-const companies = {
-  ringo: { name:'Ringo Telecommunications Limited', website:'https://ringo.ng', address:'75, Allen Avenue, Ikeja, Lagos, Nigeria', banner:'https://ringo.ng/assets/ringo-banner.png?v=1.1', bannerPreview:root+'ringo-banner.gif', socials:{facebook:'https://www.facebook.com/share/1HourvExG4/', x:'https://x.com/ringotelcomLtd', instagram:'https://www.instagram.com/ringotelecommunicationsltd'} },
-  approot: { name:'Approot Technologies', website:'https://approot.ng', address:'Lekki Phase 1, Lagos', banner:'https://ringo.ng/assets/approot-banner.gif?v=1.1', bannerPreview:root+'approot-banner.gif', socials:{} }
-};
-const companyKey=ref(localStorage.getItem('memoflo_signature_company')||'ringo');
-const company=ref({...companies[companyKey.value], socials:{...companies[companyKey.value].socials}});
-const form=ref({name:'',title:'',phone:'',email:''}); const html=ref(''); const copied=ref('');
-function loadCompany(){company.value={...companies[companyKey.value],socials:{...companies[companyKey.value].socials}}; localStorage.setItem('memoflo_signature_company',companyKey.value); generate();}
-function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function phoneClean(v){return String(v||'').replace(/\s+/g,'').replace(/[^0-9+]/g,'');}
-function social(url,icon,label){if(!url)return '';return `<a href="${esc(url)}" target="_blank" style="margin-right:8px;text-decoration:none;"><span style="font-family:Arial;font-size:12px;">${esc(label)}</span></a>`;}
-function generate(){
- const c=company.value, p=phoneClean(form.value.phone), email=form.value.email;
- html.value=`<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;font-size:14px;width:100%;max-width:700px;color:#111827;table-layout:fixed;overflow-wrap:anywhere;">\n<tr>\n<td style="vertical-align:top;padding-right:16px;width:52%;overflow-wrap:anywhere;">\n<strong>${esc(form.value.name)}</strong><br>${esc(form.value.title)}<br>${esc(c.name)}<br>📞 <a href="https://wa.me/${esc(p)}" style="color:#111827;">${esc(p)}</a><br>✉️ <a href="mailto:${esc(email)}" style="color:#111827;">${esc(email)}</a><br><br>\n<div>📍 <span style="color:#0f766e;">${esc(c.address)}</span></div>\n<div style="margin-top:10px;">${social(c.website,'','Website')}${social(c.socials.facebook,'','Facebook')}${social(c.socials.x,'','X')}${social(c.socials.instagram,'','Instagram')}</div>\n</td>\n<td style="width:50%;vertical-align:top;"><img src="${esc(c.banner)}" style="width:100%;max-width:100%;height:auto;max-height:150px;object-fit:contain;display:block;border-radius:8px;" alt="${esc(c.name)}" /></td>\n</tr>\n</table>`;
- localStorage.setItem('memoflo_signature_form',JSON.stringify(form.value)); localStorage.setItem('memoflo_signature_company',companyKey.value); copied.value='';
+const employee = getSavedEmployee();
+const company = ref({ id: '', name: 'Your company', website: '', address: '', bannerUrl: '', previewUrl: '', socials: {} });
+const form = ref({ name: '', title: '', phone: '', email: '' });
+const html = ref('');
+const copied = ref('');
+const loadError = ref('');
+const previewFailed = ref(false);
+const previewBanner = computed(() => {
+  if (previewFailed.value || !company.value.previewUrl) return '';
+  return company.value.previewUrl.startsWith('/') ? company.value.previewUrl : assetUrl(company.value.previewUrl);
+});
+const storageKey = computed(() => `memoflo_signature_form:${company.value.id || 'tenant'}:${employee?._id || employee?.id || 'employee'}`);
+
+function esc(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-const previewHtml=computed(()=>`<div style="font-family:Arial,sans-serif;padding:18px;border:1px solid #e5e7eb;border-radius:12px;"><img src="${company.value.bannerPreview}" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px;margin-bottom:18px;"/><strong>${esc(form.value.name||'Your Name')}</strong><br>${esc(form.value.title||'Your Job Title')}<br>${esc(company.value.name)}<br>📞 ${esc(form.value.phone||'+234...')}<br>✉️ ${esc(form.value.email||'you@company.com')}<br><br>📍 <span style="color:#0f766e">${esc(company.value.address)}</span></div>`);
-async function copyText(text,msg){try{await navigator.clipboard.writeText(text);copied.value=msg;}catch(e){copied.value='Copy failed — select the HTML manually.';}}
-function copyHtml(){copyText(html.value,'HTML copied to clipboard.');}
-async function copyRendered(){const box=document.createElement('div');box.innerHTML=html.value;try{await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html.value],{type:'text/html'}),'text/plain':new Blob([box.innerText],{type:'text/plain'})})]);copied.value='Signature copied — paste it directly into your mail client.';}catch(e){copyText(html.value,'HTML copied to clipboard.');}}
-function useFallbackBanner(e){e.target.src=root+'ringo-banner.gif';}
-try{const saved=JSON.parse(localStorage.getItem('memoflo_signature_form')||'null');if(saved)form.value={...form.value,...saved};}catch{}
-watch(form,generate,{deep:true});
-generate();
+function cleanPhone(value) { return String(value || '').replace(/\s+/g, '').replace(/[^0-9+]/g, ''); }
+function link(url, label) {
+  if (!url) return '';
+  return `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer" style="margin-right:8px;text-decoration:none;color:#0f766e;font-family:Arial,sans-serif;font-size:12px;">${esc(label)}</a>`;
+}
+function generate() {
+  const c = company.value;
+  const phone = cleanPhone(form.value.phone);
+  const phoneLine = phone ? `📞 <a href="https://wa.me/${esc(phone.replace(/^\+/, ''))}" style="color:#111827;text-decoration:none;">${esc(form.value.phone)}</a><br>` : '';
+  const emailLine = form.value.email ? `✉️ <a href="mailto:${esc(form.value.email)}" style="color:#111827;text-decoration:none;">${esc(form.value.email)}</a><br>` : '';
+  const socials = [link(c.website, 'Website'), link(c.socials?.facebook, 'Facebook'), link(c.socials?.x, 'X'), link(c.socials?.instagram, 'Instagram'), link(c.socials?.linkedin, 'LinkedIn')].join('');
+  const banner = c.bannerUrl ? `<td style="width:48%;vertical-align:top;"><img src="${esc(c.bannerUrl)}" style="width:100%;max-width:100%;height:auto;max-height:150px;object-fit:contain;display:block;border-radius:8px;" alt="${esc(c.name)}" /></td>` : '';
+  const leftWidth = c.bannerUrl ? '52%' : '100%';
+  html.value = `<table cellpadding="0" cellspacing="0" border="0" style="font-family:Arial,sans-serif;font-size:14px;width:100%;max-width:700px;color:#111827;table-layout:fixed;border-collapse:collapse;"><tr><td style="vertical-align:top;padding-right:16px;width:${leftWidth};overflow-wrap:anywhere;"><strong>${esc(form.value.name)}</strong><br>${esc(form.value.title)}<br>${esc(c.name)}<br>${phoneLine}${emailLine}${c.address ? `<br><div>📍 <span style="color:#0f766e;">${esc(c.address)}</span></div>` : ''}${socials ? `<div style="margin-top:10px;">${socials}</div>` : ''}</td>${banner}</tr></table>`;
+  try { localStorage.setItem(storageKey.value, JSON.stringify(form.value)); } catch {}
+  copied.value = '';
+}
+const previewHtml = computed(() => `<div style="font-family:Arial,sans-serif;padding:14px;color:#111827;"><strong>${esc(form.value.name || 'Your Name')}</strong><br>${esc(form.value.title || 'Your Job Title')}<br>${esc(company.value.name)}<br>${esc(form.value.phone || 'Phone number')}<br>${esc(form.value.email || 'Email address')}${company.value.address ? `<br>${esc(company.value.address)}` : ''}</div>`);
+async function copyText(value, message) {
+  try { await navigator.clipboard.writeText(value); copied.value = message; }
+  catch { copied.value = 'Clipboard access failed — open View generated HTML and copy it manually.'; }
+}
+function copyHtml() { return copyText(html.value, 'HTML copied to clipboard.'); }
+async function copyRendered() {
+  const box = document.createElement('div'); box.innerHTML = html.value;
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html.value], { type: 'text/html' }), 'text/plain': new Blob([box.innerText], { type: 'text/plain' }) })]);
+    copied.value = 'Signature copied — paste it directly into your mail client.';
+  } catch { await copyText(html.value, 'HTML copied to clipboard.'); }
+}
+onMounted(async () => {
+  try {
+    const result = await api.getCompanyWorkspace();
+    const workspace = result?.data || result;
+    const c = workspace?.company || {};
+    const identity = workspace?.signature || {};
+    company.value = {
+      id: c._id || c.id || employee?.company?._id || '',
+      name: c.name || employee?.company?.name || 'Your company',
+      website: identity.website || c.website || '',
+      address: identity.address || [c.address, c.city, c.state, c.country].filter(Boolean).join(', '),
+      bannerUrl: identity.bannerUrl || '',
+      previewUrl: identity.previewUrl || '',
+      socials: identity.socials || {},
+    };
+    form.value = {
+      name: [employee?.firstName, employee?.lastName].filter(Boolean).join(' '),
+      title: employee?.position?.title || employee?.designation?.name || employee?.jobTitle || '',
+      phone: employee?.phone || '',
+      email: employee?.email || '',
+    };
+    try { const saved = JSON.parse(localStorage.getItem(storageKey.value) || 'null'); if (saved) form.value = { ...form.value, ...saved }; } catch {}
+    generate();
+  } catch (error) {
+    loadError.value = error?.message || 'Unable to load your company signature settings.';
+    company.value.name = employee?.company?.name || 'Your company';
+    generate();
+  }
+});
+watch(form, generate, { deep: true });
 </script>
 
 <style scoped>

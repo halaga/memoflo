@@ -79,7 +79,7 @@ onMounted(load);
     <section v-if="announcements.length" class="mf-announcement-strip" aria-label="Company announcements">
       <span class="mf-announcement-label">ANNOUNCEMENTS</span>
       <div class="mf-announcement-window"><div class="mf-announcement-track">
-        <template v-for="copy in 2" :key="copy"><a v-for="item in announcements" :key="copy + '-' + item._id" class="mf-announcement-item" :href="item.link || undefined" :target="item.link ? '_blank' : undefined" :rel="item.link ? 'noopener noreferrer' : undefined"><strong>{{ item.title }}</strong><span>{{ item.body }}</span><time v-if="item.publishedAt">{{ formatDate(item.publishedAt) }}</time></a></template>
+        <template v-for="copy in 2" :key="copy"><a v-for="item in announcements" :key="copy + '-' + item._id" class="mf-announcement-item" :href="item.link || `/announcements#${item._id}`" :target="item.link ? '_blank' : undefined" :rel="item.link ? 'noopener noreferrer' : undefined"><strong>{{ item.title }}</strong><span>{{ item.body }}</span><time v-if="item.publishedAt">{{ formatDate(item.publishedAt) }}</time></a></template>
       </div></div>
     </section>
 

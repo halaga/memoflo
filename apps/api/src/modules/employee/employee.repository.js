@@ -15,30 +15,28 @@ class EmployeeRepository {
     return Employee.create(data);
   }
 
-  async findById(id, companyId = null) {
+  async findById(id, companyId) {
     const filter = {
       _id: id,
       active: true,
       deletedAt: null,
     };
 
-    if (companyId) {
-      filter.company = companyId;
-    }
+    if (!companyId) throw new Error("Company context is required for employee lookup.");
+    filter.company = companyId;
 
     return populateEmployee(Employee.findOne(filter));
   }
 
-  async findByEmail(email, companyId = null, includePassword = false) {
+  async findByEmail(email, companyId, includePassword = false) {
     const filter = {
       email: email.toLowerCase(),
       active: true,
       deletedAt: null,
     };
 
-    if (companyId) {
-      filter.company = companyId;
-    }
+    if (!companyId) throw new Error("Company context is required for employee lookup.");
+    filter.company = companyId;
 
     let query = Employee.findOne(filter);
 
@@ -49,16 +47,15 @@ class EmployeeRepository {
     return populateEmployee(query);
   }
 
-  async findByEmployeeNo(employeeNo, companyId = null) {
+  async findByEmployeeNo(employeeNo, companyId) {
     const filter = {
       employeeNo,
       active: true,
       deletedAt: null,
     };
 
-    if (companyId) {
-      filter.company = companyId;
-    }
+    if (!companyId) throw new Error("Company context is required for employee lookup.");
+    filter.company = companyId;
 
     return Employee.findOne(filter);
   }
@@ -126,7 +123,7 @@ class EmployeeRepository {
     );
   }
 
-  async clearPositionOccupant(positionId, employeeId) {
+  async clearPositionOccupant(companyId, positionId, employeeId) {
     const Position = (
       await import("../position/position.model.js")
     ).default;
@@ -134,6 +131,7 @@ class EmployeeRepository {
     return Position.updateOne(
       {
         _id: positionId,
+        company: companyId,
         occupant: employeeId,
       },
       {
@@ -142,7 +140,7 @@ class EmployeeRepository {
     );
   }
 
-  async setPositionOccupant(positionId, employeeId) {
+  async setPositionOccupant(companyId, positionId, employeeId) {
     const Position = (
       await import("../position/position.model.js")
     ).default;
@@ -150,6 +148,7 @@ class EmployeeRepository {
     return Position.findOneAndUpdate(
       {
         _id: positionId,
+        company: companyId,
         occupant: null,
         active: true,
       },

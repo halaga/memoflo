@@ -31,8 +31,46 @@ import announcementRoutes from "./modules/announcement/announcement.routes.js";
 
 const app = express();
 
+function isAllowedOrigin(origin) {
+  // Requests without an Origin header are common for server-to-server clients,
+  // health checks and native clients; CORS does not apply to them.
+  if (!origin) return true;
+
+  const configuredOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (configuredOrigins.includes(origin)) return true;
+
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const parsed = new URL(origin);
+      const hostname = parsed.hostname.toLowerCase();
+      const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(hostname);
+      const isLocalTenantHost = hostname.endsWith(".localhost");
+      return (parsed.protocol === "http:" || parsed.protocol === "https:") && (isLocalHost || isLocalTenantHost);
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) return callback(null, true);
+    const error = new Error("Origin is not allowed by MemoFlo CORS policy");
+    error.status = 403;
+    return callback(error);
+  },
+  credentials: true,
+  methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  maxAge: 600,
+}));
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -22,6 +22,7 @@ const permissions = [
     description: "Enable or disable company modules",
   },
   { name: "company.branding.update", module: "company", action: "branding.update", description: "Customize company tenant branding" },
+  { name: "announcements.manage", module: "announcements", action: "manage", description: "Manage company announcements" },
   { name: "notifications.view", module: "notifications", action: "view", description: "View notifications" },
   { name: "notifications.update", module: "notifications", action: "update", description: "Mark notifications as read" },
   { name: "inventory.view", module: "inventory", action: "view", description: "View company inventory records" },

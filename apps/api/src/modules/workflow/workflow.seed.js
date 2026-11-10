@@ -137,6 +137,7 @@ export async function seedProcurementWorkflow(company) {
 
   for (const step of steps) {
     const exists = await WorkflowStep.findOne({
+      company: companyId,
       workflow: workflow._id,
       order: step.order,
     });
@@ -146,6 +147,7 @@ export async function seedProcurementWorkflow(company) {
     }
 
     await WorkflowStep.create({
+      company: companyId,
       workflow: workflow._id,
       ...step,
       required: true,

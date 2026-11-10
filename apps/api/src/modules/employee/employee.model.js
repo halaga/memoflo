@@ -11,7 +11,6 @@ const employeeSchema = new mongoose.Schema(
     employeeNo: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     firstName: {
@@ -29,7 +28,6 @@ const employeeSchema = new mongoose.Schema(
       required: true,
       lowercase: true,
       trim: true,
-      unique: true,
     },
     phone: {
       type: String,
@@ -97,6 +95,9 @@ const employeeSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+employeeSchema.index({ company: 1, employeeNo: 1 }, { unique: true, name: "uniq_employee_company_employee_no" });
+employeeSchema.index({ company: 1, email: 1 }, { unique: true, name: "uniq_employee_company_email" });
 
 employeeSchema.virtual("fullName").get(function () {
   return `${this.firstName} ${this.lastName}`;

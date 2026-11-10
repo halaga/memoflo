@@ -81,6 +81,13 @@ class CompanyController {
       next(error);
     }
   }
+
+  async updateSignature(req, res, next) {
+    try {
+      const workspace = await CompanyService.updateSignature(req.user.company, req.body.signature);
+      return res.json({ success: true, data: workspace });
+    } catch (error) { return next(error); }
+  }
 }
 
 export default new CompanyController();

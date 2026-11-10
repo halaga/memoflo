@@ -9,6 +9,50 @@ const DEFAULT_BRANDING = {
   secondaryColor: "#1E293B",
 };
 
+// Preserve the signature Ringo already uses. These defaults are deliberately
+// restricted to the RINGO tenant; no other company inherits Ringo assets or links.
+const RINGO_SIGNATURE_DEFAULTS = {
+  bannerUrl: "https://ringo.ng/assets/ringo-banner.png?v=1.1",
+  previewUrl: "/signatures/ringo-banner.gif",
+  address: "75, Allen Avenue, Ikeja, Lagos, Nigeria",
+  website: "https://ringo.ng",
+  socials: {
+    facebook: "https://www.facebook.com/share/1HourvExG4/",
+    x: "https://x.com/ringotelcomLtd",
+    instagram: "https://www.instagram.com/ringotelecommunicationsltd",
+  },
+};
+
+function resolveSignature(company) {
+  const configured = company.settings?.signature || {};
+  const isRingo = String(company.code || "").toUpperCase() === "RINGO";
+  const defaults = isRingo ? RINGO_SIGNATURE_DEFAULTS : {};
+  const value = (source, key, fallback = "") =>
+    Object.prototype.hasOwnProperty.call(source || {}, key) ? source[key] : fallback;
+  return {
+    bannerUrl: value(configured, "bannerUrl", defaults.bannerUrl || ""),
+    previewUrl: value(configured, "previewUrl", defaults.previewUrl || ""),
+    address: value(configured, "address", defaults.address || company.address || ""),
+    website: value(configured, "website", defaults.website || company.website || ""),
+    socials: {
+      facebook: value(configured.socials, "facebook", defaults.socials?.facebook || ""),
+      x: value(configured.socials, "x", defaults.socials?.x || ""),
+      instagram: value(configured.socials, "instagram", defaults.socials?.instagram || ""),
+      linkedin: value(configured.socials, "linkedin", defaults.socials?.linkedin || ""),
+    },
+  };
+}
+
+function validateOptionalUrl(value, label, { allowRelative = false } = {}) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  if (allowRelative && text.startsWith("/") && !text.startsWith("//")) return text;
+  let parsed;
+  try { parsed = new URL(text); } catch { throw new Error(`${label} must be a valid HTTP(S) URL${allowRelative ? " or a site-relative path" : ""}`); }
+  if (!["http:", "https:"].includes(parsed.protocol)) throw new Error(`${label} must use HTTP or HTTPS`);
+  return text;
+}
+
 class CompanyService {
   async getWorkspace(companyId) {
     const companyDoc = await CompanyRepository.findById(companyId);
@@ -46,6 +90,7 @@ class CompanyService {
         ...company,
         branding,
       },
+      signature: resolveSignature(company),
       modules: MODULE_CATALOGUE.map((module) => ({
         ...module,
         enabled: enabledModules.includes(module.id),
@@ -148,6 +193,28 @@ class CompanyService {
       cleanedBranding
     );
 
+    return this.getWorkspace(companyId);
+  }
+
+  async updateSignature(companyId, signature = {}) {
+    const allowed = ["bannerUrl", "previewUrl", "address", "website"];
+    const cleaned = {};
+    for (const key of allowed) {
+      if (signature[key] === undefined) continue;
+      const value = String(signature[key] ?? "").trim();
+      if (value.length > (key === "address" ? 240 : 500)) throw new Error(`${key} is too long`);
+      cleaned[key] = key === "address" ? value : validateOptionalUrl(value, key, { allowRelative: key === "previewUrl" });
+    }
+    if (signature.socials !== undefined) {
+      if (!signature.socials || typeof signature.socials !== "object" || Array.isArray(signature.socials)) throw new Error("Social links must be an object");
+      const socials = {};
+      for (const key of ["facebook", "x", "instagram", "linkedin"]) {
+        if (signature.socials[key] !== undefined) socials[key] = validateOptionalUrl(signature.socials[key], `${key} URL`);
+      }
+      cleaned.socials = socials;
+    }
+    const updated = await CompanyRepository.updateSignature(companyId, cleaned);
+    if (!updated) throw new Error("Company not found");
     return this.getWorkspace(companyId);
   }
 }

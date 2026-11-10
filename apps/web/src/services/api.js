@@ -137,6 +137,13 @@ export const api = {
     });
   },
 
+  updateCompanySignature(signature) {
+    return request("/company/signature", {
+      method: "PATCH",
+      body: JSON.stringify({ signature }),
+    });
+  },
+
   listAuditLogs(filters = {}) {
     const params = new URLSearchParams();
 

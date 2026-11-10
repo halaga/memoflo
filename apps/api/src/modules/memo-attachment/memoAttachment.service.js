@@ -7,14 +7,18 @@ import MemoEventService from "../memo-event/memoEvent.service.js";
 import MemoAttachment from "./memoAttachment.model.js";
 
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
-// Resolve storage from the API package, never from whichever directory started Node.
-const STORAGE_ROOT = path.resolve(
-  process.env.MEMOFLO_STORAGE_PATH || path.resolve(MODULE_DIR, "../../../storage")
-);
+const API_ROOT = path.resolve(MODULE_DIR, "../../..");
+// Relative storage configuration is anchored to the API package, not process.cwd().
+const configuredStorage = process.env.MEMOFLO_STORAGE_PATH || "storage";
+const STORAGE_ROOT = path.isAbsolute(configuredStorage)
+  ? path.resolve(configuredStorage)
+  : path.resolve(API_ROOT, configuredStorage);
+// Include the locations used by previous MemoFlo releases. Reads remain scoped
+// to the memo/company metadata; this list only preserves on-disk compatibility.
 const LEGACY_STORAGE_ROOTS = [...new Set([
   STORAGE_ROOT,
+  path.resolve(API_ROOT, "storage"),
   path.resolve(process.cwd(), "storage"),
-  path.resolve(MODULE_DIR, "../../../storage"),
   path.resolve(MODULE_DIR, "../../../../../storage"),
 ])];
 const ALLOWED = new Set([
@@ -53,8 +57,13 @@ async function locateStoredFile(relativePath) {
     const fromRoot = path.relative(root, absolutePath);
     if (!fromRoot || fromRoot === ".." || fromRoot.startsWith(`..${path.sep}`) || path.isAbsolute(fromRoot)) continue;
     try {
-      await fs.access(absolutePath);
-      return absolutePath;
+      // realpath also prevents a symlink inside storage from escaping its root.
+      const [realRoot, realFile] = await Promise.all([fs.realpath(root), fs.realpath(absolutePath)]);
+      const realRelative = path.relative(realRoot, realFile);
+      if (!realRelative || realRelative === ".." || realRelative.startsWith(`..${path.sep}`) || path.isAbsolute(realRelative)) continue;
+      const stat = await fs.stat(realFile);
+      if (!stat.isFile()) continue;
+      return realFile;
     } catch { /* Try the next known storage root for files uploaded before this fix. */ }
   }
   throw fail("Attachment file is missing from storage. The attachment record exists, but the stored file could not be found.", 404);

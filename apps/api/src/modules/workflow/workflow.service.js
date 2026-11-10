@@ -98,7 +98,7 @@ class WorkflowService {
       throw new Error("Workflow not found");
     }
 
-    const steps = await WorkflowRepository.findSteps(workflow._id);
+    const steps = await WorkflowRepository.findSteps(companyId, workflow._id);
 
     return { workflow, steps };
   }
@@ -177,7 +177,7 @@ class WorkflowService {
       throw new Error("Workflow not found");
     }
 
-    const steps = await WorkflowRepository.findSteps(workflowId);
+    const steps = await WorkflowRepository.findSteps(companyId, workflowId);
 
     const order =
       Number(payload.order) > 0
@@ -192,6 +192,7 @@ class WorkflowService {
 
     if (steps.some((step) => Number(step.order) === order)) {
       await WorkflowRepository.shiftStepsFromOrder(
+        companyId,
         workflowId,
         order
       );
@@ -199,6 +200,7 @@ class WorkflowService {
 
     return WorkflowRepository.createStep({
       ...payload,
+      company: companyId,
       order,
       workflow: workflowId,
     });
@@ -215,6 +217,7 @@ class WorkflowService {
     }
 
     const existingSteps = await WorkflowRepository.findSteps(
+      companyId,
       workflowId
     );
 
@@ -244,12 +247,14 @@ class WorkflowService {
       Number(payload.order) !== Number(existing.order)
     ) {
       await WorkflowRepository.shiftStepsFromOrder(
+        companyId,
         workflowId,
         Number(payload.order)
       );
     }
 
     const step = await WorkflowRepository.updateStep(
+      companyId,
       workflowId,
       stepId,
       safeStepUpdates(payload)
@@ -274,6 +279,7 @@ class WorkflowService {
 
     const existing = await WorkflowStep.findOne({
       _id: stepId,
+      company: companyId,
       workflow: workflowId,
       isActive: false,
     });
@@ -285,6 +291,7 @@ class WorkflowService {
     await validateWorkflowPosition(companyId, positionId);
 
     const step = await WorkflowRepository.reactivateStep(
+      companyId,
       workflowId,
       stepId,
       safeStepUpdates(payload)
@@ -308,6 +315,7 @@ class WorkflowService {
     }
 
     const step = await WorkflowRepository.deactivateStep(
+      companyId,
       workflowId,
       stepId
     );
@@ -399,6 +407,7 @@ class WorkflowService {
     }
 
     return WorkflowEngine.resubmit({
+      companyId,
       instanceId,
       employeeId,
       comment,

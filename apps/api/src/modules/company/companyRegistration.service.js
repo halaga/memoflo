@@ -12,6 +12,7 @@ const DEFAULT_MODULES = [
   "it",
   "workplace",
   "communication",
+  "signature",
   "memos",
   "leave",
   "procurement",
@@ -65,9 +66,6 @@ class CompanyRegistrationService {
   async register(payload) {
     const data = validatePayload(payload);
 
-    const existingEmployee = await Employee.findOne({ email: data.email }).select("_id").lean();
-    if (existingEmployee) throw createError("An account with this email already exists.", 409);
-
     const baseSlug = slugify(data.companyName);
     if (!baseSlug) throw createError("Please provide a company name containing letters or numbers.");
 
@@ -96,6 +94,9 @@ class CompanyRegistrationService {
               secondaryColor: "#1E293B",
               tagline: "Workflow, simplified.",
             },
+            // Signature settings are tenant-owned. Missing fields resolve only
+            // from this company's profile; Ringo defaults are code-gated.
+            signature: {},
           },
         });
         break;
@@ -135,7 +136,7 @@ class CompanyRegistrationService {
         role: adminRole._id,
       });
 
-      const hydratedEmployee = await Employee.findById(employee._id)
+      const hydratedEmployee = await Employee.findOne({ _id: employee._id, company: company._id })
         .populate("company")
         .populate("role")
         .populate("position")

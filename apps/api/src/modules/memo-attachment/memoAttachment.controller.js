@@ -12,7 +12,13 @@ class MemoAttachmentController {
   async download(req, res, next) {
     try {
       const { attachment, absolutePath } = await MemoAttachmentService.getFile(req.user.company, req.params.memoId, req.params.attachmentId);
-      res.download(absolutePath, attachment.originalName);
+      res.set({
+        "Cache-Control": "private, no-store, max-age=0",
+        "X-Content-Type-Options": "nosniff",
+      });
+      res.download(absolutePath, attachment.originalName, (error) => {
+        if (error && !res.headersSent) next(error);
+      });
     } catch (error) { next(error); }
   }
 

@@ -148,7 +148,7 @@ class EmployeeService {
 
     data.email = data.email.toLowerCase().trim();
 
-    const existing = await EmployeeRepository.findByEmail(data.email);
+    const existing = await EmployeeRepository.findByEmail(data.email, companyId);
     if (existing) {
       throw createError("Email already exists", 409);
     }
@@ -255,7 +255,8 @@ class EmployeeService {
       data.email = data.email.toLowerCase().trim();
 
       const duplicate = await EmployeeRepository.findByEmail(
-        data.email
+        data.email,
+        companyId
       );
 
       if (
@@ -312,17 +313,20 @@ class EmployeeService {
           oldPositionId.toString() !== data.position.toString()
         ) {
           await EmployeeRepository.clearPositionOccupant(
+            companyId,
             oldPositionId,
             id
           );
         }
 
         await EmployeeRepository.setPositionOccupant(
+          companyId,
           data.position,
           id
         );
       } else if (oldPositionId) {
         await EmployeeRepository.clearPositionOccupant(
+          companyId,
           oldPositionId,
           id
         );
@@ -388,6 +392,7 @@ class EmployeeService {
 
     if (positionId) {
       await EmployeeRepository.clearPositionOccupant(
+        companyId,
         positionId,
         id
       );

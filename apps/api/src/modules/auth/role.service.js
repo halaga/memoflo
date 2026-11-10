@@ -279,7 +279,7 @@ class RoleService {
     employee.role = role._id;
     await employee.save();
 
-    return Employee.findById(employee._id)
+    return Employee.findOne({ _id: employee._id, company: companyId, active: true, deletedAt: null })
       .populate("company")
       .populate("position")
       .populate("role");

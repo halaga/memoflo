@@ -82,6 +82,24 @@ class WorkflowEngine {
       throw new Error("Workflow is inactive");
     }
 
+    // The workflow start endpoint accepts a resource ID from the request.
+    // Validate ownership before creating an instance or changing the resource.
+    if (normalizedResourceType !== "memo") {
+      throw new Error("Unsupported workflow resource type");
+    }
+    const resource = await Memo.findOne({
+      _id: resourceId,
+      company: companyId,
+      isActive: true,
+      deletedAt: null,
+    }).select("_id workflow status").lean();
+    if (!resource) {
+      throw new Error("Workflow resource not found in this company");
+    }
+    if (resource.workflow && String(resource.workflow) !== String(workflowId)) {
+      throw new Error("The selected workflow is not assigned to this memo");
+    }
+
     const existingInstance =
       await WorkflowRepository.findInstanceByResource(
         companyId,
@@ -96,6 +114,7 @@ class WorkflowEngine {
     }
 
     const firstStep = await WorkflowRepository.findFirstStep(
+      companyId,
       workflowId
     );
 
@@ -227,6 +246,7 @@ class WorkflowEngine {
     const currentOrder = currentStep.order;
 
     const nextStep = await WorkflowRepository.findNextStep(
+      companyId,
       instance.workflow._id,
       currentOrder
     );
@@ -509,8 +529,8 @@ class WorkflowEngine {
     return updatedInstance;
   }
 
-  async resubmit({ instanceId, employeeId, comment = "" }) {
-    const oldInstance = await WorkflowInstance.findById(instanceId);
+  async resubmit({ companyId, instanceId, employeeId, comment = "" }) {
+    const oldInstance = await WorkflowInstance.findOne({ _id: instanceId, company: companyId, isActive: true, deletedAt: null });
 
     if (!oldInstance) {
       throw new Error("Workflow instance not found");
@@ -528,11 +548,18 @@ class WorkflowEngine {
       );
     }
 
+    const memo = await Memo.findOne({ _id: oldInstance.resourceId, company: companyId, isActive: true, deletedAt: null }).select("_id").lean();
+    if (!memo) throw new Error("Memo not found in this company");
+
+    const workflow = await WorkflowRepository.findById(oldInstance.workflow, companyId);
+    if (!workflow) throw new Error("Workflow not found in this company");
+
     const firstStep = await WorkflowStep.findOne({
-      workflow: oldInstance.workflow,
+      company: companyId,
+      workflow: workflow._id,
       order: 1,
       isActive: true,
-    }).populate("position");
+    }).populate({ path: "position", match: { company: companyId } });
 
     if (!firstStep) {
       throw new Error("Workflow has no active starting step");
@@ -544,7 +571,7 @@ class WorkflowEngine {
     if (firstStep.position) {
       const resolved = await WorkflowResolver.resolvePosition(
         firstStep.position._id,
-        oldInstance.company
+        companyId
       );
 
       currentPosition = resolved.position;

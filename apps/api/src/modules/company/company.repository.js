@@ -56,6 +56,22 @@ class CompanyRepository {
       { new: true, runValidators: true }
     );
   }
+
+  async updateSignature(companyId, signature) {
+    const updates = {};
+    for (const [key, value] of Object.entries(signature)) {
+      if (key === "socials" && value && typeof value === "object") {
+        for (const [social, url] of Object.entries(value)) updates[`settings.signature.socials.${social}`] = url;
+      } else {
+        updates[`settings.signature.${key}`] = value;
+      }
+    }
+    return Company.findOneAndUpdate(
+      { _id: companyId, isActive: true, deletedAt: null },
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+  }
 }
 
 export default new CompanyRepository();

@@ -17,6 +17,7 @@ import InventoryView from "../views/administration/InventoryView.vue";
 import ServiceRequestDetailView from "../views/ServiceRequestDetailView.vue";
 import AccessDeniedView from "../views/AccessDeniedView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
+import AnnouncementsView from "../views/AnnouncementsView.vue";
 import { api, getSavedEmployee } from "../services/api";
 
 function hostname() {
@@ -256,6 +257,7 @@ const routes = [
         },
       },
 
+      { path: "announcements", name: "announcements", component: AnnouncementsView },
       {
         path: "notifications",
         name: "notifications",
