@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onBeforeUnmount, ref } from "vue";
+import { computed, onMounted, onBeforeUnmount, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import Sidebar from "../components/layout/Sidebar.vue";
 import Topbar from "../components/layout/Topbar.vue";
@@ -36,6 +36,14 @@ function handleResize() {
   if (!isMobile.value) mobileOpen.value = false;
 }
 
+function handleKeydown(event) {
+  if (event.key === "Escape" && mobileOpen.value) mobileOpen.value = false;
+}
+
+watch(mobileOpen, (open) => {
+  document.body.style.overflow = open && isMobile.value ? "hidden" : "";
+});
+
 async function loadWorkspace() {
   try {
     const [workspaceResult, meResult] = await Promise.all([
@@ -56,8 +64,13 @@ async function loadWorkspace() {
 onMounted(() => {
   loadWorkspace();
   window.addEventListener("resize", handleResize);
+  window.addEventListener("keydown", handleKeydown);
 });
-onBeforeUnmount(() => window.removeEventListener("resize", handleResize));
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", handleResize);
+  window.removeEventListener("keydown", handleKeydown);
+  document.body.style.overflow = "";
+});
 </script>
 
 <template>

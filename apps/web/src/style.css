@@ -4447,3 +4447,266 @@ html,body,#app{width:100%;min-height:100%;max-width:100%;overflow-x:clip}*,*::be
 .register-field-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
 .register-password-hint { margin:12px 0; color:#718198; font-size:11px; line-height:1.5; }
 @media (max-width: 680px) { .register-form-side { padding:18px 12px; } .register-field-row { grid-template-columns:minmax(0,1fr); } .register-card { padding:24px 18px; } }
+
+/* ==============================================================
+   M5 — Workspace layout, readable density and responsive polish
+   Kept as a final override layer to avoid rewriting feature styles.
+   ============================================================== */
+:root {
+  --mf-sidebar-expanded: 264px;
+  --mf-sidebar-collapsed: 82px;
+  --mf-content-max: 1600px;
+  --mf-content-gutter: clamp(14px, 2.2vw, 32px);
+  --mf-content-top: clamp(18px, 2vw, 26px);
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.experience-shell {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: 100dvh;
+  height: auto;
+  overflow: clip;
+}
+
+.experience-shell .experience-sidebar {
+  position: sticky;
+  inset: 0 auto auto 0;
+  z-index: 40;
+  flex: 0 0 var(--mf-sidebar-expanded);
+  width: var(--mf-sidebar-expanded);
+  height: 100dvh;
+  min-height: 0;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  transition: width .18s ease, flex-basis .18s ease, transform .18s ease;
+}
+
+.experience-shell.sidebar-collapsed .experience-sidebar {
+  flex-basis: var(--mf-sidebar-collapsed);
+  width: var(--mf-sidebar-collapsed);
+  min-width: var(--mf-sidebar-collapsed);
+}
+
+.experience-shell .main {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  width: 0;
+  min-width: 0;
+  min-height: 100dvh;
+  height: auto;
+  max-width: 100%;
+  margin: 0;
+  overflow: visible;
+}
+
+.experience-shell .experience-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 0;
+  width: 100%;
+  min-height: 72px;
+  max-width: 100%;
+  padding: 10px var(--mf-content-gutter);
+  gap: clamp(10px, 1.4vw, 22px);
+}
+
+.experience-shell .topbar-title,
+.experience-shell .topbar-actions,
+.experience-shell .topbar-command {
+  min-width: 0;
+}
+
+.experience-shell .topbar-title { flex: 0 1 auto; }
+.experience-shell .topbar-title h2 {
+  max-width: min(28vw, 320px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.experience-shell .topbar-command {
+  flex: 1 1 360px;
+  width: auto;
+  max-width: 620px;
+  margin-inline: auto;
+}
+.experience-shell .topbar-actions { flex: 0 0 auto; }
+
+.experience-shell .content {
+  flex: 1 0 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: var(--mf-content-max);
+  margin-inline: auto;
+  padding: var(--mf-content-top) var(--mf-content-gutter) clamp(30px, 4vw, 56px);
+  overflow: visible;
+}
+
+.experience-shell .content > *,
+.experience-shell .content :where(section, article, form, header, footer, main, aside, div) {
+  min-width: 0;
+}
+
+.experience-shell :where(h1, h2, h3, h4, p, strong, small, span, a, button, label) {
+  overflow-wrap: break-word;
+}
+
+.experience-shell .page-header h1,
+.experience-shell .page-head h1,
+.experience-shell .experience-page h1 {
+  font-size: clamp(23px, 2.1vw, 30px);
+  line-height: 1.16;
+  letter-spacing: -.035em;
+}
+
+.experience-shell :where(input, select, textarea, button) { max-width: 100%; }
+.experience-shell :where(button, a, input, select, textarea):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--mf-primary, #2563eb) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.experience-shell :where(.table-wrap, .table-container, .table-responsive, .table-scroll, .data-table-wrap) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.experience-shell table { max-width: 100%; }
+.experience-shell :where(.card, .panel, .workspace-panel, .form-card, .content-card) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.experience-shell .sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgba(15, 23, 42, .48);
+  backdrop-filter: blur(2px);
+}
+
+@media (max-width: 1100px) {
+  .experience-shell .topbar-command { flex-basis: 240px; }
+  .experience-shell .topbar-user > span:last-child { display: none; }
+}
+
+@media (max-width: 900px) {
+  .experience-shell { display: block; min-height: 100dvh; }
+  .experience-shell .experience-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    width: min(280px, 86vw);
+    min-width: 0;
+    max-width: 86vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    flex: none;
+    transform: translateX(-105%);
+    visibility: hidden;
+    pointer-events: none;
+    box-shadow: 16px 0 42px rgba(15, 23, 42, .2);
+  }
+  .experience-shell .experience-sidebar.sidebar-mobile-open {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .experience-shell .experience-sidebar.sidebar-mobile-closed {
+    transform: translateX(-105%);
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .experience-shell .experience-sidebar.sidebar-mobile-open .sidebar-nav-label,
+  .experience-shell .experience-sidebar.sidebar-mobile-open .mf-brand-copy,
+  .experience-shell .experience-sidebar.sidebar-mobile-open .nav-caption,
+  .experience-shell .experience-sidebar.sidebar-mobile-open .sidebar-profile-copy,
+  .experience-shell .experience-sidebar.sidebar-mobile-open .portfolio-copy,
+  .experience-shell .experience-sidebar.sidebar-mobile-open .portfolio-link > svg,
+  .experience-shell .experience-sidebar.sidebar-mobile-open .admin-chevron { display: flex; }
+  .experience-shell .experience-sidebar.sidebar-mobile-open .nav-caption { display: block; }
+  .experience-shell .experience-sidebar.sidebar-mobile-open .sidebar-top-row { flex-direction: row; }
+  .experience-shell .experience-sidebar.sidebar-mobile-open .experience-nav-item { justify-content: flex-start; padding: 10px 12px; }
+  .experience-shell .experience-sidebar.sidebar-mobile-open .portfolio-link,
+  .experience-shell .experience-sidebar.sidebar-mobile-open .admin-entry,
+  .experience-shell .experience-sidebar.sidebar-mobile-open .sidebar-profile { justify-content: flex-start; }
+  .experience-shell .main {
+    width: 100%;
+    min-height: 100dvh;
+    margin: 0;
+  }
+  .experience-shell .experience-topbar {
+    min-height: 64px;
+    padding: 9px 14px;
+    gap: 9px;
+  }
+  .experience-shell .mobile-nav-trigger { display: inline-grid; }
+  .experience-shell .topbar-back-trigger { display: none; }
+  .experience-shell .topbar-home-trigger { display: inline-grid; }
+  .experience-shell .topbar-title { display: flex; flex: 0 0 auto; gap: 5px; }
+  .experience-shell .topbar-title h2 { max-width: 150px; font-size: 15px; }
+  .experience-shell .topbar-context { display: none; }
+  .experience-shell .topbar-command { flex: 1 1 auto; min-width: 80px; max-width: none; margin: 0; }
+  .experience-shell .topbar-command input { height: 40px; font-size: 12px; }
+  .experience-shell .topbar-command kbd { display: none; }
+  .experience-shell .content { padding: 18px 16px 34px; }
+}
+
+@media (max-width: 600px) {
+  .experience-shell .experience-topbar { gap: 7px; padding-inline: 10px; }
+  .experience-shell .topbar-home-trigger { display: none; }
+  .experience-shell .topbar-title h2 { max-width: 105px; }
+  .experience-shell .topbar-actions { gap: 4px; }
+  .experience-shell .topbar-actions .topbar-user,
+  .experience-shell .topbar-signout { display: none; }
+  .experience-shell .topbar-icon-button { width: 34px; height: 34px; }
+  .experience-shell .topbar-command { padding-inline: 8px; }
+  .experience-shell .content { padding: 16px 12px 28px; }
+  .experience-shell .page-header,
+  .experience-shell .page-head { flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .experience-shell .page-header h1,
+  .experience-shell .page-head h1,
+  .experience-shell .experience-page h1 { font-size: 24px; }
+  .experience-shell :where(.form-row, .form-grid, .two-column-grid, .detail-grid) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .experience-shell :where(.form-actions, .toolbar, .page-actions) { flex-wrap: wrap; }
+  .experience-shell :where(.form-actions, .toolbar, .page-actions) > * { min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .experience-shell *,
+  .experience-shell *::before,
+  .experience-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
