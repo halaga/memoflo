@@ -13,23 +13,16 @@ const search = ref(String(route.query.q || ""));
 const darkMode = ref(false);
 
 const titles = {
-  home: "Home", "my-work": "My Work", 
-  services: "Services", 
-  people: "People",
-  company: "Company", 
-  notifications: "Notifications", 
-  administration: "Administration",
-  "workflow-settings": "Workflow Settings", 
-  roles: "Roles & Permissions",
+  home: "Home", "my-work": "My Work", services: "Services", people: "People",
+  company: "Company", notifications: "Notifications", administration: "Administration",
+  "workflow-settings": "Workflow Settings", roles: "Roles & Permissions",
   employees: "Employees", "organization-structure": "Organization Structure",
   "module-access": "Module Access", "company-branding": "Company Branding",
   "service-catalogue": "Service Catalogue", "service-detail": "Service Details",
   "service-action": "Service Request", "global-search": "Search",
-  "employee-profile": "Employee Profile", 
-  inventory: "Inventory",
+  "employee-profile": "Employee Profile", inventory: "Inventory",
   memos: "Memos", "create-memo": "Create Memo", "memo-detail": "Memo Details",
-  approvals: "Approvals", 
-  completed: "Completed", "email-signature": "Email Signature",
+  approvals: "Approvals", completed: "Completed", "email-signature": "Email Signature",
 };
 const title = computed(() => titles[route.name] || "MemoFlo");
 const initials = computed(() => `${employee.value?.firstName?.[0] || ""}${employee.value?.lastName?.[0] || ""}`.toUpperCase() || "MF");

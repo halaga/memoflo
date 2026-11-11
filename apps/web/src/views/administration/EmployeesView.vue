@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { api, normalizeList } from "../../services/api";
 
 const employees = ref([]);
@@ -49,14 +49,28 @@ async function load() {
   finally { loading.value = false; }
 }
 
-function openCreate() { resetForm(); credentials.value = null; success.value = ""; showForm.value = true; }
-function openInvite() {
+async function revealEmployeeForm() {
+  await nextTick();
+  const formCard = document.querySelector(".employee-form-card");
+  formCard?.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.setTimeout(() => formCard?.querySelector("input")?.focus({ preventScroll: true }), 250);
+}
+
+async function openCreate() {
+  resetForm();
+  credentials.value = null;
+  success.value = "";
+  showForm.value = true;
+  await revealEmployeeForm();
+}
+async function openInvite() {
   resetForm();
   inviteMode.value = true;
   form.value.createLogin = false;
   credentials.value = null;
   success.value = "";
   showForm.value = true;
+  await revealEmployeeForm();
 }
 async function copyInvitationLink() {
   if (!credentials.value?.invitationUrl) return;
@@ -67,7 +81,7 @@ async function copyInvitationLink() {
     success.value = "Copy the invitation link from the field below.";
   }
 }
-function openEdit(employee) {
+async function openEdit(employee) {
   editingId.value = employee._id;
   inviteMode.value = false;
   credentials.value = null;
@@ -84,6 +98,7 @@ function openEdit(employee) {
     password: "",
   };
   showForm.value = true;
+  await revealEmployeeForm();
 }
 
 async function save() {
@@ -188,7 +203,7 @@ onMounted(load);
       </div>
     </section>
 
-    <section v-if="showForm" class="card employee-form-card">
+    <section v-if="showForm" class="card employee-form-card" style="scroll-margin-top: 92px">
       <div class="builder-title">
         <div>
           <span class="page-kicker">

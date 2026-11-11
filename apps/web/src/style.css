@@ -4710,3 +4710,86 @@ body,
     transition-duration: .01ms !important;
   }
 }
+
+
+/* M6 correction: the collapsed-state legacy margin created the blank strip
+   between the sidebar and the topbar. Keep the existing sidebar width and
+   controls untouched; the main column must begin immediately after it. */
+.experience-shell.sidebar-collapsed .main {
+  margin-left: 0 !important;
+}
+
+/* Softer dark surfaces and non-glare text across legacy and current pages. */
+.theme-dark,
+.theme-dark body {
+  color: #d5deeb;
+  background: #101827;
+}
+.theme-dark .experience-shell,
+.theme-dark .experience-shell .content,
+.theme-dark .experience-shell main,
+.theme-dark .experience-shell .page {
+  color: #d5deeb;
+}
+.theme-dark .experience-shell .card,
+.theme-dark .experience-shell .panel,
+.theme-dark .experience-shell .dashboard-card,
+.theme-dark .experience-shell .quick-card,
+.theme-dark .experience-shell .modal,
+.theme-dark .experience-shell .table-wrap,
+.theme-dark .experience-shell .workspace-panel {
+  color: #d5deeb;
+  background-color: #182437;
+  border-color: #34445b;
+}
+.theme-dark .experience-shell h1,
+.theme-dark .experience-shell h2,
+.theme-dark .experience-shell h3,
+.theme-dark .experience-shell h4,
+.theme-dark .experience-shell strong,
+.theme-dark .experience-shell label,
+.theme-dark .experience-shell th,
+.theme-dark .experience-shell td,
+.theme-dark .experience-shell p,
+.theme-dark .experience-shell li {
+  color: #d5deeb;
+}
+.theme-dark .experience-shell .muted,
+.theme-dark .experience-shell small,
+.theme-dark .experience-shell .helper-text,
+.theme-dark .experience-shell .page-kicker,
+.theme-dark .experience-shell .eyebrow {
+  color: #a5b3c7;
+}
+.theme-dark .experience-shell a { color: #a9c9f5; }
+.theme-dark .experience-shell input,
+.theme-dark .experience-shell select,
+.theme-dark .experience-shell textarea {
+  color: #dbe4ef;
+  background: #121e30;
+  border-color: #3a4b63;
+}
+.theme-dark .experience-shell input::placeholder,
+.theme-dark .experience-shell textarea::placeholder { color: #91a1b7; }
+.theme-dark .experience-shell button:not(.primary):not(.btn-primary) {
+  color: #d5deeb;
+  border-color: #3a4b63;
+}
+.theme-dark .experience-shell .topbar-command {
+  color: #aebbd0;
+  background: #182437;
+  border-color: #34445b;
+}
+.theme-dark .experience-shell .topbar-command input { color: #dbe4ef; }
+.theme-dark .experience-shell .topbar-command kbd,
+.theme-dark .experience-shell .topbar-actions .icon-button,
+.theme-dark .experience-shell .topbar-signout {
+  color: #d5deeb;
+  background: #202e43;
+  border-color: #3a4b63;
+}
+.theme-dark .experience-shell .topbar.experience-topbar {
+  color: #d5deeb;
+  background: rgba(20, 31, 48, .97);
+  border-color: #34445b;
+}

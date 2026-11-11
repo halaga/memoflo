@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { api, normalizeList } from "../../services/api";
 import { downloadCsv, parseCsv } from "../../utils/dataTransfer";
 import AppIcon from "../../components/ui/AppIcon.vue";
@@ -74,15 +74,23 @@ async function load() {
   loading.value = false;
 }
 
-function startCreate() {
+async function revealInventoryForm() {
+  await nextTick();
+  const formPanel = document.querySelector(".inventory-form-panel");
+  formPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+  window.setTimeout(() => formPanel?.querySelector("input, select, textarea")?.focus({ preventScroll: true }), 250);
+}
+
+async function startCreate() {
   editingId.value = "";
   form.value = { ...emptyForm(), ownerDepartment: departmentFilter.value };
   showForm.value = true;
   error.value = "";
   notice.value = "";
+  await revealInventoryForm();
 }
 
-function edit(item) {
+async function edit(item) {
   editingId.value = item._id;
   form.value = {
     ...emptyForm(),
@@ -94,6 +102,7 @@ function edit(item) {
   showForm.value = true;
   error.value = "";
   notice.value = "";
+  await revealInventoryForm();
 }
 
 async function save() {
@@ -254,7 +263,7 @@ onMounted(load);
       <button type="button" :class="{ active: departmentFilter && /administration|\badmin\b/i.test(departmentName(departmentFilter)) }" @click="setDepartmentPreset('admin')"><AppIcon name="company" :size="16" /> Admin inventory</button>
     </div>
 
-    <section v-if="showForm" class="workspace-panel inventory-form-panel">
+    <section v-if="showForm" class="workspace-panel inventory-form-panel" style="scroll-margin-top: 92px">
       <header class="section-title-row"><div><span class="eyebrow">INVENTORY RECORD</span><h2>{{ editingId ? "Edit inventory item" : "Add inventory item" }}</h2></div><button class="icon-button" type="button" aria-label="Close form" @click="showForm = false"><AppIcon name="close" :size="18" /></button></header>
       <form class="inventory-form-grid" @submit.prevent="save">
         <label>Item name<input v-model="form.name" class="input" required /></label>

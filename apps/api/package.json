@@ -13,7 +13,8 @@
     "seed": "node src/seed.js",
     "reset:login": "node src/scripts/reset-login.js",
     "test": "node --test",
-    "migrate:tenant-indexes": "node src/scripts/migrate-tenant-indexes.js"
+    "migrate:tenant-indexes": "node src/scripts/migrate-tenant-indexes.js",
+    "format:check": "prettier --check \"src/**/*.js\" \"tests/**/*.js\""
   },
   "keywords": [
     "memoflo",
