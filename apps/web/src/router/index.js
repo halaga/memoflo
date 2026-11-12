@@ -19,458 +19,414 @@ import AccessDeniedView from "../views/AccessDeniedView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import AnnouncementsView from "../views/AnnouncementsView.vue";
 import { api, getSavedEmployee } from "../services/api";
-
 function hostname() {
-  return window.location.hostname.toLowerCase();
+    return window.location.hostname.toLowerCase();
 }
-
 function isPlatformHost() {
-  return ["memoflo.com", "www.memoflo.com"].includes(hostname());
+    return ["memoflo.com", "www.memoflo.com"].includes(hostname());
 }
-
 function isTenantHost() {
-  return (
-    hostname().endsWith(".memoflo.com") ||
-    hostname().endsWith(".localhost")
-  );
+    return (hostname().endsWith(".memoflo.com") ||
+        hostname().endsWith(".localhost"));
 }
-
 function isBareLocalHost() {
-  return ["localhost", "127.0.0.1", "::1"].includes(hostname());
+    return ["localhost", "127.0.0.1", "::1"].includes(hostname());
 }
-
 function hasPermission(permission) {
-  const employee = getSavedEmployee();
-  const permissions = employee?.role?.permissions || [];
-
-  return (
-    permissions.includes("*") ||
-    permissions.includes(permission)
-  );
+    const employee = getSavedEmployee();
+    const permissions = employee?.role?.permissions || [];
+    return (permissions.includes("*") ||
+        permissions.includes(permission));
 }
-
 const routes = [
-  {
-    path: "/",
-    name: "root",
-    component: isPlatformHost() ? LandingView : LoginView,
-    meta: {
-      dynamicRoot: true,
+    {
+        path: "/",
+        name: "root",
+        component: isPlatformHost() ? LandingView : LoginView,
+        meta: {
+            dynamicRoot: true,
+        },
     },
-  },
-
-  {
-    path: "/platform",
-    name: "platform",
-    component: LandingView,
-    meta: {
-      public: true,
+    {
+        path: "/platform",
+        name: "platform",
+        component: LandingView,
+        meta: {
+            public: true,
+        },
     },
-  },
-
-  {
-    path: "/register",
-    name: "register-company",
-    component: RegisterView,
-    meta: { public: true },
-  },
-
-  {
-    path: "/accept-invitation",
-    name: "accept-invitation",
-    component: AcceptInvitationView,
-    meta: { public: true },
-  },
-
-  {
-    path: "/login",
-    name: "login",
-    component: LoginView,
-    meta: {
-      guest: true,
+    {
+        path: "/register",
+        name: "register-company",
+        component: RegisterView,
+        meta: { public: true },
     },
-  },
-
-  {
-    path: "/",
-    component: WorkspaceView,
-    meta: {
-      requiresAuth: true,
+    {
+        path: "/accept-invitation",
+        name: "accept-invitation",
+        component: AcceptInvitationView,
+        meta: { public: true },
     },
-    children: [
-      {
-        path: "home",
-        name: "home",
-        component: HomeView,
-      },
-      {
-        path: "work",
-        name: "my-work",
-        component: MyWorkView,
-      },
-      {
-        path: "services",
-        name: "services",
-        component: ServicesView,
-      },
-      {
-        path: "services/:slug",
-        name: "service-detail",
-        component: ServiceDetailView,
-      },
-      {
-        path: "services/:slug/start",
-        name: "service-action",
-        component: ServiceActionView,
-      },
-      {
-        path: "search",
-        name: "global-search",
-        component: SearchView,
-      },
-      {
-        path: "work/requests/:id",
-        name: "service-request-detail",
-        component: ServiceRequestDetailView,
-      },
-      {
-        path: "people",
-        name: "people",
-        component: PeopleView,
-      },
-      {
-        path: "people/:id",
-        name: "employee-profile",
-        component: EmployeeProfileView,
-        meta: { permission: "employees.view" },
-      },
-      {
-        path: "company",
-        name: "company",
-        component: CompanyView,
-      },
-      {
-        path: "modules",
-        name: "modules",
-        redirect: { name: "services" },
-      },
-      {
-        path: "email-signature",
-        name: "email-signature",
-        component: () =>
-          import("../views/signature/EmailSignatureView.vue"),
+    {
+        path: "/login",
+        name: "login",
+        component: LoginView,
         meta: {
-          module: "signature",
+            guest: true,
         },
-      },
-
-      {
-        path: "leave",
-        name: "leave",
-        component: () => import("../views/leave/LeaveView.vue"),
-        meta: { module: "leave" },
-      },
-      {
-        path: "procurement",
-        name: "procurement",
-        component: () => import("../views/procurement/ProcurementView.vue"),
-        meta: { module: "procurement", permission: "procurement.view" },
-      },
-      {
-        path: "procurement/requests/new",
-        name: "procurement-new",
-        component: () => import("../views/procurement/ProcurementCreateView.vue"),
-        meta: { module: "procurement", permission: "procurement.create" },
-      },
-      {
-        path: "procurement/requests/:id",
-        name: "procurement-request",
-        component: () => import("../views/procurement/ProcurementRequestView.vue"),
-        meta: { module: "procurement", permission: "procurement.view" },
-      },
-      {
-        path: "leave/requests/:id",
-        name: "leave-request",
-        component: () => import("../views/leave/LeaveRequestView.vue"),
-        meta: { module: "leave" },
-      },
-
-      {
-        path: "dashboard",
-        name: "dashboard",
-        component: () =>
-          import("../views/DashboardView.vue"),
-      },
-
-      {
-        path: "memos",
-        name: "memos",
-        component: () =>
-          import("../views/memos/MemosView.vue"),
+    },
+    {
+        path: "/",
+        component: WorkspaceView,
         meta: {
-          module: "memos",
-          permission: "memos.view",
+            requiresAuth: true,
         },
-      },
-
-      {
-        path: "memos/create",
-        name: "create-memo",
-        component: () =>
-          import("../views/memos/CreateMemoView.vue"),
-        meta: {
-          module: "memos",
-          permission: "memos.create",
-        },
-      },
-
-      {
-        path: "memos/:id",
-        name: "memo-detail",
-        component: () =>
-          import("../views/memos/MemoDetailView.vue"),
-        meta: {
-          module: "memos",
-          permission: "memos.view",
-        },
-      },
-
-      {
-        path: "approvals",
-        name: "approvals",
-        component: () =>
-          import("../views/approvals/ApprovalsView.vue"),
-        meta: {
-          module: "memos",
-          permission: "memos.approve",
-        },
-      },
-
-      {
-        path: "completed",
-        name: "completed",
-        component: () =>
-          import("../views/approvals/CompletedView.vue"),
-        meta: {
-          module: "memos",
-          permission: "memos.view",
-        },
-      },
-
-      { path: "announcements", name: "announcements", component: AnnouncementsView },
-      {
-        path: "notifications",
-        name: "notifications",
-        component: () =>
-          import("../views/NotificationsView.vue"),
-        meta: {
-          permission: "notifications.view",
-        },
-      },
-
-      {
-        path: "access-denied",
-        name: "access-denied",
-        component: AccessDeniedView,
-      },
-      {
-        path: "administration",
-        name: "administration",
-        component: () =>
-          import("../views/administration/AdministrationView.vue"),
-        meta: {
-          permission: "administration.view",
-        },
-      },
-      {
-        path: "administration/services",
-        name: "service-catalogue",
-        component: () => import("../views/administration/ServicesView.vue"),
-        meta: { permission: "business-services.view" },
-      },
-
-      {
-        path: "administration/workflows",
-        name: "workflow-settings",
-        component: () =>
-          import(
-            "../views/administration/WorkflowSettingsView.vue"
-          ),
-        meta: {
-          permission: "workflow.view",
-        },
-      },
-
-      {
-        path: "administration/roles",
-        name: "roles",
-        component: () =>
-          import("../views/administration/RolesView.vue"),
-        meta: {
-          permission: "roles.view",
-        },
-      },
-
-      {
-        path: "administration/employees",
-        name: "employees",
-        component: () =>
-          import("../views/administration/EmployeesView.vue"),
-        meta: {
-          permission: "employees.view",
-        },
-      },
-
-      {
-        path: "administration/organization",
-        name: "organization-structure",
-        component: () =>
-          import("../views/administration/OrganizationView.vue"),
-        meta: {
-          permission: "employees.view",
-        },
-      },
-
-      {
-        path: "administration/modules",
-        name: "module-access",
-        component: () =>
-          import("../views/administration/ModuleAccessView.vue"),
-        meta: {
-          permission: "company.modules.update",
-        },
-      },
-
-      {
-        path: "administration/inventory",
-        name: "inventory",
-        component: InventoryView,
-        meta: { permission: "inventory.view" },
-      },
-      {
-        path: "administration/audit",
-        name: "audit-log",
-        component: () =>
-          import("../views/administration/AuditLogView.vue"),
-        meta: {
-          permission: "audit.view",
-        },
-      },
-
-      {
-        path: "administration/company-profile",
-        name: "company-profile",
-        component: () => import("../views/administration/CompanyProfileView.vue"),
-        meta: { permission: "company.branding.update" },
-      },
-
-      {
-        path: "administration/branding",
-        name: "company-branding",
-        component: () =>
-          import("../views/administration/CompanyBrandingView.vue"),
-        meta: {
-          permission: "company.branding.update",
-        },
-      },
-    ],
-  },
-
-  {
-    path: "/:pathMatch(.*)*",
-    name: "not-found",
-    component: NotFoundView,
-  },
+        children: [
+            {
+                path: "home",
+                name: "home",
+                component: HomeView,
+            },
+            {
+                path: "work",
+                name: "my-work",
+                component: MyWorkView,
+            },
+            {
+                path: "services",
+                name: "services",
+                component: ServicesView,
+            },
+            {
+                path: "services/:slug",
+                name: "service-detail",
+                component: ServiceDetailView,
+            },
+            {
+                path: "services/:slug/start",
+                name: "service-action",
+                component: ServiceActionView,
+            },
+            {
+                path: "search",
+                name: "global-search",
+                component: SearchView,
+            },
+            {
+                path: "work/requests/:id",
+                name: "service-request-detail",
+                component: ServiceRequestDetailView,
+            },
+            {
+                path: "people",
+                name: "people",
+                component: PeopleView,
+            },
+            {
+                path: "people/:id",
+                name: "employee-profile",
+                component: EmployeeProfileView,
+                meta: { permission: "employees.view" },
+            },
+            {
+                path: "company",
+                name: "company",
+                component: CompanyView,
+            },
+            {
+                path: "modules",
+                name: "modules",
+                redirect: { name: "services" },
+            },
+            {
+                path: "email-signature",
+                name: "email-signature",
+                component: () => import("../views/signature/EmailSignatureView.vue"),
+                meta: {
+                    module: "signature",
+                },
+            },
+            {
+                path: "leave",
+                name: "leave",
+                component: () => import("../views/leave/LeaveView.vue"),
+                meta: { module: "leave" },
+            },
+            {
+                path: "procurement",
+                name: "procurement",
+                component: () => import("../views/procurement/ProcurementView.vue"),
+                meta: {
+                    module: "procurement",
+                    permission: "procurement.view"
+                },
+            },
+            {
+                path: "procurement/requests/new",
+                name: "procurement-new",
+                component: () => import("../views/procurement/ProcurementCreateView.vue"),
+                meta: {
+                    module: "procurement",
+                    permission: "procurement.create"
+                },
+            },
+            {
+                path: "procurement/requests/:id",
+                name: "procurement-request",
+                component: () => import("../views/procurement/ProcurementRequestView.vue"),
+                meta: {
+                    module: "procurement",
+                    permission: "procurement.view"
+                },
+            },
+            {
+                path: "leave/requests/:id",
+                name: "leave-request",
+                component: () => import("../views/leave/LeaveRequestView.vue"),
+                meta: { module: "leave" },
+            },
+            {
+                path: "dashboard",
+                name: "dashboard",
+                component: () => import("../views/DashboardView.vue"),
+            },
+            {
+                path: "memos",
+                name: "memos",
+                component: () => import("../views/memos/MemosView.vue"),
+                meta: {
+                    module: "memos",
+                    permission: "memos.view",
+                },
+            },
+            {
+                path: "memos/create",
+                name: "create-memo",
+                component: () => import("../views/memos/CreateMemoView.vue"),
+                meta: {
+                    module: "memos",
+                    permission: "memos.create",
+                },
+            },
+            {
+                path: "memos/:id",
+                name: "memo-detail",
+                component: () => import("../views/memos/MemoDetailView.vue"),
+                meta: {
+                    module: "memos",
+                    permission: "memos.view",
+                },
+            },
+            {
+                path: "approvals",
+                name: "approvals",
+                component: () => import("../views/approvals/ApprovalsView.vue"),
+                meta: {
+                    module: "memos",
+                    permission: "memos.approve",
+                },
+            },
+            {
+                path: "completed",
+                name: "completed",
+                component: () => import("../views/approvals/CompletedView.vue"),
+                meta: {
+                    module: "memos",
+                    permission: "memos.view",
+                },
+            },
+            {
+                path: "announcements",
+                name: "announcements",
+                component: AnnouncementsView
+            },
+            {
+                path: "notifications",
+                name: "notifications",
+                component: () => import("../views/NotificationsView.vue"),
+                meta: {
+                    permission: "notifications.view",
+                },
+            },
+            {
+                path: "access-denied",
+                name: "access-denied",
+                component: AccessDeniedView,
+            },
+            {
+                path: "administration",
+                name: "administration",
+                component: () => import("../views/administration/AdministrationView.vue"),
+                meta: {
+                    permission: "administration.view",
+                },
+            },
+            {
+                path: "administration/services",
+                name: "service-catalogue",
+                component: () => import("../views/administration/ServicesView.vue"),
+                meta: { permission: "business-services.view" },
+            },
+            {
+                path: "administration/workflows",
+                name: "workflow-settings",
+                component: () => import("../views/administration/WorkflowSettingsView.vue"),
+                meta: {
+                    permission: "workflow.view",
+                },
+            },
+            {
+                path: "administration/roles",
+                name: "roles",
+                component: () => import("../views/administration/RolesView.vue"),
+                meta: {
+                    permission: "roles.view",
+                },
+            },
+            {
+                path: "administration/employees",
+                name: "employees",
+                component: () => import("../views/administration/EmployeesView.vue"),
+                meta: {
+                    permission: "employees.view",
+                },
+            },
+            {
+                path: "administration/organization",
+                name: "organization-structure",
+                component: () => import("../views/administration/OrganizationView.vue"),
+                meta: {
+                    permission: "employees.view",
+                },
+            },
+            {
+                path: "administration/modules",
+                name: "module-access",
+                component: () => import("../views/administration/ModuleAccessView.vue"),
+                meta: {
+                    permission: "company.modules.update",
+                },
+            },
+            {
+                path: "administration/inventory",
+                name: "inventory",
+                component: InventoryView,
+                meta: { permission: "inventory.view" },
+            },
+            {
+                path: "administration/audit",
+                name: "audit-log",
+                component: () => import("../views/administration/AuditLogView.vue"),
+                meta: {
+                    permission: "audit.view",
+                },
+            },
+            {
+                path: "administration/company-profile",
+                name: "company-profile",
+                component: () => import("../views/administration/CompanyProfileView.vue"),
+                meta: { permission: "company.branding.update" },
+            },
+            {
+                path: "administration/branding",
+                name: "company-branding",
+                component: () => import("../views/administration/CompanyBrandingView.vue"),
+                meta: {
+                    permission: "company.branding.update",
+                },
+            },
+        ],
+    },
+    {
+        path: "/:pathMatch(.*)*",
+        name: "not-found",
+        component: NotFoundView,
+    },
 ];
-
 const router = createRouter({
-  history: createWebHistory(),
-  routes,
-  scrollBehavior(to, from, savedPosition) {
-    if (to.hash) return { el: to.hash, behavior: "smooth", top: 18 };
-    if (savedPosition && to.name === from.name) return savedPosition;
-    return { left: 0, top: 0, behavior: "smooth" };
-  },
-});
-
-router.beforeEach(async (to) => {
-  const token = localStorage.getItem("memoflo_token");
-
-  if (to.name === "root") {
-    if (isPlatformHost()) {
-      return true;
-    }
-
-    if (isBareLocalHost()) {
-      return {
-        name: "login",
-        replace: true,
-      };
-    }
-
-    return token
-      ? { name: "home", replace: true }
-      : { name: "login", replace: true };
-  }
-
-  if (
-    to.meta.guest &&
-    token &&
-    isTenantHost()
-  ) {
-    return {
-      name: "home",
-      replace: true,
-    };
-  }
-
-  if (
-    to.matched.some(
-      (record) => record.meta.requiresAuth
-    ) &&
-    !token
-  ) {
-    return {
-      name: "login",
-      replace: true,
-    };
-  }
-
-  if (to.meta.permission && token) {
-    if (!hasPermission(to.meta.permission)) {
-      return {
-        name: "access-denied",
-        query: { from: to.fullPath },
-        replace: true,
-      };
-    }
-  }
-
-  if (to.meta.module && token) {
-    try {
-      const result = await api.getCompanyWorkspace();
-      const workspace =
-        result?.data || result;
-
-      const module = workspace?.modules?.find(
-        (item) => item.id === to.meta.module
-      );
-
-      if (!module?.enabled) {
+    history: createWebHistory(),
+    routes,
+    scrollBehavior(to, from, savedPosition) {
+        if (to.hash)
+            return {
+                el: to.hash,
+                behavior: "smooth",
+                top: 18
+            };
+        if (savedPosition && to.name === from.name)
+            return savedPosition;
         return {
-          name: "modules",
-          replace: true,
+            left: 0,
+            top: 0,
+            behavior: "smooth"
         };
-      }
-    } catch {
-      return {
-        name: "login",
-        replace: true,
-      };
-    }
-  }
-
-  return true;
+    },
 });
-
+router.beforeEach(async (to) => {
+    const token = localStorage.getItem("memoflo_token");
+    if (to.name === "root") {
+        if (isPlatformHost()) {
+            return true;
+        }
+        if (isBareLocalHost()) {
+            return {
+                name: "login",
+                replace: true,
+            };
+        }
+        return token
+            ? {
+                name: "home",
+                replace: true
+            }
+            : {
+                name: "login",
+                replace: true
+            };
+    }
+    if (to.meta.guest &&
+        token &&
+        isTenantHost()) {
+        return {
+            name: "home",
+            replace: true,
+        };
+    }
+    if (to.matched.some((record) => record.meta.requiresAuth) &&
+        !token) {
+        return {
+            name: "login",
+            replace: true,
+        };
+    }
+    if (to.meta.permission && token) {
+        if (!hasPermission(to.meta.permission)) {
+            return {
+                name: "access-denied",
+                query: { from: to.fullPath },
+                replace: true,
+            };
+        }
+    }
+    if (to.meta.module && token) {
+        try {
+            const result = await api.getCompanyWorkspace();
+            const workspace = result?.data || result;
+            const module = workspace?.modules?.find((item) => item.id === to.meta.module);
+            if (!module?.enabled) {
+                return {
+                    name: "modules",
+                    replace: true,
+                };
+            }
+        }
+        catch {
+            return {
+                name: "login",
+                replace: true,
+            };
+        }
+    }
+    return true;
+});
 export default router;

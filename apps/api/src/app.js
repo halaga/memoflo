@@ -4,7 +4,6 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import path from "path";
-
 import auditLogger from "./middleware/auditLogger.js";
 import errorHandler from "./middleware/errorHandler.js";
 import notFound from "./middleware/notFound.js";
@@ -28,64 +27,59 @@ import sbuRoutes from "./modules/organization/sbu/sbu.routes.js";
 import workflowRoutes from "./modules/workflow/workflow.routes.js";
 import inventoryRoutes from "./modules/inventory/inventory.routes.js";
 import announcementRoutes from "./modules/announcement/announcement.routes.js";
-
 const app = express();
-
 function isAllowedOrigin(origin) {
-  // Requests without an Origin header are common for server-to-server clients,
-  // health checks and native clients; CORS does not apply to them.
-  if (!origin) return true;
-
-  const configuredOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  if (configuredOrigins.includes(origin)) return true;
-
-  if (process.env.NODE_ENV !== "production") {
-    try {
-      const parsed = new URL(origin);
-      const hostname = parsed.hostname.toLowerCase();
-      const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(hostname);
-      const isLocalTenantHost = hostname.endsWith(".localhost");
-      return (parsed.protocol === "http:" || parsed.protocol === "https:") && (isLocalHost || isLocalTenantHost);
-    } catch {
-      return false;
+    // Requests without an Origin header are common for server-to-server clients,
+    // health checks and native clients; CORS does not apply to them.
+    if (!origin)
+        return true;
+    const configuredOrigins = (process.env.CORS_ORIGINS || process.env.CLIENT_URL || "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+    if (configuredOrigins.includes(origin))
+        return true;
+    if (process.env.NODE_ENV !== "production") {
+        try {
+            const parsed = new URL(origin);
+            const hostname = parsed.hostname.toLowerCase();
+            const isLocalHost = ["localhost", "127.0.0.1", "::1"].includes(hostname);
+            const isLocalTenantHost = hostname.endsWith(".localhost");
+            return (parsed.protocol === "http:" || parsed.protocol === "https:") && (isLocalHost || isLocalTenantHost);
+        }
+        catch {
+            return false;
+        }
     }
-  }
-
-  return false;
+    return false;
 }
-
 app.use(helmet());
 app.use(cors({
-  origin(origin, callback) {
-    if (isAllowedOrigin(origin)) return callback(null, true);
-    const error = new Error("Origin is not allowed by MemoFlo CORS policy");
-    error.status = 403;
-    return callback(error);
-  },
-  credentials: true,
-  methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-  maxAge: 600,
+    origin(origin, callback) {
+        if (isAllowedOrigin(origin))
+            return callback(null, true);
+        const error = new Error("Origin is not allowed by MemoFlo CORS policy");
+        error.status = 403;
+        return callback(error);
+    },
+    credentials: true,
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    maxAge: 600,
 }));
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(auditLogger);
-
 app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    product: "MemoFlo API",
-    version: "2.0.0",
-    status: "Running",
-  });
+    res.json({
+        success: true,
+        product: "MemoFlo API",
+        version: "2.0.0",
+        status: "Running",
+    });
 });
-
 app.use("/api/auth", authRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/employees", employeeRoutes);
@@ -106,11 +100,11 @@ app.use("/api/procurement", procurementRoutes);
 app.use("/api/service-requests", serviceRequestRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/announcements", announcementRoutes);
-
 const storageRoot = path.resolve(process.env.MEMOFLO_STORAGE_PATH || "storage");
-app.use("/uploads/avatars", express.static(path.join(storageRoot, "public", "avatars"), { fallthrough: false, maxAge: "1d" }));
-
+app.use("/uploads/avatars", express.static(path.join(storageRoot, "public", "avatars"), {
+    fallthrough: false,
+    maxAge: "1d"
+}));
 app.use(notFound);
 app.use(errorHandler);
-
 export default app;

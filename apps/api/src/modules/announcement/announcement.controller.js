@@ -1,14 +1,143 @@
 import mongoose from "mongoose";
 import Announcement from "./announcement.model.js";
 import Employee from "../employee/employee.model.js";
-const fail=(res,status,message)=>res.status(status).json({success:false,message});
-const privileged=employee=>{const permissions=employee?.role?.permissions||[];return permissions.includes("*")||permissions.includes("announcements.manage");};
-const isHttpUrl=value=>{try{const url=new URL(value);return url.protocol==="http:"||url.protocol==="https:";}catch{return false;}};
-async function actor(req){return Employee.findOne({_id:req.user.id||req.user._id,company:req.user.company,active:true,employmentStatus:"Active",deletedAt:null}).populate("role","name code permissions");}
-class AnnouncementController{
- async list(req,res,next){try{const user=await actor(req);if(!user)return fail(res,401,"Employee account not found.");const canManage=privileged(user);const query={company:req.user.company,isActive:true,deletedAt:null};if(!canManage){query.status="Published";query.$and=[{$or:[{expiresAt:null},{expiresAt:{$gt:new Date()}}]}];}const rows=await Announcement.find(query).populate("author","firstName lastName").sort({publishedAt:-1,createdAt:-1}).limit(100).lean();res.json({success:true,data:rows,canManage});}catch(e){next(e)}}
- async create(req,res,next){try{const user=await actor(req);if(!user)return fail(res,401,"Employee account not found.");if(!privileged(user))return fail(res,403,"You do not have permission to manage announcements.");const title=String(req.body.title||"").trim(),body=String(req.body.body||"").trim();if(!title||!body)return fail(res,400,"Title and announcement message are required.");const status=req.body.status==="Published"?"Published":"Draft";const link=String(req.body.link||"").trim();if(link&&!isHttpUrl(link))return fail(res,400,"Announcement links must use http or https.");const item=await Announcement.create({company:req.user.company,title,body,link,status,publishedAt:status==="Published"?new Date():null,expiresAt:req.body.expiresAt?new Date(req.body.expiresAt):null,author:user._id,createdBy:String(user._id)});res.status(201).json({success:true,data:await Announcement.findOne({ _id: item._id, company: req.user.company }).populate("author","firstName lastName").lean()});}catch(e){next(e)}}
- async update(req,res,next){try{const user=await actor(req);if(!user)return fail(res,401,"Employee account not found.");if(!privileged(user))return fail(res,403,"You do not have permission to manage announcements.");if(!mongoose.isValidObjectId(req.params.id))return fail(res,400,"Invalid announcement ID.");const item=await Announcement.findOne({_id:req.params.id,company:req.user.company,isActive:true,deletedAt:null});if(!item)return fail(res,404,"Announcement not found.");for(const k of ["title","body","link"])if(req.body[k]!==undefined){const value=String(req.body[k]).trim();if(k==="link"&&value&&!isHttpUrl(value))return fail(res,400,"Announcement links must use http or https.");item[k]=value;}if(req.body.status&&["Draft","Published","Archived"].includes(req.body.status)){item.status=req.body.status;if(req.body.status==="Published"&&!item.publishedAt)item.publishedAt=new Date();}if(req.body.expiresAt!==undefined)item.expiresAt=req.body.expiresAt?new Date(req.body.expiresAt):null;item.updatedBy=String(user._id);await item.save();res.json({success:true,data:await Announcement.findOne({ _id: item._id, company: req.user.company }).populate("author","firstName lastName").lean()});}catch(e){next(e)}}
- async archive(req,res,next){try{const user=await actor(req);if(!user)return fail(res,401,"Employee account not found.");if(!privileged(user))return fail(res,403,"You do not have permission to manage announcements.");const item=await Announcement.findOne({_id:req.params.id,company:req.user.company,isActive:true,deletedAt:null});if(!item)return fail(res,404,"Announcement not found.");item.status="Archived";item.isActive=false;item.deletedAt=new Date();item.updatedBy=String(user._id);await item.save();res.json({success:true,message:"Announcement archived."});}catch(e){next(e)}}
+const fail = (res, status, message) => res.status(status).json({ success: false, message });
+const privileged = employee => { const permissions = employee?.role?.permissions || []; return permissions.includes("*") || permissions.includes("announcements.manage"); };
+const isHttpUrl = value => {
+    try {
+        const url = new URL(value);
+        return url.protocol === "http:" || url.protocol === "https:";
+    }
+    catch {
+        return false;
+    }
+};
+async function actor(req) { return Employee.findOne({ _id: req.user.id || req.user._id, company: req.user.company, active: true,
+    employmentStatus: "Active", deletedAt: null }).populate("role", "name code permissions"); }
+class AnnouncementController {
+    async list(req, res, next) {
+        try {
+            const user = await actor(req);
+            if (!user)
+                return fail(res, 401, "Employee account not found.");
+            const canManage = privileged(user);
+            const query = {
+                company: req.user.company,
+                isActive: true,
+                deletedAt: null
+            };
+            if (!canManage) {
+                query.status = "Published";
+                query.$and = [{ $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] }];
+            }
+            const rows = await Announcement.find(query).populate("author", "firstName lastName").sort({ publishedAt: -1,
+                createdAt: -1 }).limit(100).lean();
+            res.json({
+                success: true,
+                data: rows, canManage
+            });
+        }
+        catch (e) {
+            next(e);
+        }
+    }
+    async create(req, res, next) {
+        try {
+            const user = await actor(req);
+            if (!user)
+                return fail(res, 401, "Employee account not found.");
+            if (!privileged(user))
+                return fail(res, 403, "You do not have permission to manage announcements.");
+            const title = String(req.body.title || "").trim(), body = String(req.body.body || "").trim();
+            if (!title || !body)
+                return fail(res, 400, "Title and announcement message are required.");
+            const status = req.body.status === "Published" ? "Published" : "Draft";
+            const link = String(req.body.link || "").trim();
+            if (link && !isHttpUrl(link))
+                return fail(res, 400, "Announcement links must use http or https.");
+            const item = await Announcement.create({ company: req.user.company, title, body, link, status, publishedAt: status === "Published" ? new Date() : null,
+                expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : null, author: user._id, createdBy: String(user._id) });
+            res.status(201).json({ success: true, data: await Announcement.findOne({
+                _id: item._id,
+                company: req.user.company
+            }).populate("author",
+                "firstName lastName").lean() });
+        }
+        catch (e) {
+            next(e);
+        }
+    }
+    async update(req, res, next) {
+        try {
+            const user = await actor(req);
+            if (!user)
+                return fail(res, 401, "Employee account not found.");
+            if (!privileged(user))
+                return fail(res, 403, "You do not have permission to manage announcements.");
+            if (!mongoose.isValidObjectId(req.params.id))
+                return fail(res, 400, "Invalid announcement ID.");
+const item = await Announcement.findOne({
+    _id: req.params.id,
+    company: req.user.company,
+    isActive: true,
+    deletedAt: null
+});
+            if (!item)
+                return fail(res, 404, "Announcement not found.");
+            for (const k of ["title", "body", "link"])
+                if (req.body[k] !== undefined) {
+                    const value = String(req.body[k]).trim();
+                    if (k === "link" && value && !isHttpUrl(value))
+                        return fail(res, 400, "Announcement links must use http or https.");
+                    item[k] = value;
+                }
+            if (req.body.status && ["Draft", "Published", "Archived"].includes(req.body.status)) {
+                item.status = req.body.status;
+                if (req.body.status === "Published" && !item.publishedAt)
+                    item.publishedAt = new Date();
+            }
+            if (req.body.expiresAt !== undefined)
+                item.expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
+            item.updatedBy = String(user._id);
+            await item.save();
+            res.json({ success: true, data: await Announcement.findOne({
+                _id: item._id,
+                company: req.user.company
+            }).populate("author",
+                "firstName lastName").lean() });
+        }
+        catch (e) {
+            next(e);
+        }
+    }
+    async archive(req, res, next) {
+        try {
+            const user = await actor(req);
+            if (!user)
+                return fail(res, 401, "Employee account not found.");
+            if (!privileged(user))
+                return fail(res, 403, "You do not have permission to manage announcements.");
+const item = await Announcement.findOne({
+    _id: req.params.id,
+    company: req.user.company,
+    isActive: true,
+    deletedAt: null
+});
+            if (!item)
+                return fail(res, 404, "Announcement not found.");
+            item.status = "Archived";
+            item.isActive = false;
+            item.deletedAt = new Date();
+            item.updatedBy = String(user._id);
+            await item.save();
+            res.json({
+                success: true,
+                message: "Announcement archived."
+            });
+        }
+        catch (e) {
+            next(e);
+        }
+    }
 }
 export default new AnnouncementController();

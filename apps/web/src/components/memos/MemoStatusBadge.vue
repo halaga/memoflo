@@ -1,23 +1,20 @@
 <script setup>
 import { computed } from "vue";
-
 const props = defineProps({
-  status: {
-    type: String,
-    default: "Draft",
-  },
+    status: {
+        type: String,
+        default: "Draft",
+    },
 });
-
-const statusClass = computed(() =>
-  `status-${props.status.toLowerCase().replaceAll(" ", "-")}`
-);
+const statusClass = computed(() => `status-${props.status.toLowerCase().replaceAll(" ", "-")}`);
 </script>
 
 <template>
-  <span
+<span
     class="status-badge"
     :class="statusClass"
   >
-    {{ status }}
-  </span>
+  {{ status }}
+</span>
 </template>
+

@@ -1,106 +1,165 @@
 import mongoose from "mongoose";
 import BaseSchema from "../../database/BaseSchema.js";
-
-const employeeSchema = new mongoose.Schema(
-  {
+const employeeSchema = new mongoose.Schema({
     company: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Company",
-      required: true,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Company",
+        required: true,
     },
     employeeNo: {
-      type: String,
-      required: true,
-      trim: true,
+        type: String,
+        required: true,
+        trim: true,
     },
     firstName: {
-      type: String,
-      required: true,
-      trim: true,
+        type: String,
+        required: true,
+        trim: true,
     },
     lastName: {
-      type: String,
-      required: true,
-      trim: true,
+        type: String,
+        required: true,
+        trim: true,
     },
     email: {
-      type: String,
-      required: true,
-      lowercase: true,
-      trim: true,
+        type: String,
+        required: true,
+        lowercase: true,
+        trim: true,
     },
     phone: {
-      type: String,
-      default: "",
-      trim: true,
+        type: String,
+        default: "",
+        trim: true,
     },
     password: {
-      type: String,
-      required: true,
-      select: false,
+        type: String,
+        required: true,
+        select: false,
     },
     loginEnabled: {
-      type: Boolean,
-      default: true,
+        type: Boolean,
+        default: true,
     },
     position: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Position",
-      default: null,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Position",
+        default: null,
     },
     reportsTo: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Employee",
-      default: null,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Employee",
+        default: null,
     },
     role: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Role",
-      default: null,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Role",
+        default: null,
     },
     employmentStatus: {
-      type: String,
-      enum: ["Active", "Inactive", "Suspended"],
-      default: "Active",
+        type: String,
+        enum: ["Active", "Inactive", "Suspended"],
+        default: "Active",
     },
     avatar: {
-      type: String,
-      default: "",
+        type: String,
+        default: "",
     },
     biodata: {
-      middleName: { type: String, default: "", trim: true },
-      dateOfBirth: { type: Date, default: null },
-      gender: { type: String, default: "", trim: true },
-      maritalStatus: { type: String, default: "", trim: true },
-      nationality: { type: String, default: "Nigerian", trim: true },
-      stateOfOrigin: { type: String, default: "", trim: true },
-      lga: { type: String, default: "", trim: true },
-      residentialAddress: { type: String, default: "", trim: true },
-      emergencyContactName: { type: String, default: "", trim: true },
-      emergencyContactPhone: { type: String, default: "", trim: true },
-      emergencyContactRelationship: { type: String, default: "", trim: true },
-      employmentType: { type: String, default: "Full-time", trim: true },
-      hireDate: { type: Date, default: null },
-      notes: { type: String, default: "", trim: true },
+        middleName: {
+            type: String,
+            default: "",
+            trim: true
+        },
+        dateOfBirth: {
+            type: Date,
+            default: null
+        },
+        gender: {
+            type: String,
+            default: "",
+            trim: true
+        },
+        maritalStatus: {
+            type: String,
+            default: "",
+            trim: true
+        },
+        nationality: {
+            type: String,
+            default: "Nigerian",
+            trim: true
+        },
+        stateOfOrigin: {
+            type: String,
+            default: "",
+            trim: true
+        },
+        lga: {
+            type: String,
+            default: "",
+            trim: true
+        },
+        residentialAddress: {
+            type: String,
+            default: "",
+            trim: true
+        },
+        emergencyContactName: {
+            type: String,
+            default: "",
+            trim: true
+        },
+        emergencyContactPhone: {
+            type: String,
+            default: "",
+            trim: true
+        },
+        emergencyContactRelationship: {
+            type: String,
+            default: "",
+            trim: true
+        },
+        employmentType: {
+            type: String,
+            default: "Full-time",
+            trim: true
+        },
+        hireDate: {
+            type: Date,
+            default: null
+        },
+        notes: {
+            type: String,
+            default: "",
+            trim: true
+        },
     },
     lastLogin: {
-      type: Date,
-      default: null,
+        type: Date,
+        default: null,
     },
     active: {
-      type: Boolean,
-      default: true,
+        type: Boolean,
+        default: true,
     },
     ...BaseSchema,
-  },
-  { timestamps: true }
-);
-
-employeeSchema.index({ company: 1, employeeNo: 1 }, { unique: true, name: "uniq_employee_company_employee_no" });
-employeeSchema.index({ company: 1, email: 1 }, { unique: true, name: "uniq_employee_company_email" });
-
-employeeSchema.virtual("fullName").get(function () {
-  return `${this.firstName} ${this.lastName}`;
+}, { timestamps: true });
+employeeSchema.index({
+    company: 1,
+    employeeNo: 1
+}, {
+    unique: true,
+    name: "uniq_employee_company_employee_no"
 });
-
+employeeSchema.index({
+    company: 1,
+    email: 1
+}, {
+    unique: true,
+    name: "uniq_employee_company_email"
+});
+employeeSchema.virtual("fullName").get(function () {
+    return `${this.firstName} ${this.lastName}`;
+});
 export default mongoose.model("Employee", employeeSchema);

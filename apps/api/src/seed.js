@@ -5,25 +5,21 @@ import { seedRoles } from "./modules/auth/role.seed.js";
 import { seedOrganization } from "./modules/organization/organization.seed.js";
 import { seedBusinessServices } from "./modules/business-service/businessService.seed.js";
 import { seedLeave } from "./modules/leave/leave.seed.js";
-
 async function run() {
-  try {
-    await connectDB();
-
-    const company = await seedCompany();
-
-    await seedOrganization(company);
-    await seedEmployees(company);
-    await seedRoles(company);
-    await seedBusinessServices(company);
-    await seedLeave(company);
-
-    console.log("\n🎉 MemoFlo seed completed");
-    process.exit(0);
-  } catch (error) {
-    console.error("MemoFlo seed failed:", error);
-    process.exit(1);
-  }
+    try {
+        await connectDB();
+        const company = await seedCompany();
+        await seedOrganization(company);
+        await seedEmployees(company);
+        await seedRoles(company);
+        await seedBusinessServices(company);
+        await seedLeave(company);
+        console.log("\n🎉 MemoFlo seed completed");
+        process.exit(0);
+    }
+    catch (error) {
+        console.error("MemoFlo seed failed:", error);
+        process.exit(1);
+    }
 }
-
 run();

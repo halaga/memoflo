@@ -18,14 +18,11 @@ import "../modules/memo/memo.model.js";
 import "../modules/memo-event/memoEvent.model.js";
 import "../modules/memo-attachment/memoAttachment.model.js";
 import "../modules/notification/notification.model.js";
-
 import "../modules/leave/leaveType.model.js";
 import "../modules/leave/leaveBalance.model.js";
 import "../modules/leave/leaveRequest.model.js";
 import "../modules/leave/leaveEvent.model.js";
 import "../modules/procurement/procurement.model.js";
 import "../modules/service-request/serviceRequest.model.js";
-
 import "../modules/inventory/inventory.model.js";
-
 import "../modules/announcement/announcement.model.js";

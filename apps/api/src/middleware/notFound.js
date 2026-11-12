@@ -1,8 +1,7 @@
 const notFound = (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Endpoint not found",
-  });
+    res.status(404).json({
+        success: false,
+        message: "Endpoint not found",
+    });
 };
-
 export default notFound;

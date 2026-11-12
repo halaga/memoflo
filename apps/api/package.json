@@ -14,7 +14,7 @@
     "reset:login": "node src/scripts/reset-login.js",
     "test": "node --test",
     "migrate:tenant-indexes": "node src/scripts/migrate-tenant-indexes.js",
-    "format:check": "prettier --check \"src/**/*.js\" \"tests/**/*.js\""
+    "test:contracts": "node --test tests/*.contract.test.js"
   },
   "keywords": [
     "memoflo",
