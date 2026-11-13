@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { api, normalizeList } from "../../services/api";
 const employees = ref([]);
 const roles = ref([]);
@@ -9,6 +9,7 @@ const saving = ref(false);
 const error = ref("");
 const success = ref("");
 const showForm = ref(false);
+const employeeFormSection = ref(null);
 const credentials = ref(null);
 const editingId = ref(null);
 const inviteMode = ref(false);
@@ -53,14 +54,27 @@ async function load() {
         loading.value = false;
     }
 }
-function openCreate() { resetForm(); credentials.value = null; success.value = ""; showForm.value = true; }
-function openInvite() {
+async function revealEmployeeForm() {
+    await nextTick();
+    employeeFormSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+    await nextTick();
+    employeeFormSection.value?.querySelector("input:not([type=hidden]), select, textarea")?.focus({ preventScroll: true });
+}
+async function openCreate() {
+    resetForm();
+    credentials.value = null;
+    success.value = "";
+    showForm.value = true;
+    await revealEmployeeForm();
+}
+async function openInvite() {
     resetForm();
     inviteMode.value = true;
     form.value.createLogin = false;
     credentials.value = null;
     success.value = "";
     showForm.value = true;
+    await revealEmployeeForm();
 }
 async function copyInvitationLink() {
     if (!credentials.value?.invitationUrl)
@@ -73,7 +87,7 @@ async function copyInvitationLink() {
         success.value = "Copy the invitation link from the field below.";
     }
 }
-function openEdit(employee) {
+async function openEdit(employee) {
     editingId.value = employee._id;
     inviteMode.value = false;
     credentials.value = null;
@@ -90,6 +104,7 @@ function openEdit(employee) {
         password: "",
     };
     showForm.value = true;
+    await revealEmployeeForm();
 }
 async function save() {
     if (!form.value.firstName || !form.value.lastName || !form.value.email) {
@@ -271,7 +286,7 @@ onMounted(load);
       </button>
     </div>
   </section>
-  <section v-if="showForm" class="card employee-form-card">
+  <section v-if="showForm" ref="employeeFormSection" class="card employee-form-card">
     <div class="builder-title">
       <div>
         <span class="page-kicker">

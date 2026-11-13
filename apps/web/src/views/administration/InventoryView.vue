@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref } from "vue";
 import { api, normalizeList } from "../../services/api";
 import { downloadCsv, parseCsv } from "../../utils/dataTransfer";
 import AppIcon from "../../components/ui/AppIcon.vue";
@@ -15,6 +15,7 @@ const search = ref("");
 const departmentFilter = ref("");
 const categoryFilter = ref("");
 const showForm = ref(false);
+const inventoryFormSection = ref(null);
 const editingId = ref("");
 const form = ref(emptyForm());
 function emptyForm() {
@@ -72,7 +73,13 @@ async function load() {
         employees.value = normalizeList(results[2].value, ["employees"]);
     loading.value = false;
 }
-function startCreate() {
+async function revealInventoryForm() {
+    await nextTick();
+    inventoryFormSection.value?.scrollIntoView({ behavior: "smooth", block: "start" });
+    await nextTick();
+    inventoryFormSection.value?.querySelector("input:not([type=hidden]), select, textarea")?.focus({ preventScroll: true });
+}
+async function startCreate() {
     editingId.value = "";
     form.value = {
         ...emptyForm(),
@@ -81,8 +88,9 @@ function startCreate() {
     showForm.value = true;
     error.value = "";
     notice.value = "";
+    await revealInventoryForm();
 }
-function edit(item) {
+async function edit(item) {
     editingId.value = item._id;
     form.value = {
         ...emptyForm(),
@@ -94,6 +102,7 @@ function edit(item) {
     showForm.value = true;
     error.value = "";
     notice.value = "";
+    await revealInventoryForm();
 }
 async function save() {
     if (!form.value.name.trim()) {
@@ -353,7 +362,7 @@ onMounted(load);
       Admin inventory
     </button>
   </div>
-  <section v-if="showForm" class="workspace-panel inventory-form-panel">
+  <section v-if="showForm" ref="inventoryFormSection" class="workspace-panel inventory-form-panel">
     <header class="section-title-row">
       <div>
         <span class="eyebrow">

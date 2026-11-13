@@ -3,6 +3,7 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import mongoose from "mongoose";
 import path from "path";
 import auditLogger from "./middleware/auditLogger.js";
 import errorHandler from "./middleware/errorHandler.js";
@@ -78,6 +79,23 @@ app.get("/", (req, res) => {
         product: "MemoFlo API",
         version: "2.0.0",
         status: "Running",
+    });
+});
+app.get("/health/live", (req, res) => {
+    res.status(200).json({
+        success: true,
+        status: "live",
+        service: "memoflo-api",
+    });
+});
+app.get("/health/ready", (req, res) => {
+    const databaseReady = mongoose.connection.readyState === 1;
+    res.status(databaseReady ? 200 : 503).json({
+        success: databaseReady,
+        status: databaseReady ? "ready" : "not_ready",
+        checks: {
+            database: databaseReady ? "connected" : "disconnected",
+        },
     });
 });
 app.use("/api/auth", authRoutes);

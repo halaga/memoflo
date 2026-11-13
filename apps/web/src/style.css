@@ -4793,3 +4793,129 @@ body,
   background: rgba(20, 31, 48, .97);
   border-color: #34445b;
 }
+
+
+/* M8: predictable dashboard and administration layout at either sidebar width. */
+.experience-shell .home-stat-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 248px), 1fr));
+  align-items: stretch;
+}
+.experience-shell .home-stat-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 12px;
+  min-height: 112px;
+  overflow: hidden;
+}
+.experience-shell .home-stat-card > span:nth-child(2) {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.experience-shell .home-stat-card > span:nth-child(2) > * {
+  min-width: 0;
+}
+.experience-shell .home-stat-card strong {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.experience-shell .home-stat-card em {
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+/* Administration cards remain readable as the main column narrows. */
+.experience-shell .admin-control-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
+  align-items: stretch;
+  gap: 16px;
+}
+.experience-shell .admin-control-card {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  min-width: 0;
+  min-height: 140px;
+  overflow: hidden;
+}
+.experience-shell .admin-control-card > div:last-child { min-width: 0; }
+.experience-shell .admin-control-card h2,
+.experience-shell .admin-control-card p,
+.experience-shell .admin-control-card span {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.experience-shell .admin-control-card p { line-height: 1.55; }
+
+/* Forms, modal fields and action rows must stay inside their panels. */
+.experience-shell :where(.form-grid, .form-two-col, .inventory-form-grid, .profile-form-grid, .org-form-grid) {
+  min-width: 0;
+  align-items: start;
+}
+.experience-shell :where(.form-grid, .form-two-col, .inventory-form-grid, .profile-form-grid, .org-form-grid) > *,
+.experience-shell :where(.modal-card, .inventory-form-panel, .org-panel, .card) {
+  min-width: 0;
+  max-width: 100%;
+}
+.experience-shell :where(label, .form-field, .profile-field) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+.experience-shell :where(input, select, textarea) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.experience-shell :where(.form-actions, .modal-actions, .inline-actions, .table-actions, .inventory-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+}
+.experience-shell :where(.form-actions, .modal-actions, .table-actions) > * {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.experience-shell .inventory-form-panel,
+.experience-shell .org-panel,
+.experience-shell .modal-card { scroll-margin-top: 90px; }
+.experience-shell .inventory-form-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); }
+.experience-shell .inventory-form-actions { grid-column: 1 / -1; }
+.experience-shell .org-tabs { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; }
+.experience-shell .org-tab { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.experience-shell .org-panel .section-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.experience-shell .org-panel .section-heading > * { min-width: 0; }
+.experience-shell .modal-card { width: min(720px, calc(100vw - 32px)); max-height: min(88dvh, 900px); overflow: auto; }
+.experience-shell .modal-card .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.experience-shell .modal-card .form-grid label { display: flex; flex-direction: column; gap: 7px; }
+.experience-shell .modal-card .form-span-2 { grid-column: 1 / -1; }
+.experience-shell .modal-card .checkbox-row { display: flex; flex-direction: row !important; align-items: center; gap: 9px; }
+.experience-shell .modal-card .checkbox-row input { width: auto; flex: 0 0 auto; }
+.experience-shell .inventory-form-panel { scroll-margin-top: 84px; }
+@media (max-width: 760px) {
+  .experience-shell .home-stat-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); }
+  .experience-shell .modal-card .form-grid { grid-template-columns: minmax(0, 1fr); }
+  .experience-shell .modal-card .form-span-2 { grid-column: auto; }
+  .experience-shell .org-panel .section-heading { align-items: stretch; }
+  .experience-shell .org-panel .section-heading > button { align-self: flex-start; }
+}
+
+
+/* Keep dark-mode tokens calm and readable across legacy and current views. */
+html.theme-dark {
+  --mf-surface: #192638;
+  --mf-surface-soft: #202f43;
+  --mf-text: #d5deeb;
+  --mf-muted: #a5b3c7;
+  --mf-border: #34445b;
+}
