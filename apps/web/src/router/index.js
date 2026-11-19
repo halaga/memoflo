@@ -18,19 +18,12 @@ import ServiceRequestDetailView from "../views/ServiceRequestDetailView.vue";
 import AccessDeniedView from "../views/AccessDeniedView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import AnnouncementsView from "../views/AnnouncementsView.vue";
-import { api, getSavedEmployee } from "../services/api";
+import { api, clearSession, getSavedEmployee } from "../services/api";
 function hostname() {
     return window.location.hostname.toLowerCase();
 }
 function isPlatformHost() {
     return ["memoflo.com", "www.memoflo.com"].includes(hostname());
-}
-function isTenantHost() {
-    return (hostname().endsWith(".memoflo.com") ||
-        hostname().endsWith(".localhost"));
-}
-function isBareLocalHost() {
-    return ["localhost", "127.0.0.1", "::1"].includes(hostname());
 }
 function hasPermission(permission) {
     const employee = getSavedEmployee();
@@ -362,33 +355,36 @@ const router = createRouter({
         };
     },
 });
+// A fresh browser/app load must always begin at the sign-in screen.
+// Clear any previous session so protected routes cannot bypass the login screen.
+let isInitialAppNavigation = true;
+
 router.beforeEach(async (to) => {
-    const token = localStorage.getItem("memoflo_token");
-    if (to.name === "root") {
-        if (isPlatformHost()) {
-            return true;
-        }
-        if (isBareLocalHost()) {
-            return {
-                name: "login",
-                replace: true,
-            };
-        }
-        return token
-            ? {
-                name: "home",
-                replace: true
-            }
-            : {
-                name: "login",
-                replace: true
-            };
+    const isFirstNavigation = isInitialAppNavigation;
+    isInitialAppNavigation = false;
+
+    if (isFirstNavigation) {
+        clearSession();
     }
-    if (to.meta.guest &&
-        token &&
-        isTenantHost()) {
+
+    const token = localStorage.getItem("memoflo_token");
+
+    if (isPlatformHost() && to.name === "root") {
+        return true;
+    }
+
+    // Deep links such as /home or /administration must not bypass login on
+    // startup, even when a previous token is still stored in this browser.
+    if (isFirstNavigation && to.matched.some((record) => record.meta.requiresAuth)) {
         return {
-            name: "home",
+            name: "login",
+            replace: true,
+        };
+    }
+
+    if (to.name === "root") {
+        return {
+            name: "login",
             replace: true,
         };
     }
