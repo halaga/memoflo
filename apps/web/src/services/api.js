@@ -407,6 +407,9 @@ export const api = {
             body: JSON.stringify(payload),
         });
     },
+    submitMemo(id) {
+        return request(`/memos/${id}/submit`, { method: "POST" });
+    },
     listWorkflows() {
         return request("/workflow");
     },

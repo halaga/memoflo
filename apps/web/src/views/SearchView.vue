@@ -107,6 +107,7 @@ async function load() {
                     title: `${item.firstName || ""} ${item.lastName || ""}`.trim() || item.email || "Employee",
                     description: [item.employeeNo, item.email, item.position?.title, item.position?.department?.name, item.department?.name].filter(Boolean).join(" · "),
                     route: canViewEmployeeProfiles ? `/people/${item._id}` : "/people",
+                    personId: item._id,
                     icon: "user",
                     keywords: item.phone || "",
                 });
@@ -224,6 +225,9 @@ async function load() {
 function open(item) {
     router.push(item.route);
 }
+function sendBasicMemo(item) {
+    router.push({ path: "/memos/create", query: { memoType: "simple", recipient: item.personId } });
+}
 watch(() => route.query.q, (value) => {
     query.value = String(value || "");
     load();
@@ -273,7 +277,7 @@ onMounted(load);
     No results for “{{ query }}”. Try another keyword.
   </div>
   <section v-else class="search-results workspace-panel">
-    <button v-for="item in filtered" :key="item.id" type="button" class="search-result-row" @click="open(item)">
+    <div v-for="item in filtered" :key="item.id" class="search-result-row" role="button" tabindex="0" @click="open(item)" @keydown.enter="open(item)">
       <span class="search-result-icon">
         <AppIcon :name="item.icon" :size="20" />
       </span>
@@ -288,8 +292,11 @@ onMounted(load);
       <span class="search-result-type">
         {{ item.kind }}
       </span>
+      <button v-if="item.kind === 'people'" type="button" class="search-quick-action" @click.stop="sendBasicMemo(item)">
+        Send Basic Memo
+      </button>
       <AppIcon name="arrow" :size="18" />
-    </button>
+    </div>
   </section>
 </div>
 </template>

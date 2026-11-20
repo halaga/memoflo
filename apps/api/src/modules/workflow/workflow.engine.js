@@ -75,6 +75,9 @@ class WorkflowEngine {
         }
 const existingInstance = await WorkflowRepository.findInstanceByResource(companyId, normalizedResourceType, resourceId);
         if (existingInstance) {
+            if (["running", "completed"].includes(existingInstance.status)) {
+                return WorkflowRepository.findInstance(existingInstance._id, companyId);
+            }
             throw new Error("A workflow instance already exists for this resource");
         }
         const firstStep = await WorkflowRepository.findFirstStep(companyId, workflowId);

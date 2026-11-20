@@ -52,12 +52,14 @@ const actionRoute = computed(() => {
     if (!item)
         return "/services";
     switch (item.actionType) {
+        case "memo-simple": return "/memos/create?memoType=simple";
+        case "memo-approval": return "/memos/create?memoType=approval";
         case "signature": return "/email-signature";
         case "leave": return "/leave";
-        case "procurement": return "/procurement/requests/new";
+        case "procurement": return `/memos/create?service=${encodeURIComponent(item._id || item.slug)}`;
         case "people": return "/people";
         case "approvals": return "/approvals";
-        default: return `/services/${item.slug}/start`;
+        default: return `/memos/create?service=${encodeURIComponent(item._id || item.slug)}`;
     }
 });
 async function load() {
@@ -165,7 +167,7 @@ onMounted(load);
           One service, the right workflow.
         </h2>
         <p>
-          MemoFlo opens the relevant form or module for this service. Direct memos go to their recipients; requests use their own service or approval process.
+          MemoFlo opens the unified submission form with this service selected. The service catalogue defines the required information; approvals, payment and fulfilment are tracked separately.
         </p>
       </article>
       <article class="workspace-panel service-info-panel">

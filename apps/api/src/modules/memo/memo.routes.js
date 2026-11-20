@@ -7,5 +7,6 @@ router.use(authenticate);
 router.post("/", authorize("memos.create"), MemoController.create);
 router.get("/", authorize("memos.view"), MemoController.list);
 router.get("/:id", authorize("memos.view"), MemoController.show);
+router.post("/:id/submit", authorize("memos.create"), MemoController.submit);
 router.patch("/:id", authorize("memos.update"), MemoController.update);
 export default router;

@@ -3,6 +3,7 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 import Company from "../company/company.model.js";
 import Position from "../position/position.model.js";
+import Department from "../organization/department/department.model.js";
 import Role from "../auth/role.model.js";
 import Employee from "./employee.model.js";
 import EmployeeRepository from "./employee.repository.js";
@@ -39,7 +40,19 @@ class EmployeeService {
         };
         if (term) {
             const rx = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-            filter.$or = [{ firstName: rx }, { lastName: rx }, { email: rx }, { employeeNo: rx }];
+            const [matchingPositions, matchingDepartments] = await Promise.all([
+                Position.find({ company: companyId, isActive: true, active: true, $or: [{ title: rx }, { code: rx }] }).select("_id").lean(),
+                Department.find({ company: companyId, isActive: true, name: rx }).select("_id").lean(),
+            ]);
+            const departmentIds = matchingDepartments.map((department) => department._id);
+            const departmentPositions = departmentIds.length
+                ? await Position.find({ company: companyId, isActive: true, active: true, department: { $in: departmentIds } }).select("_id").lean()
+                : [];
+            const positionIds = [...matchingPositions, ...departmentPositions].map((position) => position._id);
+            filter.$or = [
+                { firstName: rx }, { lastName: rx }, { email: rx }, { employeeNo: rx },
+                ...(positionIds.length ? [{ position: { $in: positionIds } }] : []),
+            ];
         }
         return Employee.find(filter)
             .select("_id employeeNo firstName lastName email phone avatar biodata employmentStatus position")

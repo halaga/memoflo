@@ -26,7 +26,14 @@ class BusinessServiceService {
         return businessService;
     }
     async updateBusinessService(companyId, id, payload) {
-        const businessService = await BusinessServiceRepository.update(id, companyId, payload);
+        const existing = await BusinessServiceRepository.findById(id, companyId);
+        if (!existing) {
+            throw new Error("Business service not found");
+        }
+        const safePayload = { ...payload };
+        delete safePayload.company;
+        validateCreateBusinessService({ ...existing.toObject(), ...safePayload });
+        const businessService = await BusinessServiceRepository.update(id, companyId, safePayload);
         if (!businessService) {
             throw new Error("Business service not found");
         }

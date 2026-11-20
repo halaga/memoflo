@@ -24,8 +24,38 @@ const memoSchema = new mongoose.Schema({
     memoType: {
         type: String,
         enum: ["simple", "approval", "request"],
-        default: "simple"
+        default: "simple",
     },
+    // Kept for compatibility with records created by the earlier M2 draft.
+    submissionType: {
+        type: String,
+        default: "",
+        index: true,
+    },
+    requisitionType: {
+        type: String,
+        trim: true,
+        default: "",
+        index: true,
+    },
+    submissionDetails: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {},
+    },
+    businessJustification: { type: String, trim: true, default: "" },
+    requiredCompletionDate: { type: Date, default: null },
+    financialDetails: {
+        required: { type: Boolean, default: false },
+        estimatedAmount: { type: Number, min: 0, default: null },
+        currency: { type: String, trim: true, default: "NGN" },
+        budgetOrCostCentre: { type: String, trim: true, default: "" },
+        vendor: { type: String, trim: true, default: "" },
+        invoiceNumber: { type: String, trim: true, default: "" },
+        quotationDetails: { type: String, trim: true, default: "" },
+        paymentRequired: { type: Boolean, default: false },
+    },
+    ccRecipients: [{ type: mongoose.Schema.Types.ObjectId, ref: "Employee" }],
+    acknowledgementRequired: { type: Boolean, default: false },
     recipient: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Employee",

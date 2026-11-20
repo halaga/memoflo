@@ -12,6 +12,7 @@ class MemoRepository {
             .populate("createdBy", "_id firstName lastName email")
             .populate("recipient", "_id firstName lastName email")
             .populate("recipients", "_id firstName lastName email")
+            .populate("ccRecipients", "_id firstName lastName email")
             .populate("businessService", "_id name category actionType routeKey")
             .populate("currentApprover", "_id title code")
             .populate("workflow", "_id name");
@@ -26,6 +27,7 @@ class MemoRepository {
             .populate("createdBy", "_id firstName lastName email")
             .populate("recipient", "_id firstName lastName email")
             .populate("recipients", "_id firstName lastName email")
+            .populate("ccRecipients", "_id firstName lastName email")
             .populate("businessService", "_id name category actionType routeKey")
             .populate("workflow", "_id name");
     }

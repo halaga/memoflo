@@ -1,83 +1,54 @@
 import BusinessService from "./businessService.model.js";
 import Department from "../organization/department/department.model.js";
+
+const RINGO_CATALOGUE = [
+    { name: "Office Drinking Water", category: "Admin", owner: "Administration", slug: "office-drinking-water", keywords: ["water", "drinking water", "office"], financialRequired: true },
+    { name: "Fine & Levy", category: "Admin", owner: "Administration", slug: "admin-fine-levy", keywords: ["fine", "levy", "regulatory"], financialRequired: true, paymentRequired: true },
+    { name: "Utility", category: "Admin", owner: "Administration", slug: "utility", keywords: ["utility", "electricity", "power", "water"], financialRequired: true, paymentRequired: true },
+    { name: "Facility Management", category: "Admin", owner: "Administration", slug: "facility-management", keywords: ["facility", "maintenance", "building"] },
+    { name: "Office Supplies", category: "Admin", owner: "Administration", slug: "office-supplies", keywords: ["stationery", "supplies", "office"], inventoryFulfilment: true },
+    { name: "Sanitation", category: "Admin", owner: "Administration", slug: "sanitation", keywords: ["cleaning", "sanitation", "hygiene"] },
+    { name: "Budget", category: "SBU", owner: "Administration", slug: "sbu-budget", keywords: ["budget", "allocation"], requiresSbu: true, financialRequired: true },
+    { name: "Unit Admin Expenses", category: "SBU", owner: "Administration", slug: "unit-admin-expenses", keywords: ["unit", "admin", "expense"], requiresSbu: true, financialRequired: true },
+    { name: "Rent", category: "SBU", owner: "Administration", slug: "sbu-rent", keywords: ["rent", "lease", "premises"], requiresSbu: true, financialRequired: true, paymentRequired: true },
+    { name: "Fine & Levy", category: "SBU", owner: "Administration", slug: "sbu-fine-levy", keywords: ["fine", "levy"], requiresSbu: true, financialRequired: true, paymentRequired: true },
+    { name: "IT Support", category: "IT", owner: "Information Technology", slug: "it-support", keywords: ["it", "support", "technical", "repair"] },
+    { name: "IT Maintenance", category: "IT", owner: "Information Technology", slug: "it-maintenance", keywords: ["it", "maintenance", "hardware"] },
+];
+
 export async function seedBusinessServices(company) {
-    console.log("\n🏢 Seeding Business Services...");
-    const departments = await Department.find({
-        company: company._id,
-        isActive: true
-    });
-    const getDepartment = (name) => departments.find((department) => department.name === name);
-    const services = [
-        { name: "Business Purchase", slug: "business-purchase-request", category: "Business Services", moduleId: "procurement",
-             actionType: "procurement", routeKey: "business-purchase-request", keywords: ["laptop", "computer", "device", "hardware",
-             "it", "purchase", "equipment", "supplies"], requiresSbu: true, subscriptionFeature: "procurement", icon: "purchase", owner: "Information Technology" },
-        { name: "IT Maintenance", slug: "it-maintenance", category: "IT", moduleId: "it", actionType: "it-request", routeKey: "it-maintenance",
-             keywords: ["it", "maintenance", "repair", "printer", "network", "hardware"], requiresSbu: false, subscriptionFeature: "it",
-            icon: "settings", owner: "Information Technology" },
-        { name: "Internet Subscription", slug: "internet-subscription", category: "IT", moduleId: "it", actionType: "it-request",
-             routeKey: "internet-subscription", keywords: ["internet", "wifi", "data", "network", "it"], requiresSbu: false, subscriptionFeature: "it",
-            icon: "wifi", owner: "Information Technology" },
-        { name: "Software Installation", slug: "software-installation", category: "IT", moduleId: "it", actionType: "it-request",
-             routeKey: "software-installation", keywords: ["software", "application", "install", "app", "it"], requiresSbu: false,
-            subscriptionFeature: "it", icon: "box", owner: "Information Technology" },
-        { name: "IT Support", slug: "it-support", category: "IT", moduleId: "it", actionType: "it-request", routeKey: "it-support",
-             keywords: ["it", "support", "help", "computer", "technical"], requiresSbu: false, subscriptionFeature: "it", icon: "headset",
-            owner: "Information Technology" },
-        { name: "Fuel Request", slug: "fuel-request", category: "Business Services", moduleId: "workplace", actionType: "service-request",
-             routeKey: "fuel-request", keywords: ["fuel", "petrol", "diesel", "vehicle"], requiresSbu: true, subscriptionFeature: "workplace",
-            icon: "fuel", owner: "Administration" },
-        { name: "Vehicle Repair", slug: "vehicle-repair", category: "Business Services", moduleId: "workplace", actionType: "service-request",
-             routeKey: "vehicle-repair", keywords: ["vehicle", "car", "repair", "maintenance"], requiresSbu: true, subscriptionFeature: "workplace",
-            icon: "car", owner: "Administration" },
-        { name: "Office Furniture", slug: "office-furniture", category: "Business Services", moduleId: "workplace", actionType: "service-request",
-             routeKey: "office-furniture", keywords: ["furniture", "chair", "desk", "office"], requiresSbu: true, subscriptionFeature: "workplace",
-            icon: "chair", owner: "Administration" },
-        { name: "Recruitment Request", slug: "recruitment", category: "People & HR", moduleId: "hr", actionType: "recruitment",
-             routeKey: "recruitment", keywords: ["hr", "human resources", "recruitment", "hiring", "hire", "vacancy", "people"], requiresSbu: true,
-            subscriptionFeature: "hr", icon: "users", owner: "Human Resources" },
-        { name: "Leave Request", slug: "leave-request", category: "People & HR", moduleId: "hr", actionType: "leave", routeKey: "leave",
-             keywords: ["hr", "human resources", "leave", "vacation", "absence", "time off", "people"], requiresSbu: true, subscriptionFeature: "hr",
-            icon: "calendar", owner: "Human Resources" },
-        { name: "Employee Information Request", slug: "employee-information", category: "People & HR", moduleId: "hr",
-             actionType: "service-request", routeKey: "employee-information", keywords: ["hr", "human resources", "employee", "people",
-            "profile", "information"], requiresSbu: false, subscriptionFeature: "hr", icon: "user", owner: "Human Resources" },
-        { name: "General Memo", slug: "general-memo", category: "Communication", moduleId: "communication", actionType: "memo-simple",
-             routeKey: "simple-memo", keywords: ["memo", "message", "communication", "letter", "internal"], requiresSbu: false, subscriptionFeature: "memos",
-            icon: "file-text", owner: "Administration" },
-        { name: "Approval Memo", slug: "approval-memo", category: "Communication", moduleId: "communication", actionType: "memo-approval",
-             routeKey: "approval-memo", keywords: ["memo", "approval", "approve", "communication"], requiresSbu: true, subscriptionFeature: "memos",
-            icon: "file-check", owner: "Administration" },
-    ];
-    for (const service of services) {
-        const ownerDepartment = getDepartment(service.owner);
+    const departments = await Department.find({ company: company._id, isActive: true });
+    const findDepartment = (name) => departments.find((department) => department.name.toLowerCase() === name.toLowerCase());
+
+    for (const entry of RINGO_CATALOGUE) {
+        const ownerDepartment = findDepartment(entry.owner);
         if (!ownerDepartment) {
-            console.warn(`⚠ Skipping ${service.name}: owner department not found`);
+            console.warn(`Skipping ${entry.name}: ${entry.owner} department not found`);
             continue;
         }
+        const { owner, ...service } = entry;
         const data = {
+            ...service,
             company: company._id,
-            name: service.name,
-            slug: service.slug,
-            category: service.category,
             ownerDepartment: ownerDepartment._id,
-            moduleId: service.moduleId,
-            actionType: service.actionType,
-            routeKey: service.routeKey,
-            keywords: service.keywords,
-            requiresSbu: service.requiresSbu,
-            subscriptionFeature: service.subscriptionFeature,
-            icon: service.icon,
+            responsibleDepartment: owner,
+            moduleId: "memos",
+            actionType: "service-request",
+            routeKey: "memo-composer",
+            description: `${entry.name} request submitted through the company memo and approval process.`,
+            defaultPriority: "Normal",
+            active: true,
         };
-        const existing = await BusinessService.findOne({
-            company: company._id,
-            slug: service.slug
-        });
-        if (existing) {
-            await BusinessService.updateOne({ _id: existing._id }, { $set: data });
-            continue;
-        }
-        await BusinessService.create(data);
-        console.log(`✔ ${service.name}`);
+        await BusinessService.updateOne(
+            { company: company._id, slug: entry.slug },
+            { $setOnInsert: data, $set: { category: entry.category, active: true } },
+            { upsert: true },
+        );
     }
-    console.log("✅ Business Services Seed Complete");
+
+    // Legacy services remain available; transaction-specific routing is migrated to the unified composer.
+    await BusinessService.updateMany(
+        { company: company._id, active: true, actionType: { $in: ["procurement", "service-request"] } },
+        { $set: { actionType: "service-request", routeKey: "memo-composer", moduleId: "memos" } },
+    );
 }
