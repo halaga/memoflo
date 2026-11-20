@@ -4,10 +4,13 @@ import BaseSchema from "../../database/BaseSchema.js";
 const formFieldSchema = new mongoose.Schema({
     key: { type: String, required: true, trim: true },
     label: { type: String, required: true, trim: true },
-    type: { type: String, enum: ["text", "textarea", "number", "date", "select", "checkbox"], default: "text" },
+    type: { type: String, enum: ["text", "textarea", "number", "currency", "date", "select", "multiselect", "checkbox", "file", "user", "department"], default: "text" },
     required: { type: Boolean, default: false },
     placeholder: { type: String, default: "" },
     options: { type: [String], default: [] },
+    helpText: { type: String, default: "", trim: true },
+    conditionalOn: { type: String, default: "", trim: true },
+    conditionalValue: { type: String, default: "", trim: true },
 }, { _id: false });
 
 const businessServiceSchema = new mongoose.Schema({
@@ -24,10 +27,12 @@ const businessServiceSchema = new mongoose.Schema({
     description: { type: String, default: "", trim: true },
     ownerDepartment: { type: mongoose.Schema.Types.ObjectId, ref: "Department", required: true },
     responsibleDepartment: { type: String, default: "", trim: true },
+    availabilityRules: { type: mongoose.Schema.Types.Mixed, default: {} },
     audienceGroups: { type: [String], default: [] },
     formSchema: { type: [formFieldSchema], default: [] },
     allowedRequisitionTypes: { type: [String], default: [] },
     workflow: { type: mongoose.Schema.Types.ObjectId, ref: "Workflow", default: null },
+    requisitionWorkflowMap: { type: mongoose.Schema.Types.Mixed, default: {} },
     icon: { type: String, default: "", trim: true },
     color: { type: String, default: "#2563EB", trim: true },
     requiredAttachments: [{ type: String, trim: true }],

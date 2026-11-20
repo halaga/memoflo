@@ -7,6 +7,7 @@ router.use(authenticate);
 router.post("/", authorize("business-services.create"), BusinessServiceController.create);
 router.get("/", BusinessServiceController.list);
 router.get("/slug/:slug", BusinessServiceController.showBySlug);
+router.get("/admin/all", authorize("business-services.view"), BusinessServiceController.listAdmin);
 router.get("/:id", BusinessServiceController.show);
 router.patch("/:id", authorize("business-services.update"), BusinessServiceController.update);
 router.delete("/:id", authorize("business-services.delete"), BusinessServiceController.remove);

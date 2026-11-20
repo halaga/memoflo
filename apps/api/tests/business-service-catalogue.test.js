@@ -49,3 +49,36 @@ test("validates SLA and default priority", () => {
     assert.throws(() => validateCreateBusinessService({ ...validService, slaHours: -1 }), /non-negative/);
     assert.throws(() => validateCreateBusinessService({ ...validService, defaultPriority: "Immediate" }), /priority/);
 });
+
+test("accepts multiple requisition types and workflow mappings", () => {
+    assert.doesNotThrow(() => validateCreateBusinessService({
+        ...validService,
+        allowedRequisitionTypes: ["Admin Requisition", "SBU Requisition"],
+        requisitionWorkflowMap: {
+            "Admin Requisition": "workflow-admin",
+            "SBU Requisition": "workflow-sbu",
+        },
+    }));
+});
+
+test("rejects duplicate or empty requisition type values", () => {
+    assert.throws(() => validateCreateBusinessService({
+        ...validService,
+        allowedRequisitionTypes: ["Admin Requisition", "Admin Requisition"],
+    }), /Duplicate/);
+    assert.throws(() => validateCreateBusinessService({
+        ...validService,
+        allowedRequisitionTypes: [""],
+    }), /cannot be empty/);
+});
+
+test("supports multi-select fields and requires configured options", () => {
+    assert.doesNotThrow(() => validateCreateBusinessService({
+        ...validService,
+        formSchema: [{ key: "locations", label: "Locations", type: "multiselect", options: ["Lagos", "Abuja"] }],
+    }));
+    assert.throws(() => validateCreateBusinessService({
+        ...validService,
+        formSchema: [{ key: "locations", label: "Locations", type: "multiselect", options: [] }],
+    }), /at least one option/);
+});

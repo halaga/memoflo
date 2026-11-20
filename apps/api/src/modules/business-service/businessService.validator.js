@@ -1,4 +1,4 @@
-const FIELD_TYPES = new Set(["text", "textarea", "number", "date", "select", "checkbox"]);
+const FIELD_TYPES = new Set(["text", "textarea", "number", "currency", "date", "select", "multiselect", "checkbox", "file", "user", "department"]);
 const PRIORITIES = new Set(["Low", "Normal", "High", "Urgent", "Critical"]);
 
 export function validateCreateBusinessService(payload) {
@@ -7,6 +7,7 @@ export function validateCreateBusinessService(payload) {
     if (!payload.category?.trim()) throw new Error("Business service category is required");
     if (!payload.ownerDepartment) throw new Error("Owner department is required");
     if (payload.defaultPriority && !PRIORITIES.has(payload.defaultPriority)) throw new Error("Invalid default priority");
+    if (payload.requisitionWorkflowMap !== undefined && (!payload.requisitionWorkflowMap || typeof payload.requisitionWorkflowMap !== "object" || Array.isArray(payload.requisitionWorkflowMap))) throw new Error("Requisition workflow mapping must be an object");
     if (payload.allowedRequisitionTypes !== undefined) {
         if (!Array.isArray(payload.allowedRequisitionTypes)) {
             throw new Error("Allowed requisition types must be a list");
@@ -30,7 +31,7 @@ export function validateCreateBusinessService(payload) {
             if (!FIELD_TYPES.has(field.type || "text")) throw new Error(`Unsupported field type: ${field.type}`);
             if (keys.has(field.key)) throw new Error(`Duplicate service form field: ${field.key}`);
             keys.add(field.key);
-            if (field.type === "select" && (!Array.isArray(field.options) || !field.options.length)) {
+            if (["select", "multiselect"].includes(field.type) && (!Array.isArray(field.options) || !field.options.length)) {
                 throw new Error(`Select field ${field.label} needs at least one option`);
             }
         }

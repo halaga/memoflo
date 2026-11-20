@@ -16,6 +16,17 @@ class BusinessServiceRepository {
                 name: 1
             });
     }
+    async findAllForAdmin(companyId) {
+        return BusinessService.find({ company: companyId, isActive: true })
+            .populate("ownerDepartment")
+            .populate("workflow")
+            .sort({ category: 1, name: 1 });
+    }
+    async findByIdForAdmin(id, companyId) {
+        return BusinessService.findOne({ _id: id, company: companyId, isActive: true })
+            .populate("ownerDepartment")
+            .populate("workflow");
+    }
     async findById(id, companyId) {
         return BusinessService.findOne({
             _id: id,
@@ -41,7 +52,6 @@ class BusinessServiceRepository {
             _id: id,
             company: companyId,
             isActive: true,
-            active: true,
         }, data, {
             new: true,
             runValidators: true,
@@ -56,9 +66,7 @@ class BusinessServiceRepository {
             isActive: true,
             active: true,
         }, {
-            isActive: false,
             active: false,
-            deletedAt: new Date(),
         }, {
             new: true,
         });

@@ -11,6 +11,9 @@ class BusinessServiceService {
     async listBusinessServices(companyId) {
         return BusinessServiceRepository.findAll(companyId);
     }
+    async listBusinessServicesForAdmin(companyId) {
+        return BusinessServiceRepository.findAllForAdmin(companyId);
+    }
     async getBusinessService(companyId, id) {
         const businessService = await BusinessServiceRepository.findById(id, companyId);
         if (!businessService) {
@@ -26,7 +29,7 @@ class BusinessServiceService {
         return businessService;
     }
     async updateBusinessService(companyId, id, payload) {
-        const existing = await BusinessServiceRepository.findById(id, companyId);
+        const existing = await BusinessServiceRepository.findByIdForAdmin(id, companyId);
         if (!existing) {
             throw new Error("Business service not found");
         }

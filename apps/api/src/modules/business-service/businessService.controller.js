@@ -24,6 +24,12 @@ class BusinessServiceController {
             next(err);
         }
     }
+    async listAdmin(req, res, next) {
+        try {
+            const businessServices = await BusinessServiceService.listBusinessServicesForAdmin(req.user.company);
+            res.json({ success: true, data: businessServices });
+        } catch (err) { next(err); }
+    }
     async show(req, res, next) {
         try {
             const businessService = await BusinessServiceService.getBusinessService(req.user.company, req.params.id);

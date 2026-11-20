@@ -44,9 +44,8 @@ class MemoService {
         for (const field of fields) {
             if (!field.required) continue;
             const value = values[field.key];
-            if (value === undefined || value === null || String(value).trim() === "") {
-                throw serviceError(`${field.label} is required.`);
-            }
+            const missing = value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0) || (typeof value === "string" && !value.trim());
+            if (missing) throw serviceError(`${field.label} is required.`);
         }
     }
 
@@ -84,7 +83,7 @@ class MemoService {
                     throw serviceError("Enter the estimated amount required by this Business Service.");
                 }
             }
-            workflowId = businessService.workflow?._id || businessService.workflow || null;
+            workflowId = businessService.requisitionWorkflowMap?.[payload.requisitionType] || businessService.workflow?._id || businessService.workflow || null;
             if (!saveAsDraft && !workflowId) {
                 throw serviceError("This Business Service has no active workflow configured. Save as draft or contact your administrator.");
             }
@@ -221,7 +220,7 @@ class MemoService {
         if (service.financialRequired && !memo.financialDetails?.estimatedAmount) {
             throw serviceError("Financial information and an estimated amount are required for this service.");
         }
-        const workflowId = service.workflow?._id || service.workflow || memo.workflow;
+        const workflowId = service.requisitionWorkflowMap?.[memo.requisitionType] || service.workflow?._id || service.workflow || memo.workflow;
         if (!workflowId) throw serviceError("No workflow is configured for this Business Service.");
         memo.workflow = workflowId;
         const instance = await WorkflowEngine.start(companyId, workflowId, "memo", memo._id, actorId);

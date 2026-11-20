@@ -348,6 +348,9 @@ export const api = {
     listBusinessServices() {
         return request("/business-services");
     },
+    listBusinessServicesAdmin() {
+        return request("/business-services/admin/all");
+    },
     getBusinessService(id) {
         return request(`/business-services/${id}`);
     },

@@ -388,12 +388,12 @@ onMounted(loadFormData);
             <label v-for="field in selectedService.formSchema" :key="field.key">
               {{ field.label }}<span v-if="field.required"> *</span>
               <textarea v-if="field.type === 'textarea'" v-model="serviceFieldValues[field.key]" class="textarea" :placeholder="field.placeholder" :required="field.required" rows="3"></textarea>
-              <select v-else-if="field.type === 'select'" v-model="serviceFieldValues[field.key]" class="input" :required="field.required">
-                <option value="">Select {{ field.label.toLowerCase() }}</option>
+              <select v-else-if="field.type === 'select' || field.type === 'multiselect'" v-model="serviceFieldValues[field.key]" class="input" :multiple="field.type === 'multiselect'" :required="field.required">
+                <option v-if="field.type !== 'multiselect'" value="">Select {{ field.label.toLowerCase() }}</option>
                 <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
               </select>
               <input v-else-if="field.type === 'checkbox'" v-model="serviceFieldValues[field.key]" type="checkbox" />
-              <input v-else v-model="serviceFieldValues[field.key]" class="input" :type="field.type || 'text'" :placeholder="field.placeholder" :required="field.required" />
+              <input v-else v-model="serviceFieldValues[field.key]" class="input" :type="['number','currency','date'].includes(field.type) ? (field.type === 'currency' ? 'number' : field.type) : 'text'" :placeholder="field.placeholder" :required="field.required" :min="field.type === 'number' || field.type === 'currency' ? 0 : undefined" />
             </label>
           </div>
         </section>
