@@ -104,6 +104,21 @@ class MemoService {
             }
         }
 
+        let requestingSbu = payload.requestingSbu || null;
+        let beneficiarySBU = payload.beneficiarySBU || payload.beneficiarySbu || null;
+        if (!isBasic && (!requestingSbu || !beneficiarySBU)) {
+            const requester = await Employee.findOne({
+                _id: payload.createdBy,
+                company: payload.company,
+                active: true,
+                isActive: true,
+                deletedAt: null,
+            }).populate({ path: "position", select: "sbu" }).select("position").lean();
+            const profileSbu = requester?.position?.sbu || null;
+            requestingSbu = requestingSbu || profileSbu;
+            beneficiarySBU = beneficiarySBU || requestingSbu;
+        }
+
         const recipients = isBasic
             ? await this.resolvePeople(payload.recipients || [], payload.company, "recipients")
             : [];
@@ -111,6 +126,8 @@ class MemoService {
 
         const memo = await MemoRepository.create({
             ...payload,
+            requestingSbu,
+            beneficiarySBU,
             memoType,
             submissionType: "",
             requisitionType: isBasic ? "" : String(payload.requisitionType || "").trim(),

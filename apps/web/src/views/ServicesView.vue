@@ -20,9 +20,6 @@ const builtIns = [
         actionType: "approvals", moduleId: "memos", keywords: ["approval", "decision"], icon: "check" },
     { name: "Leave Request", slug: "leave-request", description: "Submit leave and follow the HR review process.", category: "People & HR",
         actionType: "leave", moduleId: "leave", keywords: ["hr", "leave", "vacation", "absence"], icon: "calendar" },
-    { name: "Business Purchase", slug: "business-purchase-request", description: "Request laptops, equipment, supplies and other business purchases.",
-         category: "Business Services", actionType: "procurement", moduleId: "procurement", keywords: ["purchase", "procurement",
-        "laptop", "equipment", "buy"], icon: "purchase" },
     { name: "People Directory", slug: "people-directory", description: "Find colleagues, roles and departments.", category: "People & HR",
         actionType: "people", moduleId: "hr", keywords: ["people", "employee", "staff", "directory"], icon: "people" },
     { name: "IT Support & Maintenance", slug: "it-support", description: "Log an IT support ticket for troubleshooting, equipment repair, software installation, connectivity or data/internet issues, then track its progress.",
@@ -43,8 +40,7 @@ if (["laptop-request", "business-purchase", "business-purchase-request"].include
 const catalog = computed(() => {
     const dynamic = services.value.map((service) => {
         const originalSlug = String(service.slug || service._id || "").toLowerCase();
-        const slug = ({ "business-purchase": "business-purchase-request", "laptop-request": "business-purchase-request",
-            "it-maintenance": "it-support", "software-installation": "it-support", "internet-subscription": "it-support" })[originalSlug] || originalSlug;
+        const slug = originalSlug;
         return {
             ...service,
             slug,
@@ -56,9 +52,12 @@ const catalog = computed(() => {
                     : service.description || "Company service.",
             category: slug === "business-purchase-request" ? "Business Services" : slug === "it-support" ? "IT" : categoryFor({ ...service,
                 slug }),
-            actionType: slug === "business-purchase-request" ? "procurement" : slug === "it-support" ? "it-request" : service.actionType || "service-request",
-            moduleId: slug === "business-purchase-request" ? "procurement" : slug === "it-support" ? "it" : service.moduleId || "",
-            icon: slug === "business-purchase-request" ? "purchase" : slug === "it-support" ? "laptop" : service.icon || "services",
+            actionType: ["business-purchase", "laptop-request", "business-purchase-request"].includes(originalSlug)
+                ? "service-request" : slug === "it-support" ? "it-request" : service.actionType || "service-request",
+            moduleId: ["business-purchase", "laptop-request", "business-purchase-request"].includes(originalSlug)
+                ? "memos" : slug === "it-support" ? "it" : service.moduleId || "memos",
+            icon: slug === "it-support" ? "laptop" : service.icon || "services",
+            color: service.color || "#2563EB",
             keywords: Array.isArray(service.keywords) ? service.keywords : [],
         };
     });
@@ -164,6 +163,7 @@ onMounted(load);
         :to="`/services/${service.slug}`"
         class="service-card"
         :class="{ 'service-disabled': !moduleEnabled(service) }"
+        :style="{ '--service-accent': service.color || '#2563EB' }"
       >
         <span class="service-icon">
           <AppIcon :name="service.icon" :size="23" />
@@ -186,3 +186,7 @@ onMounted(load);
 </div>
 </template>
 
+
+<style scoped>
+.service-card{position:relative;display:flex;align-items:center;gap:1rem;min-height:112px;padding:1.1rem 1.2rem;border:1px solid var(--border-color, #e5e7eb);border-radius:18px;background:var(--surface, #fff);text-decoration:none;color:inherit;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;overflow:hidden}.service-card:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--service-accent);opacity:.85}.service-card:hover{transform:translateY(-2px);border-color:var(--service-accent);box-shadow:0 12px 28px rgba(15,23,42,.08)}.service-icon{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;border-radius:15px;background:color-mix(in srgb,var(--service-accent) 12%,transparent);color:var(--service-accent)}.service-card-copy{display:grid;gap:.35rem;min-width:0}.service-card-copy strong{font-size:1rem;line-height:1.3}.service-card-copy small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--text-muted,#64748b);line-height:1.45}.service-card-arrow{margin-left:auto;flex:0 0 auto;color:var(--service-accent)}.service-group-heading{display:flex;align-items:end;justify-content:space-between;gap:1rem;margin:1.8rem 0 1rem}.service-group-heading h2{margin:.25rem 0 0}.service-card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1rem}.service-availability{margin-left:auto;font-size:.75rem;font-weight:700;color:var(--text-muted,#64748b)}.service-disabled{opacity:.58;cursor:not-allowed}@media(max-width:640px){.service-card{min-height:96px;padding:.9rem}.service-icon{width:42px;height:42px;flex-basis:42px}}
+</style>

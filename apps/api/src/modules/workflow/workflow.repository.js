@@ -98,7 +98,11 @@ class WorkflowRepository {
             workflow: workflowId,
             isActive: true,
         })
-            .populate({ path: "position", match: { company: companyId } })
+            .populate({
+                path: "position",
+                match: { company: companyId },
+                populate: { path: "occupant", match: { company: companyId }, select: "_id firstName lastName email employeeNo" },
+            })
             .sort({ order: 1 });
     }
     async findStepByOrder(companyId, workflowId, order) {

@@ -4,6 +4,7 @@ import WorkflowEngine from "./workflow.engine.js";
 import BusinessService from "../business-service/businessService.model.js";
 import Position from "../position/position.model.js";
 import WorkflowStep from "./workflowStep.model.js";
+import WorkflowInstance from "./workflowInstance.model.js";
 import { validateCreateWorkflow, validateCreateWorkflowStep, } from "./workflow.validator.js";
 async function validateBusinessService(companyId, businessServiceId) {
     if (!businessServiceId)
@@ -107,15 +108,29 @@ class WorkflowService {
         return workflow;
     }
     async deleteWorkflow(companyId, id) {
-        const workflow = await WorkflowRepository.deactivate(id, companyId);
+        const workflow = await WorkflowRepository.findById(id, companyId);
         if (!workflow) {
             throw new Error("Workflow not found");
         }
-        await BusinessService.updateMany({
+        const instances = await WorkflowInstance.countDocuments({
             company: companyId,
             workflow: id,
-        }, { workflow: null });
-        return workflow;
+            isActive: true,
+            deletedAt: null,
+        });
+        if (instances > 0) {
+            throw new Error("This workflow has existing workflow history. Reassign its services and keep it active so historical records remain readable.");
+        }
+        const services = await BusinessService.find({ company: companyId, isActive: true, active: true })
+            .select("_id name workflow requisitionWorkflowMap").lean();
+        const assignedService = services.find((service) => {
+            if (String(service.workflow || "") === String(id)) return true;
+            return Object.values(service.requisitionWorkflowMap || {}).some((workflowId) => String(workflowId) === String(id));
+        });
+        if (assignedService) {
+            throw new Error(`Reassign ${assignedService.name} to another workflow before deactivating this workflow.`);
+        }
+        return WorkflowRepository.deactivate(id, companyId);
     }
     async addStep(companyId, workflowId, payload) {
         const workflow = await WorkflowRepository.findById(workflowId, companyId);
@@ -150,6 +165,16 @@ class WorkflowService {
         const existing = existingSteps.find((step) => String(step._id) === String(stepId));
         if (!existing) {
             throw new Error("Workflow step not found");
+        }
+        const inFlight = await WorkflowInstance.exists({
+            company: companyId,
+            workflow: workflowId,
+            currentStep: stepId,
+            status: "running",
+            isActive: true,
+        });
+        if (inFlight) {
+            throw new Error("This step is currently in use by an active workflow. Finish or reassign the running request before editing it.");
         }
         validateCreateWorkflowStep({
             ...existing.toObject?.(),
@@ -196,6 +221,16 @@ await validateWorkflowPosition(companyId, payload.position !== undefined ? paylo
         if (!workflow) {
             throw new Error("Workflow not found");
         }
+        const inFlight = await WorkflowInstance.exists({
+            company: companyId,
+            workflow: workflowId,
+            currentStep: stepId,
+            status: "running",
+            isActive: true,
+        });
+        if (inFlight) {
+            throw new Error("This step is currently assigned to an active request and cannot be removed yet.");
+        }
         const step = await WorkflowRepository.deactivateStep(companyId, workflowId, stepId);
         if (!step) {
             throw new Error("Workflow step not found");
@@ -226,20 +261,11 @@ await validateWorkflowPosition(companyId, payload.position !== undefined ? paylo
             };
         }
         const step = instance.currentStep;
-        if (!step.position) {
-            return {
-                instance,
-                step,
-                position: null,
-                employee: null,
-            };
-        }
-        const resolved = await WorkflowResolver.resolvePosition(step.position._id, companyId);
         return {
             instance,
             step,
-            position: resolved.position,
-            employee: resolved.employee,
+            position: instance.currentPosition || null,
+            employee: instance.currentEmployee || null,
         };
     }
     async resubmitInstance(companyId, instanceId, employeeId, comment = "") {

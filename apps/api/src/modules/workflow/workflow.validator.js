@@ -36,5 +36,8 @@ export function validateCreateWorkflowStep(payload) {
     if (!payload.position) {
         throw new Error("Workflow position is required");
     }
+    if (payload.assignmentRule !== undefined && !["fixed_position", "beneficiary_sbu_head"].includes(payload.assignmentRule)) {
+        throw new Error("Invalid workflow assignment rule");
+    }
 }
 export { ACTIONS };

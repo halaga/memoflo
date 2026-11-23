@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref } from "vue";
 import { api, normalizeList } from "../../services/api";
+import AppIcon from "../../components/ui/AppIcon.vue";
 const workflows = ref([]);
 const positions = ref([]);
 const services = ref([]);
@@ -23,6 +24,7 @@ const stepForm = ref({
     name: "",
     action: "approve",
     position: "",
+    assignmentRule: "fixed_position",
     required: true,
     allowDelegate: false,
 });
@@ -45,6 +47,7 @@ const actions = [
 const sortedSteps = computed(() => {
     return [...(selectedWorkflow.value?.steps || [])].sort((a, b) => a.order - b.order);
 });
+const unassignedSteps = computed(() => sortedSteps.value.filter((step) => !step.position?.occupant));
 async function load() {
     loading.value = true;
     error.value = "";
@@ -138,6 +141,7 @@ async function openNewStep() {
         name: "",
         action: "approve",
         position: "",
+        assignmentRule: "fixed_position",
         required: true,
         allowDelegate: false,
     };
@@ -155,6 +159,7 @@ async function editStep(step) {
         name: step.name || "",
         action: step.action || "approve",
         position: step.position?._id || step.position || "",
+        assignmentRule: step.assignmentRule || "fixed_position",
         required: step.required !== false,
         allowDelegate: step.allowDelegate === true,
     };
@@ -282,11 +287,11 @@ onMounted(load);
       </p>
     </div>
     <button
-        class="btn btn-primary"
+        class="btn btn-primary workflow-primary-button"
         type="button"
         @click="openNewWorkflow"
       >
-      + Add workflow
+      <AppIcon name="plus" :size="17" /> Add workflow
     </button>
   </div>
   <div
@@ -332,7 +337,7 @@ onMounted(load);
           {{ item.name }}
         </strong>
         <small>
-          {{ item.code }} · {{ item.steps?.length || 0 }} steps
+          {{ item.code }} · v{{ item.version || 1 }}
         </small>
       </button>
       <button
@@ -340,7 +345,7 @@ onMounted(load);
           class="workflow-list-add"
           @click="openNewWorkflow"
         >
-        + New workflow
+        <AppIcon name="plus" :size="16" /> New workflow
       </button>
     </aside>
     <main
@@ -366,7 +371,7 @@ onMounted(load);
             :disabled="saving"
             @click="removeWorkflow"
           >
-            Delete
+            <AppIcon name="trash" :size="15" /> Delete
           </button>
         </div>
         <div class="form-row">
@@ -401,11 +406,15 @@ onMounted(load);
             :disabled="saving"
             @click="saveDefinition"
           >
-            Save definition
+            <AppIcon name="check" :size="16" /> Save definition
           </button>
         </div>
       </section>
       <section class="card">
+        <div v-if="unassignedSteps.length" class="alert alert-warning workflow-assignment-warning">
+          <AppIcon name="users" :size="18" />
+          <span>{{ unassignedSteps.length }} workflow position(s) need an assigned office holder before requests can be routed: {{ unassignedSteps.map((step) => step.position?.title || step.name).join(", ") }}.</span>
+        </div>
         <div class="card-header">
           <div>
             <h2>
@@ -420,7 +429,7 @@ onMounted(load);
               type="button"
               @click="openNewStep"
             >
-            + Add step
+            <AppIcon name="plus" :size="16" /> Add step
           </button>
         </div>
         <div class="workflow-builder-steps">
@@ -441,11 +450,12 @@ onMounted(load);
                   {{ step.action }}
                 </span>
                 <span>
-                  {{ step.position?.title || "Unassigned" }}
+                  {{ step.position?.occupant ? `${step.position.occupant.firstName} ${step.position.occupant.lastName}` : `${step.position?.title || "Unassigned"} · assign office holder` }}
                 </span>
                 <span>
                   {{ step.required ? "Required" : "Optional" }}
                 </span>
+                <span v-if="step.assignmentRule === 'beneficiary_sbu_head'">Beneficiary SBU routing</span>
               </div>
             </div>
             <div class="builder-step-actions">
@@ -454,14 +464,14 @@ onMounted(load);
                 type="button"
                 @click="editStep(step)"
               >
-                Edit
+                <AppIcon name="edit" :size="14" /> Edit
               </button>
               <button
                 class="btn btn-danger"
                 type="button"
                 @click="removeStep(step)"
               >
-                Delete
+                <AppIcon name="trash" :size="14" /> Delete
               </button>
             </div>
           </article>
@@ -491,7 +501,7 @@ onMounted(load);
             type="button"
             @click="showStep = false"
           >
-            Close
+            <AppIcon name="close" :size="15" /> Close
           </button>
         </div>
         <div class="form-row">
@@ -537,6 +547,14 @@ onMounted(load);
               {{ position.code ? `— ${position.code}` : "" }}
             </option>
           </select>
+        </label>
+        <label>
+          Assignment rule
+          <select v-model="stepForm.assignmentRule" class="input">
+            <option value="fixed_position">Fixed position</option>
+            <option value="beneficiary_sbu_head">Head of Beneficiary SBU</option>
+          </select>
+          <small>Use Beneficiary SBU routing when the approver changes with the request's selected SBU.</small>
         </label>
         <label class="check-label">
           <input
@@ -590,7 +608,7 @@ onMounted(load);
             type="button"
             @click="showWorkflow = false"
           >
-          Close
+          <AppIcon name="close" :size="15" /> Close
         </button>
       </div>
       <label>
@@ -643,7 +661,7 @@ onMounted(load);
           :disabled="saving"
           @click="createWorkflow"
         >
-          {{ saving ? "Creating…" : "Create workflow" }}
+          <AppIcon name="check" :size="16" /> {{ saving ? "Creating…" : "Create workflow" }}
         </button>
       </div>
     </section>
@@ -651,3 +669,7 @@ onMounted(load);
 </div>
 </template>
 
+
+<style scoped>
+.workflow-primary-button,.workflow-list-add,.builder-step-actions button,.form-actions button,.card-header button{display:inline-flex;align-items:center;justify-content:center;gap:.45rem}.workflow-list-item{display:grid;gap:.3rem;width:100%;padding:.9rem 1rem;border:1px solid transparent;border-radius:12px;text-align:left;background:transparent;transition:background .15s ease,border-color .15s ease}.workflow-list-item:hover{background:var(--surface-muted,#f8fafc)}.workflow-list-item.active{background:var(--surface-muted,#f1f5f9);border-color:var(--border-color,#dbe3ef)}.workflow-list-item small{color:var(--text-muted,#64748b)}.workflow-builder-steps{display:grid;gap:.75rem}.builder-step{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:.9rem;padding:1rem;border:1px solid var(--border-color,#e5e7eb);border-radius:14px;background:var(--surface,#fff)}.workflow-step-number{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--surface-muted,#eff6ff);font-weight:800;color:var(--primary,#2563eb)}.workflow-step-meta{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.4rem}.workflow-step-meta span{padding:.25rem .5rem;border-radius:999px;background:var(--surface-muted,#f1f5f9);font-size:.75rem;color:var(--text-muted,#64748b)}.builder-step-actions{display:flex;gap:.4rem}.workflow-primary-button{border-radius:12px;padding:.7rem 1rem;box-shadow:0 5px 14px rgba(37,99,235,.15)}@media(max-width:640px){.builder-step{grid-template-columns:34px minmax(0,1fr)}.builder-step-actions{grid-column:1/-1;justify-content:flex-end}.workflow-builder{grid-template-columns:1fr!important}}.workflow-assignment-warning{display:flex;align-items:flex-start;gap:.65rem;line-height:1.5}
+</style>

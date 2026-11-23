@@ -94,6 +94,7 @@ function openCreate(type) {
                         department: departments.value[0]?._id || "",
                         designation: designations.value[0]?._id || "",
                         reportsTo: "",
+                        workflowRole: "",
                         isWorkflowNode: true,
                     };
 }
@@ -486,6 +487,11 @@ onMounted(load);
               type="number"
               min="1"
             />
+        </label>
+        <label v-if="modal.type === 'position'">
+          Workflow role key
+          <input v-model="form.workflowRole" placeholder="e.g. HEAD_OF_SBU" />
+          <small>Optional routing key used by reusable workflow assignment rules.</small>
         </label>
         <label v-if="modal.type === 'position'">
           Reports to

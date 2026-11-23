@@ -39,6 +39,7 @@ export function cleanPositionPayload(payload = {}) {
         "designation",
         "title",
         "code",
+        "workflowRole",
         "reportsTo",
         "isWorkflowNode",
     ];
@@ -61,6 +62,9 @@ export function cleanPositionPayload(payload = {}) {
     }
     if (typeof data.code === "string") {
         data.code = data.code.trim().toUpperCase();
+    }
+    if (typeof data.workflowRole === "string") {
+        data.workflowRole = data.workflowRole.trim().toUpperCase();
     }
     for (const field of RELATION_FIELDS) {
         if (data[field] !== undefined &&

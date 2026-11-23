@@ -5,6 +5,7 @@ import { seedRoles } from "./modules/auth/role.seed.js";
 import { seedOrganization } from "./modules/organization/organization.seed.js";
 import { seedBusinessServices } from "./modules/business-service/businessService.seed.js";
 import { seedLeave } from "./modules/leave/leave.seed.js";
+import { seedRingoApprovalConfiguration } from "./modules/workflow/ringo.workflow.seed.js";
 async function run() {
     try {
         await connectDB();
@@ -13,6 +14,7 @@ async function run() {
         await seedEmployees(company);
         await seedRoles(company);
         await seedBusinessServices(company);
+        await seedRingoApprovalConfiguration(company);
         await seedLeave(company);
         console.log("\n🎉 MemoFlo seed completed");
         process.exit(0);

@@ -3,9 +3,38 @@ import WorkflowResolver from "./workflow.resolver.js";
 import Memo from "../memo/memo.model.js";
 import WorkflowInstance from "./workflowInstance.model.js";
 import WorkflowStep from "./workflowStep.model.js";
+import Position from "../position/position.model.js";
 import NotificationService from "../notification/notification.service.js";
 import MemoEventService from "../memo-event/memoEvent.service.js";
 class WorkflowEngine {
+    async resolveStepAssignment(companyId, step, resourceId) {
+        if (!step) return null;
+        if (step.assignmentRule === "beneficiary_sbu_head") {
+            const memo = await Memo.findOne({
+                _id: resourceId,
+                company: companyId,
+                isActive: true,
+                deletedAt: null,
+            }).select("beneficiarySBU requestingSbu").lean();
+            if (!memo) throw new Error("Memo not found while resolving the SBU approval position");
+            const sbuId = memo.beneficiarySBU || memo.requestingSbu;
+            if (!sbuId) throw new Error("Select a Beneficiary SBU before submitting this Approval Memo");
+            const position = await Position.findOne({
+                company: companyId,
+                sbu: sbuId,
+                workflowRole: "HEAD_OF_SBU",
+                isWorkflowNode: true,
+                active: true,
+                isActive: true,
+                deletedAt: null,
+            }).select("_id").lean();
+            if (!position) throw new Error("No Head of SBU workflow position is configured for the selected Beneficiary SBU");
+            return WorkflowResolver.resolvePosition(position._id, companyId);
+        }
+        if (!step.position) return null;
+        return WorkflowResolver.resolvePosition(step.position._id || step.position, companyId);
+    }
+
     async notify({ company, recipient, title, message, link = "", type = "workflow", createdBy = null, }) {
         if (!recipient)
             return;
@@ -66,7 +95,7 @@ class WorkflowEngine {
             company: companyId,
             isActive: true,
             deletedAt: null,
-        }).select("_id workflow status").lean();
+        }).select("_id workflow status beneficiarySBU requestingSbu").lean();
         if (!resource) {
             throw new Error("Workflow resource not found in this company");
         }
@@ -84,9 +113,7 @@ const existingInstance = await WorkflowRepository.findInstanceByResource(company
         if (!firstStep) {
             throw new Error("Workflow has no active steps");
         }
-        const resolved = firstStep.position
-            ? await WorkflowResolver.resolvePosition(firstStep.position._id, companyId)
-            : null;
+        const resolved = await this.resolveStepAssignment(companyId, firstStep, resourceId);
         const currentPosition = resolved?.position?._id || null;
         const currentEmployee = resolved?.employee?._id || null;
         const instance = await WorkflowRepository.createInstance({
@@ -210,9 +237,7 @@ const existingInstance = await WorkflowRepository.findInstanceByResource(company
             }
             return completedInstance;
         }
-        const resolved = nextStep.position
-            ? await WorkflowResolver.resolvePosition(nextStep.position._id, companyId)
-            : null;
+        const resolved = await this.resolveStepAssignment(companyId, nextStep, instance.resourceId);
         const currentPosition = resolved?.position?._id || null;
         const currentEmployee = resolved?.employee?._id || null;
         const updatedInstance = await WorkflowRepository.updateInstance(instanceId, companyId, {
@@ -373,7 +398,7 @@ const memo = await Memo.findOne({
     company: companyId,
     isActive: true,
     deletedAt: null
-}).select("_id").lean();
+}).select("_id beneficiarySBU requestingSbu").lean();
         if (!memo)
             throw new Error("Memo not found in this company");
         const workflow = await WorkflowRepository.findById(oldInstance.workflow, companyId);
@@ -390,8 +415,8 @@ const memo = await Memo.findOne({
         }
         let currentPosition = null;
         let currentEmployee = null;
-        if (firstStep.position) {
-            const resolved = await WorkflowResolver.resolvePosition(firstStep.position._id, companyId);
+        const resolved = await this.resolveStepAssignment(companyId, firstStep, oldInstance.resourceId);
+        if (resolved) {
             currentPosition = resolved.position;
             currentEmployee = resolved.employee;
         }

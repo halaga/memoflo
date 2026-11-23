@@ -14,7 +14,8 @@
     "reset:login": "node src/scripts/reset-login.js",
     "test": "node --test",
     "migrate:tenant-indexes": "node src/scripts/migrate-tenant-indexes.js",
-    "test:contracts": "node --test tests/*.contract.test.js"
+    "test:contracts": "node --test tests/*.contract.test.js",
+    "seed:ringo-pilot": "node src/scripts/seed-ringo-pilot-config.js"
   },
   "keywords": [
     "memoflo",

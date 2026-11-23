@@ -20,13 +20,13 @@ const builtIns = {
     "leave-request": { slug: "leave-request", name: "Leave Request", category: "People & HR", description: "Submit leave and follow the HR review process.",
         actionType: "leave", moduleId: "leave", icon: "calendar" },
     "business-purchase-request": { slug: "business-purchase-request", name: "Business Purchase", category: "Business Services",
-         description: "Request laptops, equipment, supplies or other business purchases.", actionType: "procurement", moduleId: "procurement",
-        icon: "purchase" },
-    "business-purchase": { slug: "business-purchase-request", name: "Business Purchase", category: "Business Services",
-         description: "Request laptops, IT equipment, subscriptions, software, office supplies and other business purchases.",
-        actionType: "procurement", moduleId: "procurement", icon: "purchase" },
-    "laptop-request": { slug: "business-purchase-request", name: "Business Purchase", category: "Business Services", description: "Request a laptop or other approved IT equipment through the procurement process.",
-        actionType: "procurement", moduleId: "procurement", icon: "laptop" },
+         description: "Start a business purchase through the unified Approval Memo process.", actionType: "service-request", moduleId: "memos",
+        icon: "package" },
+    "business-purchase": { slug: "business-purchase", name: "Business Purchase", category: "Business Services",
+         description: "Start a business purchase through the unified Approval Memo process.",
+        actionType: "service-request", moduleId: "memos", icon: "package" },
+    "laptop-request": { slug: "laptop-request", name: "Laptop / Computer Request", category: "IT", description: "Request IT equipment through the unified Approval Memo process.",
+        actionType: "service-request", moduleId: "memos", icon: "laptop" },
     "people-directory": { slug: "people-directory", name: "People Directory", category: "People & HR", description: "Find colleagues, roles and departments.",
         actionType: "people", moduleId: "hr", icon: "people" },
     "it-support": { slug: "it-support", name: "IT Support", category: "IT", description: "Report a technology issue and follow its progress.",
@@ -56,7 +56,7 @@ const actionRoute = computed(() => {
         case "memo-approval": return "/memos/create?memoType=approval";
         case "signature": return "/email-signature";
         case "leave": return "/leave";
-        case "procurement": return `/memos/create?service=${encodeURIComponent(item._id || item.slug)}`;
+        case "procurement": return `/memos/create?memoType=approval&service=${encodeURIComponent(item._id || item.slug)}`;
         case "people": return "/people";
         case "approvals": return "/approvals";
         default: return `/memos/create?service=${encodeURIComponent(item._id || item.slug)}`;
@@ -76,16 +76,13 @@ async function load() {
     if (workspaceResult.status === "fulfilled")
         workspace.value = workspaceResult.value?.data || workspaceResult.value;
     service.value = dynamicServices.find((item) => String(item.slug || "").toLowerCase() === slug) || builtIns[slug] || null;
-    if (service.value) {
-        if (["business-purchase", "laptop-request", "business-purchase-request"].includes(service.value.slug)) {
-            service.value.slug = "business-purchase-request";
-            service.value.name = "Business Purchase";
-            service.value.category = "Business Services";
-            service.value.actionType = "procurement";
-            service.value.moduleId = "procurement";
-        }
+    if (service.value && service.value.actionType === "procurement") {
+        // Legacy catalogue entries keep their records but now enter the unified Approval Memo.
+        service.value.actionType = "service-request";
+        service.value.moduleId = "memos";
+        service.value.icon = service.value.icon || "package";
     }
-    else {
+    if (!service.value) {
         error.value = serviceResult.status === "rejected"
             ? "Unable to load the service catalogue. Try again."
             : "Service not found.";
@@ -147,8 +144,8 @@ onMounted(load);
       </div>
       <div class="service-detail-actions">
         <RouterLink v-if="available" :to="actionRoute" class="action-primary">
+          <AppIcon name="arrow-right" :size="17" />
           Continue
-          <AppIcon name="arrow" :size="17" />
         </RouterLink>
         <span v-else class="service-disabled-message">
           This service is disabled for your company. Contact your administrator to enable it.

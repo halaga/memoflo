@@ -31,6 +31,13 @@ const positionSchema = new mongoose.Schema({
         trim: true,
         uppercase: true,
     },
+    workflowRole: {
+        type: String,
+        trim: true,
+        uppercase: true,
+        default: "",
+        index: true,
+    },
     occupant: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Employee",

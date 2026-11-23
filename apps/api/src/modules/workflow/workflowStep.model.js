@@ -48,6 +48,11 @@ const workflowStepSchema = new mongoose.Schema({
         ref: "Position",
         default: null,
     },
+    assignmentRule: {
+        type: String,
+        enum: ["fixed_position", "beneficiary_sbu_head"],
+        default: "fixed_position",
+    },
     required: {
         type: Boolean,
         default: true,
