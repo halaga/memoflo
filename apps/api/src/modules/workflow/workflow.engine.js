@@ -1,6 +1,7 @@
 import WorkflowRepository from "./workflow.repository.js";
 import WorkflowResolver from "./workflow.resolver.js";
 import Memo from "../memo/memo.model.js";
+import Bill from "../billing/bill.model.js";
 import WorkflowInstance from "./workflowInstance.model.js";
 import WorkflowStep from "./workflowStep.model.js";
 import Position from "../position/position.model.js";
@@ -471,7 +472,7 @@ const memo = await Memo.findOne({
     }
     async syncResource(companyId, resourceType, resourceId, data) {
         if (resourceType === "memo") {
-            return Memo.findOneAndUpdate({
+            const memo = await Memo.findOneAndUpdate({
                 _id: resourceId,
                 company: companyId,
                 isActive: true,
@@ -479,6 +480,12 @@ const memo = await Memo.findOne({
                 new: true,
                 runValidators: true,
             });
+            if (memo && data.status === "Approved") {
+                await Bill.updateMany({ company: companyId, memo: memo._id, approvalStatus: "pending", isActive: true }, { $set: { approvalStatus: "approved" }, $push: { auditHistory: { action: "approval_completed", actor: "workflow-engine" } } });
+            } else if (memo && data.status === "Rejected") {
+                await Bill.updateMany({ company: companyId, memo: memo._id, approvalStatus: "pending", isActive: true }, { $set: { approvalStatus: "rejected" }, $push: { auditHistory: { action: "approval_rejected", actor: "workflow-engine" } } });
+            }
+            return memo;
         }
         throw new Error(`Unsupported workflow resource type: ${resourceType}`);
     }

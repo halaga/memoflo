@@ -1,0 +1,13 @@
+import express from "express";
+import authenticate from "../auth/auth.middleware.js";
+import authorize, { authorizeAny } from "../../middleware/authorize.js";
+import { createBill, linkBillMemo, listBills, listPayments, recordPayment, updatePaymentStatus } from "./billing.controller.js";
+const router = express.Router();
+router.use(authenticate);
+router.get("/bills", authorize("finance.view"), listBills);
+router.post("/bills", authorize("finance.bills.create"), createBill);
+router.patch("/bills/:id/link-memo", authorize("finance.bills.create"), linkBillMemo);
+router.get("/payments", authorize("finance.view"), listPayments);
+router.post("/payments", authorize("finance.payments.process"), recordPayment);
+router.patch("/payments/:id/action", authorizeAny("finance.payments.verify", "finance.payments.reconcile"), updatePaymentStatus);
+export default router;

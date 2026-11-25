@@ -218,6 +218,12 @@ const routes = [
                 },
             },
             {
+                path: "finance",
+                name: "finance-workspace",
+                component: () => import("../views/finance/FinanceWorkspaceView.vue"),
+                meta: { permission: "finance.view" },
+            },
+            {
                 path: "approvals",
                 name: "approvals",
                 component: () => import("../views/approvals/ApprovalsView.vue"),

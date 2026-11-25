@@ -8,6 +8,11 @@ const RINGO_CATALOGUE = [
     { name: "Facility Management", category: "Admin", owner: "Administration", slug: "facility-management", icon: "building", color: "#64748B", allowedRequisitionTypes: ["Admin Requisition"], keywords: ["facility", "maintenance", "building"] },
     { name: "Office Supplies", category: "Admin", owner: "Administration", slug: "office-supplies", icon: "package", color: "#8B5CF6", allowedRequisitionTypes: ["Admin Requisition"], keywords: ["stationery", "supplies", "office"], inventoryFulfilment: true },
     { name: "Sanitation", category: "Admin", owner: "Administration", slug: "sanitation", icon: "sparkles", color: "#14B8A6", allowedRequisitionTypes: ["Admin Requisition"], keywords: ["cleaning", "sanitation", "hygiene"] },
+    { name: "Electricity and Utility Bills", category: "Admin", owner: "Administration", slug: "electricity-utility-bills", icon: "zap", color: "#EAB308", allowedRequisitionTypes: ["Admin Requisition"], keywords: ["electricity", "utility", "power bill"], financialRequired: true, paymentRequired: true, requiredAttachments: ["Utility invoice or bill"], formSchema: [{ key: "accountNumber", label: "Account / Meter Number", type: "text", required: true }, { key: "billingPeriod", label: "Billing Period", type: "text", required: true }, { key: "vendor", label: "Service Provider", type: "text", required: true }] },
+    { name: "Internet and Telecommunications Bills", category: "Admin", owner: "Administration", slug: "internet-telecommunications-bills", icon: "wifi", color: "#0891B2", allowedRequisitionTypes: ["Admin Requisition"], keywords: ["internet", "telecom", "data", "connectivity bill"], financialRequired: true, paymentRequired: true, requiredAttachments: ["Internet or telecommunications invoice"], formSchema: [{ key: "accountNumber", label: "Account Number", type: "text", required: true }, { key: "billingPeriod", label: "Billing Period", type: "text", required: true }, { key: "vendor", label: "Service Provider", type: "text", required: true }] },
+    { name: "Facility and Maintenance Bills", category: "Admin", owner: "Administration", slug: "facility-maintenance-bills", icon: "wrench", color: "#64748B", allowedRequisitionTypes: ["Admin Requisition"], keywords: ["facility", "maintenance bill", "repairs"], financialRequired: true, paymentRequired: true, requiredAttachments: ["Vendor invoice or quotation"], formSchema: [{ key: "vendor", label: "Vendor / Service Provider", type: "text", required: true }, { key: "workDescription", label: "Work / Service Description", type: "textarea", required: true }] },
+    { name: "Vendor Invoices", category: "Admin", owner: "Administration", slug: "vendor-invoices", icon: "file-text", color: "#7C3AED", allowedRequisitionTypes: ["Admin Requisition", "SBU Requisition"], keywords: ["vendor", "invoice", "supplier"], financialRequired: true, paymentRequired: true, requiredAttachments: ["Vendor invoice"], formSchema: [{ key: "vendor", label: "Vendor / Supplier", type: "text", required: true }, { key: "invoiceNumber", label: "Invoice Number", type: "text", required: true }, { key: "invoiceDate", label: "Invoice Date", type: "date", required: true }, { key: "dueDate", label: "Due Date", type: "date", required: false }] },
+    { name: "Recurring Company Bills", category: "Admin", owner: "Administration", slug: "recurring-company-bills", icon: "repeat", color: "#0F766E", allowedRequisitionTypes: ["Admin Requisition"], keywords: ["recurring", "monthly bill", "quarterly bill"], financialRequired: true, paymentRequired: true, formSchema: [{ key: "vendor", label: "Vendor / Service Provider", type: "text", required: true }, { key: "recurrence", label: "Recurrence Frequency", type: "select", options: ["Monthly", "Quarterly", "Annually", "Custom"], required: true }, { key: "nextDueDate", label: "Next Due Date", type: "date", required: true }] },
     { name: "Budget", category: "SBU", owner: "Administration", slug: "sbu-budget", icon: "chart", color: "#0F766E", allowedRequisitionTypes: ["SBU Requisition"], keywords: ["budget", "allocation"], requiresSbu: true, financialRequired: true },
     { name: "Unit Admin Expenses", category: "SBU", owner: "Administration", slug: "unit-admin-expenses", icon: "wallet", color: "#059669", allowedRequisitionTypes: ["SBU Requisition"], keywords: ["unit", "admin", "expense"], requiresSbu: true, financialRequired: true },
     { name: "Rent", category: "SBU", owner: "Administration", slug: "sbu-rent", icon: "building", color: "#6366F1", allowedRequisitionTypes: ["SBU Requisition"], keywords: ["rent", "lease", "premises"], requiresSbu: true, financialRequired: true, paymentRequired: true },
@@ -31,10 +36,21 @@ export async function seedBusinessServices(company) {
     };
 
     for (const entry of RINGO_CATALOGUE) {
-        const ownerDepartment = findDepartment(entry.owner);
+        // Organisation labels vary between tenant imports (Admin/Administration,
+        // IT/Information Technology, etc.). Resolve aliases first, then use an
+        // existing tenant department as the service owner rather than silently
+        // dropping the catalogue entry. No department is created or assigned to
+        // a person by this seed.
+        const ownerDepartment = findDepartment(entry.owner)
+            || departments.find((department) => {
+                const name = department.name.toLowerCase();
+                return entry.category === "IT" ? name.includes("it") || name.includes("techn")
+                    : entry.category === "SBU" ? name.includes("admin") || name.includes("corporate")
+                    : name.includes("admin") || name.includes("corporate");
+            })
+            || departments[0];
         if (!ownerDepartment) {
-            console.warn(`Skipping ${entry.name}: ${entry.owner} department not found`);
-            continue;
+            throw new Error(`Ringo has no active departments. Seed/import its organisation structure before the pilot catalogue.`);
         }
         const { owner, ...service } = entry;
         const data = {
@@ -51,7 +67,7 @@ export async function seedBusinessServices(company) {
         };
         await BusinessService.updateOne(
             { company: company._id, slug: entry.slug },
-            { $setOnInsert: data, $set: { category: entry.category, active: true, moduleId: "memos", actionType: "service-request", routeKey: "memo-composer", description: data.description, ownerDepartment: data.ownerDepartment, responsibleDepartment: data.responsibleDepartment, requiresSbu: Boolean(entry.requiresSbu), financialRequired: Boolean(entry.financialRequired), paymentRequired: Boolean(entry.paymentRequired), inventoryFulfilment: Boolean(entry.inventoryFulfilment), allowedRequisitionTypes: entry.allowedRequisitionTypes || [], icon: entry.icon || "services", color: entry.color || "#2563EB" } },
+            { $setOnInsert: data, $set: { category: entry.category, active: true, moduleId: "memos", actionType: "service-request", routeKey: "memo-composer", description: data.description, ownerDepartment: data.ownerDepartment, responsibleDepartment: data.responsibleDepartment, requiresSbu: Boolean(entry.requiresSbu), financialRequired: Boolean(entry.financialRequired), paymentRequired: Boolean(entry.paymentRequired), inventoryFulfilment: Boolean(entry.inventoryFulfilment), allowedRequisitionTypes: entry.allowedRequisitionTypes || [], requiredAttachments: entry.requiredAttachments || [], formSchema: entry.formSchema || [], keywords: entry.keywords || [], icon: entry.icon || "services", color: entry.color || "#2563EB" } },
             { upsert: true },
         );
     }

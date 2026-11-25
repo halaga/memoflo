@@ -266,6 +266,11 @@ const permissions = [
         action: "delete",
         description: "Delete business services",
     },
+    { name: "finance.view", module: "finance", action: "view", description: "View bills and payment records" },
+    { name: "finance.bills.create", module: "finance", action: "bills.create", description: "Create and manage bill register entries" },
+    { name: "finance.payments.process", module: "finance", action: "payments.process", description: "Record actual payments against approved bills" },
+    { name: "finance.payments.verify", module: "finance", action: "payments.verify", description: "Verify recorded payment evidence" },
+    { name: "finance.payments.reconcile", module: "finance", action: "payments.reconcile", description: "Reconcile verified payments" },
 ];
 const systemRoles = [
     {
@@ -298,6 +303,13 @@ const systemRoles = [
             "inventory.create",
             "inventory.update",
         ],
+    },
+    {
+        name: "Finance Officer",
+        code: "FINANCE_OFFICER",
+        level: 40,
+        description: "Processes approved bills and performs payment verification and reconciliation.",
+        permissions: ["finance.view", "finance.payments.process", "finance.payments.verify", "finance.payments.reconcile", "memos.view", "notifications.view", "notifications.update"],
     },
     {
         name: "Employee",
@@ -383,4 +395,20 @@ await Employee.updateOne({
     }
     console.log(`Seeded ${permissions.length} permissions`);
     console.log(`Seeded ${systemRoles.length} company role sets`);
+}
+
+
+/** Adds the Finance Officer role and permissions to a single tenant. */
+export async function seedFinanceRole(company) {
+    const financePermissions = [
+        { name: "finance.view", module: "finance", action: "view", description: "View bills and payment records" },
+        { name: "finance.bills.create", module: "finance", action: "bills.create", description: "Create and manage bill register entries" },
+        { name: "finance.payments.process", module: "finance", action: "payments.process", description: "Record actual payments against approved bills" },
+        { name: "finance.payments.verify", module: "finance", action: "payments.verify", description: "Verify recorded payment evidence" },
+        { name: "finance.payments.reconcile", module: "finance", action: "payments.reconcile", description: "Reconcile verified payments" },
+    ];
+    await Promise.all(financePermissions.map((permission) => Permission.updateOne({ name: permission.name }, { $set: permission }, { upsert: true })));
+    const names = financePermissions.map((permission) => permission.name);
+    await Role.updateOne({ company: company._id, code: "COMPANY_ADMIN", isActive: true }, { $addToSet: { permissions: { $each: names } } });
+    await Role.updateOne({ company: company._id, code: "FINANCE_OFFICER" }, { $set: { company: company._id, name: "Finance Officer", code: "FINANCE_OFFICER", level: 40, description: "Processes approved bills and performs payment verification and reconciliation.", permissions: ["finance.view", "finance.payments.process", "finance.payments.verify", "finance.payments.reconcile", "memos.view", "notifications.view", "notifications.update"], isSystem: true } }, { upsert: true });
 }

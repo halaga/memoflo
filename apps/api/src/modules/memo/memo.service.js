@@ -3,6 +3,7 @@ import Employee from "../employee/employee.model.js";
 import NotificationService from "../notification/notification.service.js";
 import MemoEventService from "../memo-event/memoEvent.service.js";
 import WorkflowEngine from "../workflow/workflow.engine.js";
+import Bill from "../billing/bill.model.js";
 import Workflow from "../workflow/workflow.model.js";
 import WorkflowStep from "../workflow/workflowStep.model.js";
 import MemoRepository from "./memo.repository.js";
@@ -244,6 +245,33 @@ class MemoService {
         memo.workflowInstance = instance._id;
         memo.status = instance.status === "completed" ? "Approved" : "Pending";
         await memo.save();
+        // Create a bill register entry only for services configured to require
+        // payment. Approval remains separate from payment execution.
+        if (service.paymentRequired && Number(memo.financialDetails?.estimatedAmount) > 0) {
+            const serviceFields = memo.submissionDetails?.serviceFields || {};
+            await Bill.findOneAndUpdate(
+                { company: companyId, memo: memo._id, isActive: true },
+                { $setOnInsert: {
+                    company: companyId,
+                    reference: memo.referenceNo,
+                    category: service.name,
+                    vendor: String(serviceFields.vendor || memo.financialDetails?.vendor || service.name),
+                    description: memo.title,
+                    invoiceNumber: String(serviceFields.invoiceNumber || memo.financialDetails?.invoiceNumber || ""),
+                    amount: Number(memo.financialDetails.estimatedAmount),
+                    currency: memo.financialDetails.currency || "NGN",
+                    dueDate: serviceFields.dueDate || null,
+                    invoiceDate: serviceFields.invoiceDate || null,
+                    department: service.ownerDepartment || null,
+                    requester: memo.createdBy || null,
+                    memo: memo._id,
+                    approvalStatus: instance.status === "completed" ? "approved" : "pending",
+                    paymentStatus: "unpaid",
+                    auditHistory: [{ action: "created_from_approval_memo", actor: String(actorId || "system") }],
+                } },
+                { upsert: true, new: true, setDefaultsOnInsert: true },
+            );
+        }
         return MemoRepository.findById(id, companyId);
     }
 

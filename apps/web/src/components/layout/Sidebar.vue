@@ -28,6 +28,7 @@ const navigation = [
 const shortcuts = [
   { label: "Memos", route: "/memos", icon: "memo", permission: "memos.view" },
   { label: "Approvals", route: "/approvals", icon: "approval", permission: "memos.approve" },
+  { label: "Bills & Payments", route: "/finance", icon: "wallet", permission: "finance.view" },
   { label: "Notifications", route: "/notifications", icon: "bell", permission: "notifications.view" },
   { label: "Inventory", route: "/administration/inventory", icon: "box", permission: "inventory.view" },
 ];

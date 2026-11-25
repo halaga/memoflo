@@ -348,6 +348,11 @@ export const api = {
     listBusinessServices() {
         return request("/business-services");
     },
+    listBills() { return request("/billing/bills"); },
+    createBill(payload) { return request("/billing/bills", { method: "POST", body: JSON.stringify(payload) }); },
+    listPayments() { return request("/billing/payments"); },
+    recordPayment(payload) { return request("/billing/payments", { method: "POST", body: JSON.stringify(payload) }); },
+    updatePaymentAction(id, action, reason = "") { return request(`/billing/payments/${id}/action`, { method: "PATCH", body: JSON.stringify({ action, reason }) }); },
     listBusinessServicesAdmin() {
         return request("/business-services/admin/all");
     },

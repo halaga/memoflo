@@ -55,3 +55,20 @@ test("workflow deactivation protects service mappings and existing workflow hist
   assert.match(workflowService, /requisitionWorkflowMap/);
   assert.match(workflowService, /Reassign .* before deactivating this workflow/);
 });
+
+test("Ringo pilot catalogue and workflow seed are synchronized on API startup", async () => {
+  const server = await readFile(path.resolve(here, "../src/server.js"), "utf8");
+  assert.match(server, /Company\.findOne\(\{ code: "RINGO"/);
+  assert.match(server, /await seedBusinessServices\(ringo\)/);
+  assert.match(server, /await seedRingoApprovalConfiguration\(ringo\)/);
+  assert.match(server, /await seedFinanceRole\(ringo\)/);
+});
+
+test("Ringo catalogue includes the supplied requisition types and bill service examples", () => {
+  assert.match(serviceSeed, /allowedRequisitionTypes: \["Admin Requisition"\]/);
+  assert.match(serviceSeed, /allowedRequisitionTypes: \["SBU Requisition"\]/);
+  assert.match(serviceSeed, /allowedRequisitionTypes: \["IT Requisition"\]/);
+  for (const slug of ["electricity-utility-bills", "internet-telecommunications-bills", "facility-maintenance-bills", "vendor-invoices", "recurring-company-bills"]) {
+    assert.ok(serviceSeed.includes(`slug: "${slug}"`), `Missing Ringo service ${slug}`);
+  }
+});

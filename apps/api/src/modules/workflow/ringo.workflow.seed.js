@@ -21,10 +21,31 @@ const ROLE_DEFINITIONS = [
 ];
 
 async function ensureRolePosition(companyId, definition) {
-  const sbu = await SBU.findOne({ company: companyId, name: definition.sbu, isActive: true });
-  const department = await Department.findOne({ company: companyId, name: definition.department, isActive: true });
-  if (!sbu || !department) {
-    throw new Error(`Cannot seed Ringo workflow role ${definition.title}: organisation unit ${definition.sbu}/${definition.department} is missing.`);
+  let sbu = await SBU.findOne({ company: companyId, name: definition.sbu, isActive: true });
+  let department = await Department.findOne({ company: companyId, name: definition.department, isActive: true });
+  // Imported Ringo organisation charts often use abbreviated or locally named
+  // departments/SBUs. Resolve against the tenant's existing structure without
+  // manufacturing employee identities or cross-tenant defaults.
+  if (!department) {
+    const allDepartments = await Department.find({ company: companyId, isActive: true });
+    const target = definition.department.toLowerCase();
+    department = allDepartments.find((item) => {
+      const name = item.name.toLowerCase();
+      return name === target || name.includes(target) || target.includes(name)
+        || (target === "administration" && (name.includes("admin") || name.includes("corporate")))
+        || (target === "information technology" && (name === "it" || name.includes("techn")))
+        || (target === "sales" && name.includes("sales"));
+    }) || allDepartments[0] || null;
+  }
+  if (!sbu && department?.sbu) sbu = await SBU.findOne({ _id: department.sbu, company: companyId, isActive: true });
+  if (!sbu) sbu = await SBU.findOne({ company: companyId, isActive: true });
+  if (!department || !sbu) {
+    throw new Error(`Ringo pilot requires at least one active SBU and department before workflow positions can be created (${definition.title}).`);
+  }
+  // Keep each position inside the resolved department's SBU where possible.
+  if (String(department.sbu) !== String(sbu._id)) {
+    const departmentSbu = await SBU.findOne({ _id: department.sbu, company: companyId, isActive: true });
+    if (departmentSbu) sbu = departmentSbu;
   }
 
   let designation = await Designation.findOne({
