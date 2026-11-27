@@ -42,8 +42,18 @@ class MemoService {
 
     validateServiceFields(service, values = {}) {
         const fields = Array.isArray(service.formSchema) ? service.formSchema : [];
+        const isVisible = (field) => {
+            if (field.conditionalOn) return String(values?.[field.conditionalOn] ?? "") === String(field.conditionalValue ?? "");
+            const condition = field.showWhen;
+            if (!condition?.field) return true;
+            const actual = values?.[condition.field];
+            if (Object.prototype.hasOwnProperty.call(condition, "equals")) return String(actual ?? "") === String(condition.equals);
+            if (Object.prototype.hasOwnProperty.call(condition, "notEquals")) return String(actual ?? "") !== String(condition.notEquals);
+            if (Array.isArray(condition.in)) return condition.in.map(String).includes(String(actual ?? ""));
+            return true;
+        };
         for (const field of fields) {
-            if (!field.required) continue;
+            if (!isVisible(field) || !field.required) continue;
             const value = values[field.key];
             const missing = value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0) || (typeof value === "string" && !value.trim());
             if (missing) throw serviceError(`${field.label} is required.`);

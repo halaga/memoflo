@@ -29,14 +29,14 @@ const builtIns = {
         actionType: "service-request", moduleId: "memos", icon: "laptop" },
     "people-directory": { slug: "people-directory", name: "People Directory", category: "People & HR", description: "Find colleagues, roles and departments.",
         actionType: "people", moduleId: "hr", icon: "people" },
-    "it-support": { slug: "it-support", name: "IT Support", category: "IT", description: "Report a technology issue and follow its progress.",
-        actionType: "it-request", moduleId: "it", icon: "laptop" },
-    "it-maintenance": { slug: "it-maintenance", name: "IT Maintenance", category: "IT", description: "Request maintenance for IT equipment, printers or network services.",
-        actionType: "it-request", moduleId: "it", icon: "settings" },
-    "software-installation": { slug: "software-installation", name: "Software Installation", category: "IT", description: "Request approved software installation or updates.",
-        actionType: "it-request", moduleId: "it", icon: "box" },
-    "internet-subscription": { slug: "internet-subscription", name: "Internet Subscription", category: "IT", description: "Request internet, Wi-Fi or data support.",
-        actionType: "it-request", moduleId: "it", icon: "wifi" },
+    "it-support": { slug: "it-support", name: "IT Support & Maintenance", category: "IT", description: "Log and track support tickets, browse quick-fix guides, and follow troubleshooting through to resolution.",
+        actionType: "it-support-center", moduleId: "it", icon: "laptop" },
+    "it-maintenance": { slug: "it-maintenance", name: "IT Maintenance Request", category: "IT", description: "Request planned IT equipment or network maintenance through Approval Memo.",
+        actionType: "service-request", moduleId: "memos", icon: "settings" },
+    "software-installation": { slug: "software-installation", name: "Software Installation Request", category: "IT", description: "Request approved software installation or updates through Approval Memo.",
+        actionType: "service-request", moduleId: "memos", icon: "box" },
+    "internet-subscription": { slug: "internet-subscription", name: "Internet Subscription", category: "IT", description: "Request internet, Wi-Fi or data subscriptions through the approval process.",
+        actionType: "service-request", moduleId: "memos", icon: "wifi" },
     "my-approvals": { slug: "my-approvals", name: "My Approvals", category: "Approvals", description: "Review work waiting for your decision.",
         actionType: "approvals", moduleId: "memos", icon: "check" },
 };
@@ -51,6 +51,7 @@ const actionRoute = computed(() => {
     const item = service.value;
     if (!item)
         return "/services";
+    if (item.slug === "it-support") return `/services/it-support/start`;
     switch (item.actionType) {
         case "memo-simple": return "/memos/create?memoType=simple";
         case "memo-approval": return "/memos/create?memoType=approval";
@@ -76,6 +77,12 @@ async function load() {
     if (workspaceResult.status === "fulfilled")
         workspace.value = workspaceResult.value?.data || workspaceResult.value;
     service.value = dynamicServices.find((item) => String(item.slug || "").toLowerCase() === slug) || builtIns[slug] || null;
+    if (service.value && String(service.value.slug || slug).toLowerCase() === "it-support") {
+        service.value.name = "IT Support & Maintenance";
+        service.value.category = "IT";
+        service.value.actionType = "it-support-center";
+        service.value.moduleId = "it";
+    }
     if (service.value && service.value.actionType === "procurement") {
         // Legacy catalogue entries keep their records but now enter the unified Approval Memo.
         service.value.actionType = "service-request";

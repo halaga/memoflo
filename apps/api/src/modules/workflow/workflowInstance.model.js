@@ -13,6 +13,11 @@ const workflowInstanceSchema = new mongoose.Schema({
         required: true,
         index: true,
     },
+    workflowVersion: {
+        type: Number,
+        default: 1,
+        min: 1,
+    },
     resourceType: {
         type: String,
         required: true,
@@ -87,13 +92,30 @@ const workflowInstanceSchema = new mongoose.Schema({
         ref: "Employee",
         default: null,
     },
+    assignmentHistory: [{
+        action: { type: String, enum: ["delegate", "reassign"], required: true },
+        fromEmployee: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
+        toEmployee: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
+        performedBy: { type: mongoose.Schema.Types.ObjectId, ref: "Employee", required: true },
+        reason: { type: String, default: "", trim: true, maxlength: 1000 },
+        occurredAt: { type: Date, default: Date.now },
+    }],
     ...BaseSchema,
 }, {
     timestamps: true,
 });
-workflowInstanceSchema.index({
-    company: 1,
-    resourceType: 1,
-    resourceId: 1,
-});
+// Only one pending/running instance may exist for a resource in a tenant.
+// Rejected/cancelled history can coexist with a later resubmission.
+workflowInstanceSchema.index(
+    { company: 1, resourceType: 1, resourceId: 1 },
+    {
+        unique: true,
+        name: "active_workflow_resource_unique",
+        partialFilterExpression: {
+            status: { $in: ["pending", "running"] },
+            isActive: true,
+            deletedAt: null,
+        },
+    },
+);
 export default mongoose.model("WorkflowInstance", workflowInstanceSchema);

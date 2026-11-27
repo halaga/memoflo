@@ -22,6 +22,19 @@ const RINGO_CATALOGUE = [
     { name: "Network and Internet", category: "IT", owner: "Information Technology", slug: "network-internet", icon: "wifi", color: "#0891B2", allowedRequisitionTypes: ["IT Requisition"], keywords: ["network", "internet", "connectivity"] },
     { name: "Repairs and Maintenance", category: "IT", owner: "Information Technology", slug: "it-repairs-maintenance", icon: "wrench", color: "#D97706", allowedRequisitionTypes: ["IT Requisition"], keywords: ["repair", "maintenance"] },
     { name: "IT Consumables", category: "IT", owner: "Information Technology", slug: "it-consumables", icon: "package", color: "#0D9488", allowedRequisitionTypes: ["IT Requisition"], keywords: ["consumables", "toner", "cables"] },
+    { name: "IT Request", category: "IT", owner: "Information Technology", slug: "it-request", icon: "monitor", color: "#2563EB", allowedRequisitionTypes: ["IT Requisition"], keywords: ["it request", "equipment", "software", "access", "repairs", "data subscription"], formSchema: [
+        { key: "requestCategory", label: "Request Category", type: "select", options: ["Laptop / Computer", "IT Equipment", "Software and Subscriptions", "Network and Internet", "Data Subscription", "Repairs and Maintenance", "IT Consumables", "Other"], required: true },
+        { key: "businessReason", label: "Business Justification", type: "textarea", required: true },
+        { key: "itemSpecification", label: "Equipment / repair specification", type: "textarea", required: false },
+        { key: "softwareName", label: "Software / Subscription Name", type: "text", required: true, conditionalOn: "requestCategory", conditionalValue: "Software and Subscriptions" },
+        { key: "networkProvider", label: "Network Provider", type: "text", required: true, conditionalOn: "requestCategory", conditionalValue: "Data Subscription" },
+        { key: "subscriptionPlan", label: "Data Plan / Bundle", type: "text", required: true, conditionalOn: "requestCategory", conditionalValue: "Data Subscription" },
+        { key: "numberOfLines", label: "Number of Lines / SIMs", type: "number", required: true, conditionalOn: "requestCategory", conditionalValue: "Data Subscription" },
+        { key: "subscriptionPeriod", label: "Subscription Period", type: "select", options: ["Monthly", "Quarterly", "Annually", "One-off"], required: true, conditionalOn: "requestCategory", conditionalValue: "Data Subscription" },
+        { key: "accessDetails", label: "System / Access Required", type: "textarea", required: true, conditionalOn: "requestCategory", conditionalValue: "Access" },
+        { key: "connectivityDetails", label: "Network / Internet Details", type: "textarea", required: true, conditionalOn: "requestCategory", conditionalValue: "Network and Internet" }
+    ] },
+    { name: "Data Subscription", category: "IT", owner: "Information Technology", slug: "data-subscription", icon: "wifi", color: "#0891B2", allowedRequisitionTypes: ["IT Requisition"], keywords: ["data", "subscription", "bundle", "SIM", "internet"], financialRequired: true, paymentRequired: true, formSchema: [{ key: "networkProvider", label: "Network Provider", type: "text", required: true }, { key: "subscriptionPlan", label: "Data Plan / Bundle", type: "text", required: true }, { key: "numberOfLines", label: "Number of Lines / SIMs", type: "number", required: true }, { key: "subscriptionPeriod", label: "Subscription Period", type: "select", options: ["Monthly", "Quarterly", "Annually", "One-off"], required: true }] },
     { name: "Other IT Requests", category: "IT", owner: "Information Technology", slug: "other-it-requests", icon: "settings", color: "#64748B", allowedRequisitionTypes: ["IT Requisition"], keywords: ["it", "other"] },
 ];
 
@@ -64,10 +77,17 @@ export async function seedBusinessServices(company) {
             description: `${entry.name} request submitted through the company memo and approval process.`,
             defaultPriority: "Normal",
             active: true,
+            // Ringo IT requisition subtypes are grouped under the one IT Request
+            // entry; the individual records remain tenant-owned for legacy links
+            // and historical references, but are hidden from employee catalogues.
+            catalogueVisible: entry.category !== "IT" || entry.slug === "it-request",
         };
+        // A single $set supports both upsert and updates existing tenant rows.
+        // Using overlapping $setOnInsert + $set paths causes MongoDB update-path
+        // conflicts and was the reason the pilot catalogue could fail to seed.
         await BusinessService.updateOne(
             { company: company._id, slug: entry.slug },
-            { $setOnInsert: data, $set: { category: entry.category, active: true, moduleId: "memos", actionType: "service-request", routeKey: "memo-composer", description: data.description, ownerDepartment: data.ownerDepartment, responsibleDepartment: data.responsibleDepartment, requiresSbu: Boolean(entry.requiresSbu), financialRequired: Boolean(entry.financialRequired), paymentRequired: Boolean(entry.paymentRequired), inventoryFulfilment: Boolean(entry.inventoryFulfilment), allowedRequisitionTypes: entry.allowedRequisitionTypes || [], requiredAttachments: entry.requiredAttachments || [], formSchema: entry.formSchema || [], keywords: entry.keywords || [], icon: entry.icon || "services", color: entry.color || "#2563EB" } },
+            { $set: data },
             { upsert: true },
         );
     }
@@ -86,7 +106,12 @@ export async function seedBusinessServices(company) {
 
     // Legacy services remain available; transaction-specific routing is migrated to the unified composer.
     await BusinessService.updateMany(
-        { company: company._id, active: true, actionType: { $in: ["procurement", "service-request"] } },
+        { company: company._id, active: true, slug: { $ne: "it-support" }, actionType: { $in: ["procurement", "service-request"] } },
         { $set: { actionType: "service-request", routeKey: "memo-composer", moduleId: "memos" } },
+    );
+    // Preserve the dedicated IT Support & Maintenance ticket workspace.
+    await BusinessService.updateOne(
+        { company: company._id, slug: "it-support" },
+        { $set: { name: "IT Support & Maintenance", category: "IT", moduleId: "it", actionType: "it-support-center", routeKey: "it-support-center", icon: "laptop", catalogueVisible: false, description: "Log and track IT support tickets and use the quick-fix knowledge base." } },
     );
 }

@@ -23,7 +23,7 @@ function blankForm() {
     responsibleDepartment: "", workflow: "", icon: "services", color: "#2563EB",
     allowedRequisitionTypes: [], requisitionWorkflowMap: {}, audienceGroups: [], formSchema: [], requiredAttachments: [],
     defaultPriority: "Normal", financialRequired: false, paymentRequired: false,
-    inventoryFulfilment: false, slaHours: "", active: true,
+    inventoryFulfilment: false, slaHours: "", active: true, catalogueVisible: true,
   };
 }
 const filtered = computed(() => {
@@ -126,7 +126,7 @@ onMounted(async () => { await load(); syncTextFromForm(); });
 
         <div class="full service-config-section"><h3>Requisition type configuration</h3><p>Enter the permitted requisition types for this service. Use commas or new lines. These are separate from the Business Service name.</p><label>Allowed requisition types<textarea v-model="requisitionText" rows="2" placeholder="Purchase Requisition, Expense Requisition"></textarea></label></div>
         <div class="full service-config-section"><h3>Workflow mapping by requisition type</h3><p>Assign the tenant workflow that should run for each permitted requisition type. Ordinary requesters never choose a workflow.</p><div v-for="typeName in splitList(requisitionText)" :key="typeName" class="service-workflow-map"><strong>{{ typeName }}</strong><select v-model="form.requisitionWorkflowMap[typeName]"><option value="">Use service default workflow</option><option v-for="workflow in workflows" :key="workflow._id" :value="workflow._id">{{ workflow.name }}</option></select></div></div>
-        <div class="full service-config-section"><h3>Availability and fulfilment</h3><div class="service-config-checks"><label><input v-model="form.financialRequired" type="checkbox" /> Financial details required</label><label><input v-model="form.paymentRequired" type="checkbox" /> Payment is expected</label><label><input v-model="form.inventoryFulfilment" type="checkbox" /> Inventory fulfilment applies</label><label><input v-model="form.active" type="checkbox" /> Service is active</label></div><label>Audience groups / roles<textarea v-model="audienceText" rows="2" placeholder="All Employees, IT_SPECIALIST (comma separated)"></textarea></label><label>Required supporting documents<textarea v-model="attachmentText" rows="2" placeholder="Vendor quotation, Invoice (comma separated)"></textarea></label></div>
+        <div class="full service-config-section"><h3>Availability and fulfilment</h3><div class="service-config-checks"><label><input v-model="form.financialRequired" type="checkbox" /> Financial details required</label><label><input v-model="form.paymentRequired" type="checkbox" /> Payment is expected</label><label><input v-model="form.inventoryFulfilment" type="checkbox" /> Inventory fulfilment applies</label><label><input v-model="form.active" type="checkbox" /> Service is active</label><label><input v-model="form.catalogueVisible" type="checkbox" /> Show in employee service directory and memo selector</label></div><label>Audience groups / roles<textarea v-model="audienceText" rows="2" placeholder="All Employees, IT_SPECIALIST (comma separated)"></textarea></label><label>Required supporting documents<textarea v-model="attachmentText" rows="2" placeholder="Vendor quotation, Invoice (comma separated)"></textarea></label></div>
         <div class="full service-config-section"><div class="panel-heading"><div><h3>Dynamic service form</h3><p>Fields appear in the unified Approval Memo when this service is selected.</p></div><button class="text-button" type="button" @click="addField"><AppIcon name="plus" :size="15" /> Add field</button></div>
           <div v-if="!form.formSchema.length" class="panel-empty">No extra fields configured. Core Approval Memo fields remain available.</div>
           <div v-for="(field, index) in form.formSchema" :key="index" class="service-field-builder">
@@ -136,6 +136,8 @@ onMounted(async () => { await load(); syncTextFromForm(); });
             <label class="field-required"><input v-model="field.required" type="checkbox" /> Required</label>
             <label v-if="field.type === 'select' || field.type === 'multiselect'" class="field-options">Dropdown options<input v-model="field.optionsText" placeholder="Option A, Option B" /></label>
             <label class="field-placeholder">Help / placeholder<input v-model="field.placeholder" placeholder="Additional guidance" /></label>
+            <label>Conditional field key<input v-model="field.conditionalOn" placeholder="requestCategory (optional)" /></label>
+            <label>Show when value<input v-model="field.conditionalValue" placeholder="Data Subscription (optional)" /></label>
             <button class="text-button danger-text" type="button" @click="removeField(index)"><AppIcon name="trash" :size="15" /> Remove field</button>
           </div>
         </div>

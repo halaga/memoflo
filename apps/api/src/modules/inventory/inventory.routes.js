@@ -5,6 +5,8 @@ import InventoryController from "./inventory.controller.js";
 const router = express.Router();
 router.use(authenticate);
 router.get("/", authorize("inventory.view"), InventoryController.list);
+router.get("/movements", authorize("inventory.view"), InventoryController.movements);
+router.post("/movements", authorize("inventory.update"), InventoryController.createMovement);
 router.post("/", authorize("inventory.create"), InventoryController.create);
 router.patch("/:id", authorize("inventory.update"), InventoryController.update);
 router.delete("/:id", authorize("inventory.delete"), InventoryController.remove);

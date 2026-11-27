@@ -85,6 +85,15 @@ const step = await WorkflowService.updateStep(req.user.company, req.params.id, r
             next(err);
         }
     }
+    async reorderStep(req, res, next) {
+        try {
+            const steps = await WorkflowService.reorderStep(req.user.company, req.params.id, req.params.stepId, req.body?.order);
+            res.json({ success: true, data: steps });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
     async reactivateStep(req, res, next) {
         try {
 const step = await WorkflowService.reactivateStep(req.user.company, req.params.id, req.params.stepId, req.body);
@@ -153,6 +162,24 @@ const instance = await WorkflowEngine.advance(req.user.company, req.params.insta
                 success: true,
                 data: instance,
             });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async delegate(req, res, next) {
+        try {
+            const instance = await WorkflowEngine.delegate(req.user.company, req.params.instanceId, req.user.id, req.body?.employeeId, req.body?.reason || "");
+            res.json({ success: true, data: instance });
+        }
+        catch (err) {
+            next(err);
+        }
+    }
+    async reassign(req, res, next) {
+        try {
+            const instance = await WorkflowEngine.reassign(req.user.company, req.params.instanceId, req.user.id, req.body?.employeeId, req.body?.reason || "");
+            res.json({ success: true, data: instance });
         }
         catch (err) {
             next(err);

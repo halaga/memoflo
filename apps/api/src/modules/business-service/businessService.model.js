@@ -43,6 +43,7 @@ const businessServiceSchema = new mongoose.Schema({
     slaHours: { type: Number, min: 0, default: null },
     escalationRules: { type: [mongoose.Schema.Types.Mixed], default: [] },
     active: { type: Boolean, default: true },
+    catalogueVisible: { type: Boolean, default: true },
     ...BaseSchema,
 }, { timestamps: true, minimize: false });
 

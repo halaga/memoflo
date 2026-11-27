@@ -75,6 +75,9 @@ const paths = {
     monitor: ["M3 4h18v13H3z", "M8 21h8", "M12 17v4"],
     code: ["m8 8-4 4 4 4", "m16 8 4 4-4 4", "m14 5-4 14"],
     wrench: ["M14.7 6.3a5 5 0 0 0-6.4 6.4L3 18l3 3 5.3-5.3a5 5 0 0 0 6.4-6.4l-3 3-3-3 3-3z"],
+    history: ["M3 12a9 9 0 1 0 2.6-6.4L3 8", "M3 3v5h5", "M12 7v5l3 2"],
+    alert: ["M12 3 2 21h20L12 3z", "M12 9v4", "M12 17h.01"],
+    "arrow-left-right": ["M17 3l4 4-4 4", "M3 7h18", "M7 21l-4-4 4-4", "M21 17H3"],
 };
 const segments = computed(() => paths[props.name] || paths.file);
 </script>

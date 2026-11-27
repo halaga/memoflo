@@ -22,9 +22,8 @@ const builtIns = [
         actionType: "leave", moduleId: "leave", keywords: ["hr", "leave", "vacation", "absence"], icon: "calendar" },
     { name: "People Directory", slug: "people-directory", description: "Find colleagues, roles and departments.", category: "People & HR",
         actionType: "people", moduleId: "hr", keywords: ["people", "employee", "staff", "directory"], icon: "people" },
-    { name: "IT Support & Maintenance", slug: "it-support", description: "Log an IT support ticket for troubleshooting, equipment repair, software installation, connectivity or data/internet issues, then track its progress.",
-         category: "IT", actionType: "it-request", moduleId: "it", keywords: ["computer", "help", "technical", "maintenance", "repair",
-        "printer", "network", "software", "installation", "internet", "wifi", "data", "ticket"], icon: "laptop" },
+    { name: "IT Support & Maintenance", slug: "it-support", description: "Log and track support tickets, browse quick-fix guides, and follow troubleshooting through to resolution.",
+         category: "IT", actionType: "it-support-center", moduleId: "it", keywords: ["computer", "help", "technical", "maintenance", "repair", "printer", "network", "software", "installation", "internet", "wifi", "ticket"], icon: "laptop" },
 ];
 const categoryOrder = ["Communication", "Business Services", "IT", "People & HR", "Approvals", "Other"];
 function categoryFor(service) {
@@ -53,16 +52,19 @@ const catalog = computed(() => {
             category: slug === "business-purchase-request" ? "Business Services" : slug === "it-support" ? "IT" : categoryFor({ ...service,
                 slug }),
             actionType: ["business-purchase", "laptop-request", "business-purchase-request"].includes(originalSlug)
-                ? "service-request" : slug === "it-support" ? "it-request" : service.actionType || "service-request",
+                ? "service-request" : slug === "it-support" ? "it-support-center" : service.actionType || "service-request",
             moduleId: ["business-purchase", "laptop-request", "business-purchase-request"].includes(originalSlug)
                 ? "memos" : slug === "it-support" ? "it" : service.moduleId || "memos",
-            icon: slug === "it-support" ? "laptop" : service.icon || "services",
+            icon: slug === "it-support" ? "laptop" : slug === "it-request" ? "monitor" : service.icon || "services",
             color: service.color || "#2563EB",
             keywords: Array.isArray(service.keywords) ? service.keywords : [],
         };
     });
     const bySlug = new Map();
-    for (const service of [...builtIns, ...dynamic]) {
+    // The IT category is intentionally a two-entry doorway: support tickets
+    // live in the support workspace; all formal IT requisitions use IT Request.
+    const visibleDynamic = dynamic.filter((service) => service.catalogueVisible !== false);
+    for (const service of [...builtIns, ...visibleDynamic]) {
         bySlug.set(service.slug, {
             ...bySlug.get(service.slug), ...service,
             category: categoryFor(service)

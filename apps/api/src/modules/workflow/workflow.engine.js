@@ -5,6 +5,7 @@ import Bill from "../billing/bill.model.js";
 import WorkflowInstance from "./workflowInstance.model.js";
 import WorkflowStep from "./workflowStep.model.js";
 import Position from "../position/position.model.js";
+import Employee from "../employee/employee.model.js";
 import NotificationService from "../notification/notification.service.js";
 import MemoEventService from "../memo-event/memoEvent.service.js";
 class WorkflowEngine {
@@ -105,7 +106,7 @@ class WorkflowEngine {
         }
 const existingInstance = await WorkflowRepository.findInstanceByResource(companyId, normalizedResourceType, resourceId);
         if (existingInstance) {
-            if (["running", "completed"].includes(existingInstance.status)) {
+            if (["running", "pending", "completed"].includes(existingInstance.status)) {
                 return WorkflowRepository.findInstance(existingInstance._id, companyId);
             }
             throw new Error("A workflow instance already exists for this resource");
@@ -117,18 +118,29 @@ const existingInstance = await WorkflowRepository.findInstanceByResource(company
         const resolved = await this.resolveStepAssignment(companyId, firstStep, resourceId);
         const currentPosition = resolved?.position?._id || null;
         const currentEmployee = resolved?.employee?._id || null;
-        const instance = await WorkflowRepository.createInstance({
-            company: companyId,
-            workflow: workflowId,
-            resourceType: normalizedResourceType,
-            resourceId,
-            currentStep: firstStep._id,
-            currentPosition,
-            currentEmployee,
-            status: "running",
-            startedBy: userId,
-            startedAt: new Date(),
-        });
+        let instance;
+        try {
+            instance = await WorkflowRepository.createInstance({
+                company: companyId,
+                workflow: workflowId,
+                workflowVersion: workflow.version || 1,
+                resourceType: normalizedResourceType,
+                resourceId,
+                currentStep: firstStep._id,
+                currentPosition,
+                currentEmployee,
+                status: "running",
+                startedBy: userId,
+                startedAt: new Date(),
+            });
+        } catch (error) {
+            // The unique active-resource index closes the double-submit race.
+            if (error?.code === 11000) {
+                const duplicate = await WorkflowRepository.findInstanceByResource(companyId, normalizedResourceType, resourceId);
+                if (duplicate) return WorkflowRepository.findInstance(duplicate._id, companyId);
+            }
+            throw error;
+        }
         await this.syncResource(companyId, normalizedResourceType, resourceId, {
             workflow: workflowId,
             workflowInstance: instance._id,
@@ -288,6 +300,69 @@ const existingInstance = await WorkflowRepository.findInstanceByResource(company
         }
         return updatedInstance;
     }
+    async updateCurrentAssignment(companyId, instanceId, actorId, targetEmployeeId, reason = "", action = "reassign") {
+        if (!targetEmployeeId) throw new Error("Select the employee who will receive this workflow action.");
+        const instance = await WorkflowRepository.findInstance(instanceId, companyId);
+        if (!instance) throw new Error("Workflow instance not found");
+        if (instance.status !== "running" || !instance.currentStep) throw new Error("Only an active workflow stage can be reassigned.");
+        await this.authorizeCurrentEmployee(instance, actorId);
+        if (action === "delegate" && !instance.currentStep.allowDelegate) {
+            throw new Error("Delegation is disabled for this workflow stage.");
+        }
+        const target = await Employee.findOne({
+            _id: targetEmployeeId,
+            company: companyId,
+            active: true,
+            isActive: true,
+            employmentStatus: "Active",
+            deletedAt: null,
+        }).select("_id firstName lastName").lean();
+        if (!target) throw new Error("The selected employee is not active in this company.");
+        const fromEmployeeId = instance.currentEmployee?._id || instance.currentEmployee;
+        if (String(fromEmployeeId) === String(target._id)) throw new Error("Choose a different employee.");
+        const updated = await WorkflowRepository.updateInstance(instanceId, companyId, {
+            currentEmployee: target._id,
+            $push: {
+                assignmentHistory: {
+                    action,
+                    fromEmployee: fromEmployeeId,
+                    toEmployee: target._id,
+                    performedBy: actorId,
+                    reason: String(reason || "").trim(),
+                    occurredAt: new Date(),
+                },
+            },
+        });
+        await this.notify({
+            company: companyId,
+            recipient: target._id,
+            title: action === "delegate" ? "Workflow action delegated to you" : "Workflow action reassigned to you",
+            message: `${instance.workflow.name}: ${instance.currentStep.name} requires your action.`,
+            link: instance.resourceType === "memo" ? `/memos/${instance.resourceId}` : "",
+            createdBy: actorId,
+        });
+        if (instance.resourceType === "memo") {
+            await MemoEventService.record({
+                company: companyId,
+                memo: instance.resourceId,
+                actor: actorId,
+                type: action === "delegate" ? "workflow.delegated" : "workflow.reassigned",
+                title: action === "delegate" ? "Workflow action delegated" : "Workflow action reassigned",
+                description: `${instance.currentStep.name} was assigned to ${[target.firstName, target.lastName].filter(Boolean).join(" ")}.`,
+                workflowStep: instance.currentStep._id,
+                comment: reason || null,
+                metadata: { workflow: instance.workflow._id, workflowInstance: instance._id, toEmployee: target._id },
+            });
+        }
+        return updated;
+    }
+    async delegate(companyId, instanceId, actorId, targetEmployeeId, reason = "") {
+        return this.updateCurrentAssignment(companyId, instanceId, actorId, targetEmployeeId, reason, "delegate");
+    }
+    async reassign(companyId, instanceId, actorId, targetEmployeeId, reason = "") {
+        return this.updateCurrentAssignment(companyId, instanceId, actorId, targetEmployeeId, reason, "reassign");
+    }
+
     async reject(companyId, instanceId, userId = null, comment = "") {
         const instance = await WorkflowRepository.findInstance(instanceId, companyId);
         if (!instance) {
@@ -424,6 +499,7 @@ const memo = await Memo.findOne({
         const newInstance = await WorkflowInstance.create({
             company: oldInstance.company,
             workflow: oldInstance.workflow,
+            workflowVersion: workflow.version || 1,
             resourceType: oldInstance.resourceType,
             resourceId: oldInstance.resourceId,
             currentStep: firstStep._id,

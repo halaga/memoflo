@@ -13,12 +13,15 @@ router.post("/:id/start", authorize("workflow.execute"), WorkflowController.star
 router.get("/instances/:instanceId", authorize("workflow.view"), WorkflowController.instance);
 router.get("/instances/:instanceId/current-step", authorize("workflow.view"), WorkflowController.currentStep);
 router.post("/instances/:instanceId/advance", authorize("workflow.execute"), WorkflowController.advance);
+router.post("/instances/:instanceId/delegate", authorize("workflow.execute"), WorkflowController.delegate);
+router.post("/instances/:instanceId/reassign", authorize("workflow.execute"), WorkflowController.reassign);
 router.post("/instances/:instanceId/reject", authorize("workflow.execute"), WorkflowController.reject);
 router.post("/instances/:instanceId/cancel", authorize("workflow.execute"), WorkflowController.cancel);
 router.post("/instances/:instanceId/resubmit", authorize("workflow.execute"), WorkflowController.resubmitInstance);
 // Workflow steps
 router.post("/:id/steps", authorize("workflow.update"), WorkflowController.addStep);
 router.patch("/:id/steps/:stepId", authorize("workflow.update"), WorkflowController.updateStep);
+router.patch("/:id/steps/:stepId/reorder", authorize("workflow.update"), WorkflowController.reorderStep);
 router.patch("/:id/steps/:stepId/reactivate", authorize("workflow.update"), WorkflowController.reactivateStep);
 router.delete("/:id/steps/:stepId", authorize("workflow.update"), WorkflowController.deleteStep);
 // Workflow definition by ID

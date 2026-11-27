@@ -55,6 +55,31 @@ class WorkflowRepository {
         return WorkflowStep.updateMany({ company: companyId, workflow: workflowId, order: { $gte: order }, isActive: true },
             { $inc: { order: 1 } });
     }
+    async reorderSteps(companyId, workflowId, orderedActiveIds) {
+        const allSteps = await WorkflowStep.find({ company: companyId, workflow: workflowId }).sort({ order: 1, createdAt: 1 });
+        const activeById = new Map(allSteps.filter((step) => step.isActive).map((step) => [String(step._id), step]));
+        const orderedActive = orderedActiveIds.map((id) => activeById.get(String(id))).filter(Boolean);
+        if (orderedActive.length !== activeById.size) {
+            throw new Error("The workflow stage list changed while it was being reordered. Reload and try again.");
+        }
+        const inactive = allSteps.filter((step) => !step.isActive);
+        const orderedAll = [...orderedActive, ...inactive];
+        // Move every row to a unique temporary negative order first. This avoids
+        // transient collisions with the compound unique (company, workflow, order) index.
+        for (let index = 0; index < orderedAll.length; index += 1) {
+            await WorkflowStep.updateOne(
+                { _id: orderedAll[index]._id, company: companyId, workflow: workflowId },
+                { $set: { order: -(index + 1) } },
+            );
+        }
+        for (let index = 0; index < orderedAll.length; index += 1) {
+            await WorkflowStep.updateOne(
+                { _id: orderedAll[index]._id, company: companyId, workflow: workflowId },
+                { $set: { order: index + 1 } },
+            );
+        }
+        return this.findSteps(companyId, workflowId);
+    }
     async updateStep(companyId, workflowId, stepId, data) {
         return WorkflowStep.findOneAndUpdate({
             _id: stepId,
@@ -185,9 +210,11 @@ class WorkflowRepository {
                 $in: [
                     "running",
                     "pending",
+                    "completed",
                 ],
             },
         })
+            .sort({ startedAt: -1, createdAt: -1 })
             .populate({ path: "workflow", match: {
                 company: companyId,
                 isActive: true

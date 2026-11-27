@@ -94,10 +94,6 @@ onMounted(() => {
     </form>
 
     <div class="topbar-actions">
-      <button class="topbar-create-memo" type="button" @click="router.push('/memos/create')">
-        <AppIcon name="plus" :size="16" />
-        <span>Create Memo</span>
-      </button>
       <button class="icon-button topbar-icon-button" type="button" :aria-label="darkMode ? 'Switch to light mode' : 'Switch to dark mode'" :title="darkMode ? 'Light mode' : 'Dark mode'" @click="toggleTheme">
         <AppIcon :name="darkMode ? 'sun' : 'moon'" :size="19" />
       </button>
@@ -114,8 +110,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.topbar-create-memo { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:36px; padding:0 12px; border:1px solid var(--mf-border, #dbe3ed); border-radius:10px; background:var(--mf-surface, #fff); color:var(--mf-text, #0f172a); font:inherit; font-weight:600; cursor:pointer; white-space:nowrap; }
-.topbar-create-memo:hover { border-color:var(--mf-primary, #2563eb); color:var(--mf-primary, #2563eb); }
 .topbar-title { display:flex; align-items:center; gap:7px; min-width:0; }
 .topbar-title > div { min-width:0; }
 .mobile-nav-trigger,.topbar-back-trigger,.topbar-home-trigger { display:inline-grid; place-items:center; flex:0 0 34px; width:34px; height:34px; border:1px solid var(--mf-border, #e2e8f0); border-radius:10px; background:var(--mf-surface, #fff); color:var(--mf-text, #0f172a); cursor:pointer; }
@@ -130,8 +124,6 @@ onMounted(() => {
  .topbar-title h2 { font-size:15px; margin:0; }
 }
 @media(max-width:560px) {
- .topbar-create-memo span { display:none; }
- .topbar-create-memo { width:36px; padding:0; }
  .topbar-home-trigger { display:none; }
  .topbar-title { flex:0 0 auto; }
  .topbar-title h2 { max-width:95px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

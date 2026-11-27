@@ -47,7 +47,7 @@ const actions = [
 const sortedSteps = computed(() => {
     return [...(selectedWorkflow.value?.steps || [])].sort((a, b) => a.order - b.order);
 });
-const unassignedSteps = computed(() => sortedSteps.value.filter((step) => !step.position?.occupant));
+const unassignedSteps = computed(() => sortedSteps.value.filter((step) => step.assignmentRule !== "beneficiary_sbu_head" && !step.position?.occupant));
 async function load() {
     loading.value = true;
     error.value = "";
@@ -199,6 +199,41 @@ async function saveStep() {
     }
     catch (err) {
         error.value = err.message || "Unable to save workflow step.";
+    }
+    finally {
+        saving.value = false;
+    }
+}
+async function moveStep(step, index, direction) {
+    const targetOrder = index + 1 + direction;
+    if (targetOrder < 1 || targetOrder > sortedSteps.value.length) return;
+    saving.value = true;
+    error.value = "";
+    try {
+        await api.reorderWorkflowStep(selectedId.value, step._id, targetOrder);
+        await selectWorkflow(selectedId.value);
+        success.value = "Workflow stage order updated.";
+    }
+    catch (err) {
+        error.value = err.message || "Unable to reorder workflow stages.";
+    }
+    finally {
+        saving.value = false;
+    }
+}
+async function toggleWorkflowStatus() {
+    if (!selectedWorkflow.value) return;
+    const nextActive = selectedWorkflow.value.active === false;
+    saving.value = true;
+    error.value = "";
+    try {
+        await api.updateWorkflow(selectedId.value, { active: nextActive });
+        await load();
+        await selectWorkflow(selectedId.value);
+        success.value = nextActive ? "Workflow activated." : "Workflow deactivated.";
+    }
+    catch (err) {
+        error.value = err.message || "Unable to change workflow status.";
     }
     finally {
         saving.value = false;
@@ -365,14 +400,17 @@ onMounted(load);
               {{ selectedWorkflow.description || "No description" }}
             </p>
           </div>
-          <button
-            class="btn btn-danger"
-            type="button"
-            :disabled="saving"
-            @click="removeWorkflow"
-          >
-            <AppIcon name="trash" :size="15" /> Delete
-          </button>
+          <div class="workflow-definition-actions">
+            <span class="workflow-status-pill" :class="selectedWorkflow.active === false ? 'is-inactive' : 'is-active'">
+              {{ selectedWorkflow.active === false ? "Inactive" : "Active" }}
+            </span>
+            <button class="btn btn-secondary" type="button" :disabled="saving" @click="toggleWorkflowStatus">
+              {{ selectedWorkflow.active === false ? "Activate" : "Deactivate" }}
+            </button>
+            <button class="btn btn-danger" type="button" :disabled="saving" @click="removeWorkflow">
+              <AppIcon name="trash" :size="15" /> Delete
+            </button>
+          </div>
         </div>
         <div class="form-row">
           <label>
@@ -427,6 +465,7 @@ onMounted(load);
           <button
               class="btn btn-primary"
               type="button"
+              :disabled="saving"
               @click="openNewStep"
             >
             <AppIcon name="plus" :size="16" /> Add step
@@ -459,9 +498,12 @@ onMounted(load);
               </div>
             </div>
             <div class="builder-step-actions">
+              <button class="btn btn-secondary workflow-move-button" type="button" :disabled="saving || index === 0" :aria-label="`Move ${step.name} up`" title="Move up" @click="moveStep(step, index, -1)">↑</button>
+              <button class="btn btn-secondary workflow-move-button" type="button" :disabled="saving || index === sortedSteps.length - 1" :aria-label="`Move ${step.name} down`" title="Move down" @click="moveStep(step, index, 1)">↓</button>
               <button
                 class="btn btn-secondary"
                 type="button"
+                :disabled="saving"
                 @click="editStep(step)"
               >
                 <AppIcon name="edit" :size="14" /> Edit
@@ -469,6 +511,7 @@ onMounted(load);
               <button
                 class="btn btn-danger"
                 type="button"
+                :disabled="saving"
                 @click="removeStep(step)"
               >
                 <AppIcon name="trash" :size="14" /> Delete
@@ -672,4 +715,5 @@ onMounted(load);
 
 <style scoped>
 .workflow-primary-button,.workflow-list-add,.builder-step-actions button,.form-actions button,.card-header button{display:inline-flex;align-items:center;justify-content:center;gap:.45rem}.workflow-list-item{display:grid;gap:.3rem;width:100%;padding:.9rem 1rem;border:1px solid transparent;border-radius:12px;text-align:left;background:transparent;transition:background .15s ease,border-color .15s ease}.workflow-list-item:hover{background:var(--surface-muted,#f8fafc)}.workflow-list-item.active{background:var(--surface-muted,#f1f5f9);border-color:var(--border-color,#dbe3ef)}.workflow-list-item small{color:var(--text-muted,#64748b)}.workflow-builder-steps{display:grid;gap:.75rem}.builder-step{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:.9rem;padding:1rem;border:1px solid var(--border-color,#e5e7eb);border-radius:14px;background:var(--surface,#fff)}.workflow-step-number{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--surface-muted,#eff6ff);font-weight:800;color:var(--primary,#2563eb)}.workflow-step-meta{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.4rem}.workflow-step-meta span{padding:.25rem .5rem;border-radius:999px;background:var(--surface-muted,#f1f5f9);font-size:.75rem;color:var(--text-muted,#64748b)}.builder-step-actions{display:flex;gap:.4rem}.workflow-primary-button{border-radius:12px;padding:.7rem 1rem;box-shadow:0 5px 14px rgba(37,99,235,.15)}@media(max-width:640px){.builder-step{grid-template-columns:34px minmax(0,1fr)}.builder-step-actions{grid-column:1/-1;justify-content:flex-end}.workflow-builder{grid-template-columns:1fr!important}}.workflow-assignment-warning{display:flex;align-items:flex-start;gap:.65rem;line-height:1.5}
+.workflow-definition-actions{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}.workflow-status-pill{display:inline-flex;align-items:center;padding:.35rem .65rem;border-radius:999px;font-size:.75rem;font-weight:700}.workflow-status-pill.is-active{background:#dcfce7;color:#166534}.workflow-status-pill.is-inactive{background:#f1f5f9;color:#475569}.workflow-move-button{min-width:34px;padding:.35rem .55rem;font-size:1rem;line-height:1}
 </style>

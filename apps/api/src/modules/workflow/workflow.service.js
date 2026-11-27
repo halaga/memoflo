@@ -37,22 +37,31 @@ async function validateWorkflowPosition(companyId, positionId) {
     }
 }
 function safeWorkflowUpdates(payload = {}) {
-    const updates = { ...payload };
-    // Tenant ownership and lifecycle fields are server-controlled.
-    for (const field of ["_id", "company", "createdBy", "isActive", "deletedAt"]) {
-        delete updates[field];
-    }
-    return updates;
+    const allowed = ["name", "code", "description", "businessService", "active"];
+    return Object.fromEntries(allowed.filter((field) => Object.prototype.hasOwnProperty.call(payload, field)).map((field) => [field, payload[field]]));
 }
 function safeStepUpdates(payload = {}) {
-    const updates = { ...payload };
-    // A step must remain attached to the workflow selected by the route.
-    for (const field of ["_id", "workflow", "isActive", "deletedAt", "createdBy"]) {
-        delete updates[field];
-    }
-    return updates;
+    const allowed = ["name", "action", "position", "assignmentRule", "required", "allowDelegate"];
+    return Object.fromEntries(allowed.filter((field) => Object.prototype.hasOwnProperty.call(payload, field)).map((field) => [field, payload[field]]));
 }
 class WorkflowService {
+    async assertNoRunningInstances(companyId, workflowId, operation = "change workflow stages") {
+        const running = await WorkflowInstance.exists({
+            company: companyId,
+            workflow: workflowId,
+            status: { $in: ["pending", "running"] },
+            isActive: true,
+            deletedAt: null,
+        });
+        if (running) {
+            throw new Error(`This workflow has requests in progress. Complete or cancel those requests before you ${operation}; active requests must keep the stage sequence they started with.`);
+        }
+    }
+
+    async bumpVersion(companyId, workflowId) {
+        await WorkflowRepository.update(workflowId, companyId, { $inc: { version: 1 } });
+    }
+
     async createWorkflow(companyId, payload) {
         validateCreateWorkflow(payload);
         await validateBusinessService(companyId, payload.businessService);
@@ -87,10 +96,27 @@ class WorkflowService {
             throw new Error("Workflow not found");
         }
         const updates = safeWorkflowUpdates(payload);
+        if (updates.active === false && existing.active !== false) {
+            await this.assertNoRunningInstances(companyId, id, "deactivate this workflow");
+        }
+        if (updates.active === true && existing.active === false) {
+            const configuredSteps = await WorkflowRepository.findSteps(companyId, id);
+            if (!configuredSteps.length) throw new Error("Add at least one workflow stage before activating this workflow.");
+            for (const step of configuredSteps) {
+                await validateWorkflowPosition(companyId, step.position?._id || step.position);
+            }
+        }
         if (updates.businessService !== undefined) {
             await validateBusinessService(companyId, updates.businessService);
         }
-        const workflow = await WorkflowRepository.update(id, companyId, updates);
+        if (updates.active === false) {
+            const assignedServices = await BusinessService.find({ company: companyId, active: true, isActive: true })
+                .select("name workflow requisitionWorkflowMap").lean();
+            const assigned = assignedServices.find((service) => String(service.workflow || "") === String(id)
+                || Object.values(service.requisitionWorkflowMap || {}).some((workflowId) => String(workflowId) === String(id)));
+            if (assigned) throw new Error(`Reassign ${assigned.name} to another workflow before deactivating this workflow.`);
+        }
+        const workflow = await WorkflowRepository.update(id, companyId, { ...updates, $inc: { version: 1 } });
         if (updates.businessService !== undefined) {
             await BusinessService.updateMany({
                 company: companyId,
@@ -137,24 +163,19 @@ class WorkflowService {
         if (!workflow) {
             throw new Error("Workflow not found");
         }
-        const steps = await WorkflowRepository.findSteps(companyId, workflowId);
-        const order = Number(payload.order) > 0
-            ? Number(payload.order)
-            : steps.length + 1;
-        validateCreateWorkflowStep({
-            ...payload,
-            order,
-        });
+        await this.assertNoRunningInstances(companyId, workflowId, "add a stage");
+        const steps = await WorkflowStep.find({ company: companyId, workflow: workflowId }).select("order").lean();
+        const order = steps.reduce((max, step) => Math.max(max, Number(step.order) || 0), 0) + 1;
+        validateCreateWorkflowStep({ ...payload, order });
         await validateWorkflowPosition(companyId, payload.position);
-        if (steps.some((step) => Number(step.order) === order)) {
-            await WorkflowRepository.shiftStepsFromOrder(companyId, workflowId, order);
-        }
-        return WorkflowRepository.createStep({
+        const created = await WorkflowRepository.createStep({
             ...payload,
             company: companyId,
             order,
             workflow: workflowId,
         });
+        await this.bumpVersion(companyId, workflowId);
+        return created;
     }
     async updateStep(companyId, workflowId, stepId, payload) {
         const workflow = await WorkflowRepository.findById(workflowId, companyId);
@@ -166,16 +187,7 @@ class WorkflowService {
         if (!existing) {
             throw new Error("Workflow step not found");
         }
-        const inFlight = await WorkflowInstance.exists({
-            company: companyId,
-            workflow: workflowId,
-            currentStep: stepId,
-            status: "running",
-            isActive: true,
-        });
-        if (inFlight) {
-            throw new Error("This step is currently in use by an active workflow. Finish or reassign the running request before editing it.");
-        }
+        await this.assertNoRunningInstances(companyId, workflowId, "edit a stage");
         validateCreateWorkflowStep({
             ...existing.toObject?.(),
             ...payload,
@@ -184,21 +196,37 @@ class WorkflowService {
                 : existing.order,
         });
 await validateWorkflowPosition(companyId, payload.position !== undefined ? payload.position : existing.position);
-        if (payload.order !== undefined &&
-            Number(payload.order) !== Number(existing.order)) {
-            await WorkflowRepository.shiftStepsFromOrder(companyId, workflowId, Number(payload.order));
-        }
-        const step = await WorkflowRepository.updateStep(companyId, workflowId, stepId, safeStepUpdates(payload));
+        const stepUpdates = safeStepUpdates(payload);
+        delete stepUpdates.order; // Stage order is changed only through the reorder operation.
+        const step = await WorkflowRepository.updateStep(companyId, workflowId, stepId, stepUpdates);
         if (!step) {
             throw new Error("Workflow step not found");
         }
+        await this.bumpVersion(companyId, workflowId);
         return step;
+    }
+    async reorderStep(companyId, workflowId, stepId, targetOrder) {
+        const workflow = await WorkflowRepository.findById(workflowId, companyId);
+        if (!workflow) throw new Error("Workflow not found");
+        await this.assertNoRunningInstances(companyId, workflowId, "reorder stages");
+        const order = Number(targetOrder);
+        if (!Number.isInteger(order) || order < 1) throw new Error("Target stage order must be a positive integer.");
+        const steps = await WorkflowRepository.findSteps(companyId, workflowId);
+        const fromIndex = steps.findIndex((step) => String(step._id) === String(stepId));
+        if (fromIndex < 0) throw new Error("Workflow step not found");
+        const toIndex = Math.min(order - 1, steps.length - 1);
+        const [moving] = steps.splice(fromIndex, 1);
+        steps.splice(toIndex, 0, moving);
+        await WorkflowRepository.reorderSteps(companyId, workflowId, steps.map((step) => step._id));
+        await this.bumpVersion(companyId, workflowId);
+        return WorkflowRepository.findSteps(companyId, workflowId);
     }
     async reactivateStep(companyId, workflowId, stepId, payload) {
         const workflow = await WorkflowRepository.findById(workflowId, companyId);
         if (!workflow) {
             throw new Error("Workflow not found");
         }
+        await this.assertNoRunningInstances(companyId, workflowId, "reactivate a stage");
         const existing = await WorkflowStep.findOne({
             _id: stepId,
             company: companyId,
@@ -214,6 +242,7 @@ await validateWorkflowPosition(companyId, payload.position !== undefined ? paylo
         if (!step) {
             throw new Error("Workflow step not found");
         }
+        await this.bumpVersion(companyId, workflowId);
         return step;
     }
     async deleteStep(companyId, workflowId, stepId) {
@@ -221,20 +250,12 @@ await validateWorkflowPosition(companyId, payload.position !== undefined ? paylo
         if (!workflow) {
             throw new Error("Workflow not found");
         }
-        const inFlight = await WorkflowInstance.exists({
-            company: companyId,
-            workflow: workflowId,
-            currentStep: stepId,
-            status: "running",
-            isActive: true,
-        });
-        if (inFlight) {
-            throw new Error("This step is currently assigned to an active request and cannot be removed yet.");
-        }
+        await this.assertNoRunningInstances(companyId, workflowId, "remove a stage");
         const step = await WorkflowRepository.deactivateStep(companyId, workflowId, stepId);
         if (!step) {
             throw new Error("Workflow step not found");
         }
+        await this.bumpVersion(companyId, workflowId);
         return step;
     }
     async resolvePosition(positionId, companyId) {

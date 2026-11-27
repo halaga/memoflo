@@ -27,6 +27,18 @@ class InventoryController {
             next(error);
         }
     }
+    async movements(req, res, next) {
+        try {
+            const data = await InventoryService.movements(req.user.company, req.query.itemId, req.query.limit);
+            res.json({ success: true, data });
+        } catch (error) { next(error); }
+    }
+    async createMovement(req, res, next) {
+        try {
+            const data = await InventoryService.recordMovement(req.user.company, req.user.id, req.body);
+            res.status(201).json({ success: true, data });
+        } catch (error) { next(error); }
+    }
     async remove(req, res, next) {
         try {
             const data = await InventoryService.remove(req.user.company, req.params.id);

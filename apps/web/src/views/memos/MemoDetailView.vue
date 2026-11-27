@@ -10,9 +10,10 @@ const employee = getSavedEmployee();
 const memo = ref(null);
 const workflow = ref(null);
 const instance = ref(null);
-const workflows = ref([]);
 const events = ref([]);
 const attachments = ref([]);
+const workflowEmployees = ref([]);
+const assignmentLoading = ref(false);
 const selectedFile = ref(null);
 const comment = ref("");
 const loading = ref(true);
@@ -58,11 +59,18 @@ async function load() {
     try {
         const result = await api.getMemo(memoId.value);
         memo.value = result?.memo || result?.data || result;
-        const workflowResult = await api.listWorkflows();
-        workflows.value = normalizeList(workflowResult, ["workflows"]);
         const workflowId = memo.value?.workflow?._id || memo.value?.workflow;
         if (workflowId)
             await loadWorkflow(workflowId);
+        if (canAct.value) {
+            try {
+                workflowEmployees.value = normalizeList(await api.listEmployeeDirectory(), ["employees", "people"]);
+            } catch {
+                workflowEmployees.value = [];
+            }
+        } else {
+            workflowEmployees.value = [];
+        }
         await Promise.all([loadEvents(), loadAttachments()]);
     }
     catch (err) {
@@ -95,25 +103,6 @@ async function loadInstance(instanceId) {
 async function refreshHistory() {
     await Promise.all([loadEvents(), loadAttachments()]);
 }
-async function startWorkflow() {
-    actionError.value = "";
-    const workflowId = memo.value?.workflow?._id || memo.value?.workflow || workflows.value.find((item) => item.name === "Procurement Approval")?._id;
-    if (!workflowId) {
-        actionError.value = "No workflow is configured for this memo.";
-        return;
-    }
-    workflowLoading.value = true;
-    try {
-        await api.startWorkflow(workflowId, "memo", memo.value._id);
-        await load();
-    }
-    catch (err) {
-        actionError.value = err.message;
-    }
-    finally {
-        workflowLoading.value = false;
-    }
-}
 async function approve() {
     if (!instance.value?._id)
         return;
@@ -129,6 +118,20 @@ async function approve() {
     }
     finally {
         workflowLoading.value = false;
+    }
+}
+async function changeAssignment(action, payload) {
+    if (!instance.value?._id || !payload?.employeeId) return;
+    assignmentLoading.value = true;
+    actionError.value = "";
+    try {
+        if (action === "delegate") await api.delegateWorkflowInstance(instance.value._id, payload.employeeId, payload.reason || "");
+        else await api.reassignWorkflowInstance(instance.value._id, payload.employeeId, payload.reason || "");
+        await load();
+    } catch (err) {
+        actionError.value = err.message || `Unable to ${action} workflow action.`;
+    } finally {
+        assignmentLoading.value = false;
     }
 }
 async function reject() {
@@ -484,12 +487,12 @@ onMounted(load);
           </p>
         </div>
         <div v-else-if="!instance && !memo.workflowInstance" class="workflow-start-new">
-          <p>
-            This memo has not started its approval workflow.
+          <p v-if="String(memo.status || '').toLowerCase() === 'draft'">
+            Submit this Approval Memo to start its configured workflow automatically.
           </p>
-          <button class="btn btn-primary btn-block" :disabled="workflowLoading" type="button" @click="startWorkflow">
-            {{ workflowLoading ? "Starting…" : "Start Approval Workflow" }}
-          </button>
+          <p v-else>
+            No workflow instance is linked to this submitted memo. Refresh the record; if the issue remains, ask an administrator to review the workflow configuration.
+          </p>
         </div>
         <template v-else>
           <div v-if="canAct" class="workflow-comment-box">
@@ -507,10 +510,14 @@ onMounted(load);
             :instance="instance"
             :loading="workflowLoading"
             :can-act="canAct"
+            :employees="workflowEmployees"
+            :assignment-loading="assignmentLoading"
             @approve="approve"
             @reject="reject"
             @cancel="cancel"
             @resubmit="resubmit"
+            @delegate="changeAssignment('delegate', $event)"
+            @reassign="changeAssignment('reassign', $event)"
            />
         </template>
       </aside>

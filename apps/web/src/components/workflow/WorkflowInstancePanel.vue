@@ -19,12 +19,22 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    employees: {
+        type: Array,
+        default: () => [],
+    },
+    assignmentLoading: {
+        type: Boolean,
+        default: false,
+    },
 });
 const emit = defineEmits([
     "approve",
     "reject",
     "cancel",
     "resubmit",
+    "delegate",
+    "reassign",
 ]);
 const steps = computed(() => props.workflow?.steps || []);
 const currentStep = computed(() => props.instance?.currentStep || null);
@@ -105,10 +115,14 @@ const occupantName = computed(() => {
       :instance="instance"
       :loading="loading"
       :can-act="canAct"
+      :employees="employees"
+      :assignment-loading="assignmentLoading"
       @approve="emit('approve')"
       @reject="emit('reject')"
       @cancel="emit('cancel')"
       @resubmit="emit('resubmit')"
+      @delegate="emit('delegate', $event)"
+      @reassign="emit('reassign', $event)"
      />
   </template>
 </section>

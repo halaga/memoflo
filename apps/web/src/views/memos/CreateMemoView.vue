@@ -21,6 +21,19 @@ const requisitionTypes = computed(() => {
     const service = selectedService.value;
     return service ? (service.allowedRequisitionTypes || service.requisitionTypes || []) : [];
 });
+function matchesFieldCondition(condition, values) {
+    if (!condition?.field) return true;
+    const actual = values?.[condition.field];
+    if (Object.prototype.hasOwnProperty.call(condition, "equals")) return String(actual ?? "") === String(condition.equals);
+    if (Object.prototype.hasOwnProperty.call(condition, "notEquals")) return String(actual ?? "") !== String(condition.notEquals);
+    if (Array.isArray(condition.in)) return condition.in.map(String).includes(String(actual ?? ""));
+    return true;
+}
+const visibleServiceFields = computed(() => (selectedService.value?.formSchema || [])
+    .filter((field) => {
+        if (field.conditionalOn) return String(serviceFieldValues.value[field.conditionalOn] ?? "") === String(field.conditionalValue ?? "");
+        return matchesFieldCondition(field.showWhen, serviceFieldValues.value);
+    }));
 const form = ref({
     memoType: "simple",
     title: "",
@@ -109,7 +122,8 @@ async function loadFormData() {
             api.listSBUs(),
             api.listEmployeeDirectory(),
         ]);
-        services.value = normalizeList(serviceResult, ["services", "businessServices"]);
+        services.value = normalizeList(serviceResult, ["services", "businessServices"])
+            .filter((service) => service.catalogueVisible !== false);
         sbus.value = normalizeList(sbuResult, ["sbus", "SBUs"]);
         employees.value = normalizeList(employeeResult, ["employees", "people"]);
 
@@ -176,7 +190,7 @@ function validateForm() {
         if (!form.value.businessService) return "Select a Business Service.";
         if (!form.value.requisitionType) return "Select a Requisition Type.";
         if (!form.value.businessJustification.trim()) return "Business justification is required.";
-        for (const field of selectedService.value?.formSchema || []) {
+        for (const field of visibleServiceFields.value) {
             const value = serviceFieldValues.value[field.key];
             if (field.required && (value === undefined || value === null || String(value).trim() === "")) {
                 return `${field.label} is required.`;
@@ -385,7 +399,7 @@ onMounted(loadFormData);
         <section v-if="selectedService?.formSchema?.length" class="composer-section">
           <h2>{{ selectedService.name }} information</h2>
           <div class="form-row">
-            <label v-for="field in selectedService.formSchema" :key="field.key">
+            <label v-for="field in visibleServiceFields" :key="field.key">
               {{ field.label }}<span v-if="field.required"> *</span>
               <textarea v-if="field.type === 'textarea'" v-model="serviceFieldValues[field.key]" class="textarea" :placeholder="field.placeholder" :required="field.required" rows="3"></textarea>
               <select v-else-if="field.type === 'select' || field.type === 'multiselect'" v-model="serviceFieldValues[field.key]" class="input" :multiple="field.type === 'multiselect'" :required="field.required">

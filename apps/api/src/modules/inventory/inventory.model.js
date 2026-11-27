@@ -12,11 +12,12 @@ const inventorySchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    category: {
-        type: String,
-        default: "General",
-        trim: true
-    },
+    category: { type: String, default: "General", trim: true },
+    description: { type: String, default: "", trim: true },
+    supplier: { type: String, default: "", trim: true },
+    purchaseReference: { type: String, default: "", trim: true },
+    condition: { type: String, enum: ["New", "Good", "Fair", "Damaged", "Lost", "Unknown"], default: "Unknown" },
+    minimumStock: { type: Number, min: 0, default: 0 },
     itemCode: {
         type: String,
         default: "",

@@ -25,4 +25,5 @@ import "../modules/leave/leaveEvent.model.js";
 import "../modules/procurement/procurement.model.js";
 import "../modules/service-request/serviceRequest.model.js";
 import "../modules/inventory/inventory.model.js";
+import "../modules/inventory/inventoryMovement.model.js";
 import "../modules/announcement/announcement.model.js";

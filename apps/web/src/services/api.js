@@ -250,6 +250,14 @@ export const api = {
         const query = params.toString();
         return request(`/inventory${query ? `?${query}` : ""}`);
     },
+    listInventoryMovements(itemId = "", limit = 100) {
+        const params = new URLSearchParams({ limit: String(limit) });
+        if (itemId) params.set("itemId", itemId);
+        return request(`/inventory/movements?${params.toString()}`);
+    },
+    createInventoryMovement(data) {
+        return request("/inventory/movements", { method: "POST", body: JSON.stringify(data) });
+    },
     createInventory(data) {
         return request("/inventory", {
             method: "POST",
@@ -451,6 +459,24 @@ export const api = {
         return request(`/workflow/${workflowId}/steps/${stepId}`, {
             method: "PATCH",
             body: JSON.stringify(payload),
+        });
+    },
+    reorderWorkflowStep(workflowId, stepId, order) {
+        return request(`/workflow/${workflowId}/steps/${stepId}/reorder`, {
+            method: "PATCH",
+            body: JSON.stringify({ order }),
+        });
+    },
+    delegateWorkflowInstance(instanceId, employeeId, reason = "") {
+        return request(`/workflow/instances/${instanceId}/delegate`, {
+            method: "POST",
+            body: JSON.stringify({ employeeId, reason }),
+        });
+    },
+    reassignWorkflowInstance(instanceId, employeeId, reason = "") {
+        return request(`/workflow/instances/${instanceId}/reassign`, {
+            method: "POST",
+            body: JSON.stringify({ employeeId, reason }),
         });
     },
     deleteWorkflowStep(workflowId, stepId) {

@@ -6,6 +6,8 @@ import AppIcon from "../../components/ui/AppIcon.vue";
 const items = ref([]);
 const departments = ref([]);
 const employees = ref([]);
+const purchaseRequests = ref([]);
+const approvedMemos = ref([]);
 const loading = ref(true);
 const saving = ref(false);
 const importing = ref(false);
@@ -18,9 +20,17 @@ const showForm = ref(false);
 const inventoryFormSection = ref(null);
 const editingId = ref("");
 const form = ref(emptyForm());
+const movementItem = ref(null);
+const movementSaving = ref(false);
+const movementError = ref("");
+const movementNotice = ref("");
+const movementForm = ref({ movementType: "Stock In", quantity: 1, destinationItem: "", custodian: "", toLocation: "", referenceType: "", referenceId: "", reference: "", notes: "" });
+const movementHistory = ref([]);
+const historyItem = ref(null);
+const historyLoading = ref(false);
 function emptyForm() {
     return {
-        name: "", category: "IT Equipment", itemCode: "", serialNumber: "",
+        name: "", category: "IT Equipment", description: "", supplier: "", purchaseReference: "", condition: "Unknown", minimumStock: 0, itemCode: "", serialNumber: "",
         quantity: 1, availableQuantity: 1, unit: "unit", status: "Available",
         ownerDepartment: "", custodian: "", location: "", purchaseDate: "", notes: "",
     };
@@ -62,6 +72,8 @@ async function load() {
         api.listInventory(),
         api.listDepartments(),
         api.listEmployeeDirectory(),
+        api.listProcurementRequests("all"),
+        api.listMemos(),
     ]);
     if (results[0].status === "fulfilled")
         items.value = normalizeList(results[0].value, ["items", "inventory"]);
@@ -71,6 +83,10 @@ async function load() {
         departments.value = normalizeList(results[1].value, ["departments"]);
     if (results[2].status === "fulfilled")
         employees.value = normalizeList(results[2].value, ["employees"]);
+    if (results[3].status === "fulfilled")
+        purchaseRequests.value = normalizeList(results[3].value, ["requests", "procurements"]);
+    if (results[4].status === "fulfilled")
+        approvedMemos.value = normalizeList(results[4].value, ["memos"]).filter(memo => memo.memoType === "approval" && ["Approved", "Completed"].includes(memo.status));
     loading.value = false;
 }
 async function revealInventoryForm() {
@@ -156,6 +172,11 @@ function exportInventory() {
     downloadCsv("memoflo-inventory.csv", filtered.value.map((item) => ({
         name: item.name || "",
         category: item.category || "",
+        description: item.description || "",
+        supplier: item.supplier || "",
+        purchaseReference: item.purchaseReference || "",
+        condition: item.condition || "Unknown",
+        minimumStock: item.minimumStock ?? 0,
         itemCode: item.itemCode || "",
         serialNumber: item.serialNumber || "",
         quantity: item.quantity ?? 0,
@@ -195,6 +216,11 @@ const row = Object.fromEntries(Object.entries(rows[index]).map(([key, value]) =>
                 await api.createInventory({
                     name: row.name,
                     category: row.category || "General",
+                    description: row.description || "",
+                    supplier: row.supplier || "",
+                    purchaseReference: row.purchaseReference || "",
+                    condition: row.condition || "Unknown",
+                    minimumStock: Number(row.minimumStock || 0),
                     itemCode: row.itemCode || "",
                     serialNumber: row.serialNumber || "",
                     quantity,
@@ -224,9 +250,38 @@ const row = Object.fromEntries(Object.entries(rows[index]).map(([key, value]) =>
         importing.value = false;
     }
 }
+function openMovement(item) {
+    movementItem.value = item;
+    movementError.value = "";
+    movementNotice.value = "";
+    movementForm.value = { movementType: "Stock In", quantity: 1, destinationItem: "", custodian: item.custodian?._id || item.custodian || "", toLocation: item.location || "", referenceType: "", referenceId: "", reference: "", notes: "" };
+}
+async function saveMovement() {
+    if (!movementItem.value) return;
+    movementSaving.value = true;
+    movementError.value = "";
+    try {
+        const payload = { ...movementForm.value, item: movementItem.value._id, quantity: Number(movementForm.value.quantity) };
+        if (payload.movementType !== "Custody" && !payload.quantity) throw new Error("Enter a valid movement quantity.");
+        if (payload.movementType === "Stock Transfer" && !payload.destinationItem) throw new Error("Choose the destination inventory item.");
+        if (payload.movementType === "Custody" && !payload.custodian) throw new Error("Choose the new custodian.");
+        await api.createInventoryMovement(payload);
+        movementNotice.value = `${payload.movementType} recorded for ${movementItem.value.name}.`;
+        movementItem.value = null;
+        await load();
+    } catch (err) { movementError.value = err.message || "Unable to record stock movement."; }
+    finally { movementSaving.value = false; }
+}
+async function viewHistory(item) {
+    historyItem.value = item;
+    historyLoading.value = true;
+    try { movementHistory.value = normalizeList(await api.listInventoryMovements(item._id), ["movements"]); }
+    catch (err) { error.value = err.message || "Unable to load movement history."; movementHistory.value = []; }
+    finally { historyLoading.value = false; }
+}
 function downloadTemplate() {
     downloadCsv("memoflo-inventory-template.csv", [{
-            name: "", category: "IT Equipment", itemCode: "", serialNumber: "",
+            name: "", category: "IT Equipment", description: "", supplier: "", purchaseReference: "", condition: "New", minimumStock: "0", itemCode: "", serialNumber: "",
             quantity: "1", availableQuantity: "1", unit: "unit", status: "Available",
             ownerDepartment: "Information Technology", custodianEmail: "", location: "", purchaseDate: "", notes: "",
         }]);
@@ -274,6 +329,7 @@ onMounted(load);
   <div v-if="notice" class="alert alert-success">
     {{ notice }}
   </div>
+  <div v-if="movementNotice" class="alert alert-success">{{ movementNotice }}</div>
   <section class="inventory-summary-grid">
     <article class="inventory-summary">
       <span class="inventory-summary-icon">
@@ -301,13 +357,12 @@ onMounted(load);
       <span class="inventory-summary-icon">
         <AppIcon name="people" :size="20" />
       </span>
-      <small>
-        ASSIGNED ITEMS
-      </small>
+      <small>ASSIGNED ITEMS</small>
       <strong>
         {{ items.filter((item) => item.status === "Assigned" || item.custodian).length }}
       </strong>
     </article>
+    <article class="inventory-summary"><span class="inventory-summary-icon"><AppIcon name="alert" :size="20" /></span><small>LOW STOCK ALERTS</small><strong>{{ items.filter(item => Number(item.minimumStock || 0) > 0 && Number(item.availableQuantity || 0) <= Number(item.minimumStock || 0)).length }}</strong></article>
   </section>
   <section class="inventory-toolbar workspace-panel">
     <label class="inventory-search">
@@ -385,6 +440,11 @@ onMounted(load);
         Category
         <input v-model="form.category" class="input" required />
       </label>
+      <label>Description <input v-model="form.description" class="input" placeholder="Item specification or description" /></label>
+      <label>Supplier <input v-model="form.supplier" class="input" /></label>
+      <label>Purchase reference <input v-model="form.purchaseReference" class="input" placeholder="PO / invoice / requisition" /></label>
+      <label>Condition <select v-model="form.condition" class="input"><option>New</option><option>Good</option><option>Fair</option><option>Damaged</option><option>Lost</option><option>Unknown</option></select></label>
+      <label>Minimum stock alert <input v-model.number="form.minimumStock" class="input" type="number" min="0" /></label>
       <label>
         Item code
         <input v-model="form.itemCode" class="input" />
@@ -471,6 +531,29 @@ onMounted(load);
       </div>
     </form>
   </section>
+  <section v-if="movementItem" class="workspace-panel inventory-form-panel movement-panel">
+    <header class="section-title-row"><div><span class="eyebrow">STOCK CONTROL</span><h2>{{ movementForm.movementType }} · {{ movementItem.name }}</h2><p>Current balance: {{ movementItem.availableQuantity }} available of {{ movementItem.quantity }} {{ movementItem.unit || "unit" }}.</p></div><button class="icon-button" type="button" aria-label="Close movement form" @click="movementItem = null"><AppIcon name="close" :size="18" /></button></header>
+    <form class="inventory-form-grid" @submit.prevent="saveMovement">
+      <label>Movement type<select v-model="movementForm.movementType" class="input"><option>Stock In</option><option>Goods Receipt</option><option>Return</option><option>Stock Out</option><option>Damaged</option><option>Lost</option><option>Stock Transfer</option><option>Stock Adjustment</option><option>Custody</option></select></label>
+      <label v-if="movementForm.movementType !== 'Custody'">Quantity <input v-model.number="movementForm.quantity" class="input" type="number" :min="movementForm.movementType === 'Stock Adjustment' ? -999999 : 0.01" step="0.01" required /></label>
+      <label v-if="movementForm.movementType === 'Stock Transfer'">Destination item<select v-model="movementForm.destinationItem" class="input" required><option value="">Select destination</option><option v-for="option in items.filter(x => x._id !== movementItem?._id)" :key="option._id" :value="option._id">{{ option.name }} · {{ option.location || "No location" }}</option></select></label>
+      <label v-if="['Custody','Stock Out'].includes(movementForm.movementType)">Custodian <select v-model="movementForm.custodian" class="input" :required="movementForm.movementType === 'Custody'"><option value="">{{ movementForm.movementType === 'Custody' ? 'Select employee' : 'Optional — issue to employee' }}</option><option v-for="person in employees" :key="person._id" :value="person._id">{{ person.firstName }} {{ person.lastName }}</option></select></label>
+      <label>Location / destination <input v-model="movementForm.toLocation" class="input" placeholder="Store, office, floor…" /></label>
+      <label>Reference type <select v-model="movementForm.referenceType" class="input"><option value="">No linked reference</option><option value="Purchase Request">Purchase Request</option><option value="Procurement">Procurement</option><option value="Approval Memo">Approval Memo</option><option value="Other">Other</option></select></label>
+      <label v-if="movementForm.referenceType === 'Procurement'">Approved purchase request<select v-model="movementForm.referenceId" class="input" @change="movementForm.reference = purchaseRequests.find(p => p._id === movementForm.referenceId)?.requestNo || ''"><option value="">Select approved request</option><option v-for="purchase in purchaseRequests.filter(p => ['Approved','Completed'].includes(p.status))" :key="purchase._id" :value="purchase._id">{{ purchase.requestNo }} · {{ purchase.title }}</option></select><small v-if="!purchaseRequests.length">No procurement records available or your role cannot view them.</small></label>
+      <label v-if="movementForm.referenceType === 'Approval Memo'">Approved purchase Approval Memo<select v-model="movementForm.referenceId" class="input" @change="movementForm.reference = approvedMemos.find(m => m._id === movementForm.referenceId)?.title || ''"><option value="">Select approved memo</option><option v-for="memo in approvedMemos" :key="memo._id" :value="memo._id">{{ memo.title }} · {{ memo.status }}</option></select><small v-if="!approvedMemos.length">No approved purchase memos available or your role cannot view them.</small></label>
+      <label>Reference number <input v-model="movementForm.reference" class="input" placeholder="PO / request / delivery reference" /></label>
+      <label class="inventory-notes">Notes <textarea v-model="movementForm.notes" class="textarea" rows="2" placeholder="Condition, verification, reason or handover details…"></textarea></label>
+      <div v-if="movementError" class="alert alert-error inventory-notes">{{ movementError }}</div>
+      <div class="form-actions inventory-form-actions"><button class="action-secondary" type="button" @click="movementItem = null">Cancel</button><button class="action-primary" type="submit" :disabled="movementSaving">{{ movementSaving ? "Recording…" : "Record movement" }}<AppIcon name="check" :size="17" /></button></div>
+    </form>
+  </section>
+  <section v-if="historyItem" class="workspace-panel inventory-table-panel movement-history-panel">
+    <header class="section-title-row"><div><span class="eyebrow">AUDIT TRAIL</span><h2>Movement history · {{ historyItem.name }}</h2></div><button class="icon-button" type="button" aria-label="Close movement history" @click="historyItem = null"><AppIcon name="close" :size="18" /></button></header>
+    <div v-if="historyLoading" class="panel-empty">Loading movement history…</div>
+    <div v-else-if="!movementHistory.length" class="panel-empty">No stock movements recorded for this item yet.</div>
+    <div v-else class="inventory-table-wrap"><table class="data-table"><thead><tr><th>Reference</th><th>Movement</th><th>Quantity</th><th>Balance</th><th>Performed by</th><th>Date</th><th>Notes</th></tr></thead><tbody><tr v-for="move in movementHistory" :key="move._id"><td>{{ move.movementNo }}</td><td>{{ move.movementType }}</td><td>{{ move.quantity }}</td><td>{{ move.availableBefore }} → {{ move.availableAfter }}</td><td>{{ move.performedBy?.firstName || "—" }} {{ move.performedBy?.lastName || "" }}</td><td>{{ move.occurredAt ? new Date(move.occurredAt).toLocaleString() : "—" }}</td><td>{{ move.notes || move.reference || "—" }}</td></tr></tbody></table></div>
+  </section>
   <section class="workspace-panel inventory-table-panel">
     <div v-if="loading" class="panel-empty">
       Loading inventory records…
@@ -546,12 +629,14 @@ onMounted(load);
               {{ item.location || "—" }}
             </td>
             <td>
-              <span class="inventory-status" :class="String(item.status || '').toLowerCase().replace(/\s+/g, '-')">
-                {{ item.status || "Available" }}
+              <span class="inventory-status" :class="Number(item.minimumStock || 0) > 0 && Number(item.availableQuantity || 0) <= Number(item.minimumStock || 0) ? 'low-stock' : String(item.status || '').toLowerCase().replace(/\s+/g, '-')">
+                {{ Number(item.minimumStock || 0) > 0 && Number(item.availableQuantity || 0) <= Number(item.minimumStock || 0) ? 'Low Stock' : (item.status || "Available") }}
               </span>
             </td>
             <td>
               <div class="row-actions">
+                <button class="icon-button" type="button" :aria-label="`Record movement for ${item.name}`" title="Stock movement" @click="openMovement(item)"><AppIcon name="arrow-left-right" :size="17" /></button>
+                <button class="icon-button" type="button" :aria-label="`View movement history for ${item.name}`" title="Movement history" @click="viewHistory(item)"><AppIcon name="history" :size="17" /></button>
                 <button class="icon-button" type="button" :aria-label="`Edit ${item.name}`" @click="edit(item)">
                   <AppIcon name="edit" :size="17" />
                 </button>

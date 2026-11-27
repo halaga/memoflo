@@ -122,20 +122,12 @@ const builtIns = {
         slug: "it-support",
         name: "IT Support",
         category: "IT",
-        actionType: "it-request",
+        actionType: "it-support-center",
         moduleId: "it"
     },
-    "it-maintenance": {
-        slug: "it-maintenance",
-        name: "IT Maintenance",
-        category: "IT",
-        actionType: "it-request",
-        moduleId: "it"
-    },
-    "software-installation": { slug: "software-installation", name: "Software Installation", category: "IT", actionType: "it-request",
-        moduleId: "it" },
-    "internet-subscription": { slug: "internet-subscription", name: "Internet Subscription", category: "IT", actionType: "it-request",
-        moduleId: "it" },
+    "it-maintenance": { slug: "it-maintenance", name: "IT Maintenance Request", category: "IT", actionType: "service-request", moduleId: "memos" },
+    "software-installation": { slug: "software-installation", name: "Software Installation Request", category: "IT", actionType: "service-request", moduleId: "memos" },
+    "internet-subscription": { slug: "internet-subscription", name: "Internet Subscription", category: "IT", actionType: "service-request", moduleId: "memos" },
     "employee-information": { slug: "employee-information", name: "Employee Information Request", category: "People & HR",
         actionType: "service-request", moduleId: "hr" },
     "recruitment": { slug: "recruitment", name: "Recruitment Request", category: "People & HR", actionType: "recruitment",
@@ -190,6 +182,15 @@ async function load() {
 const canonicalSlug = ({ "business-purchase": "business-purchase-request", "laptop-request": "business-purchase-request" })[slug] || slug;
     service.value = services.value.find((item) => String(item.slug || "").toLowerCase() === slug) || services.value.find((item) => ({ "business-purchase": "business-purchase-request",
         "laptop-request": "business-purchase-request" })[String(item.slug || "").toLowerCase()] === canonicalSlug) || builtIns[slug] || builtIns[canonicalSlug] || null;
+    // IT Support is a ticketing workspace, never an Approval Memo service.
+    // Keep its legacy service record for compatibility but restore the dedicated
+    // support centre action even if an older seed changed its actionType.
+    if (service.value && String(service.value.slug || slug).toLowerCase() === "it-support") {
+        service.value.actionType = "it-support-center";
+        service.value.moduleId = "it";
+        service.value.name = "IT Support & Maintenance";
+        service.value.category = "IT";
+    }
 if (service.value && ["business-purchase", "laptop-request", "business-purchase-request"].includes(service.value.slug)) {
         service.value.slug = "business-purchase-request";
         service.value.name = "Business Purchase";
@@ -205,7 +206,7 @@ if (service.value && ["business-purchase", "laptop-request", "business-purchase-
         return;
     }
     try {
-        if (action.value === "it-request") {
+        if (action.value === "it-support-center") {
             await loadTickets();
             if (isSupportStaff.value) {
                 try {
@@ -450,7 +451,7 @@ async function submit() {
     success.value = "";
     saving.value = true;
     try {
-        if (action.value === "it-request")
+        if (action.value === "it-support-center")
             return await submitItTicket();
         if (action.value === "memo-simple")
             return await submitMemo("simple");
@@ -517,10 +518,10 @@ requestAnimationFrame(() => { document.getElementById("it-ticket-form")?.scrollI
           Complete the details below. MemoFlo will send it to the relevant recipient or request queue.
         </p>
         <div class="service-quick-actions">
-          <button v-if="action === 'it-request'" type="button" class="action-primary" @click="scrollToTicket()">
+          <button v-if="action === 'it-support-center'" type="button" class="action-primary" @click="scrollToTicket()">
             Log a Ticket
           </button>
-          <button v-if="action === 'it-request'" type="button" class="action-secondary" @click="scrollToTracker()">
+          <button v-if="action === 'it-support-center'" type="button" class="action-secondary" @click="scrollToTracker()">
             Track Tickets
           </button>
         </div>
@@ -534,7 +535,7 @@ requestAnimationFrame(() => { document.getElementById("it-ticket-form")?.scrollI
         This service is disabled for your company. Contact your administrator.
       </p>
     </div>
-    <template v-else-if="action === 'it-request'">
+    <template v-else-if="action === 'it-support-center'">
       <div class="it-center-intro">
         <div class="it-center-copy">
           <span class="it-center-kicker">
@@ -625,7 +626,7 @@ requestAnimationFrame(() => { document.getElementById("it-ticket-form")?.scrollI
               <button
                 type="button"
                 class="action-secondary"
-                @click="itForm.category = solution.category.includes('Network') ? 'Network & Internet' : solution.category.includes('Account') ? 'Accounts & Access' : solution.category.includes('Email') ? 'Email & Communication' : solution.category.includes('Laptop') ? 'Hardware' : solution.category.includes('Printer') ? 'Hardware' : solution.category.includes('Software') ? 'Software & Applications' : 'Security'; itForm.title = solution.title; document.getElementById('it-ticket-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })"
+                @click="itForm.category = solution.category.includes('Network') ? 'Network & Internet' : solution.category.includes('Account') ? 'Accounts & Access' : solution.category.includes('Email') ? 'Email & Communication' : solution.category.includes('Laptop') ? 'Hardware' : solution.category.includes('Printer') ? 'Hardware' : solution.category.includes('Software') ? 'Software & Applications' : 'Security'; itForm.title = solution.title; scrollToTicket()"
               >
                 Still need help? Log a ticket
               </button>
@@ -1291,7 +1292,7 @@ requestAnimationFrame(() => { document.getElementById("it-ticket-form")?.scrollI
           <input v-model.number="form.headcount" class="input" type="number" min="1" />
         </label>
       </div>
-      <label v-if="action === 'it-request'" class="form-field">
+      <label v-if="action === 'it-support-center'" class="form-field">
         Requested item or system
         <input v-model="form.item" class="input" :placeholder="service.name" />
       </label>
